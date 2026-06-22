@@ -13,8 +13,8 @@
     ],
     "ticket_tiers": [
       {
-      "name": "最低方向覆盖",
-      "stake_label": "2 元档",
+      "name": "稳健方向单",
+      "stake_label": "稳健方向单",
       "unit_count": 1,
       "unit_price": 2,
       "total_amount": 2,
@@ -27,58 +27,58 @@
       ],
       "risk_tier": "medium",
       "value_judgment": "单源赔率样例，价值判断降级",
-      "reason": "只保留每场最集中的方向，作为最低覆盖参考"
+      "reason": "只保留每场最集中的方向，作为不强压比分的参考"
       },
       {
-      "name": "小额比分覆盖",
-      "stake_label": "16 元档",
-      "unit_count": 8,
+      "name": "基础比分覆盖",
+      "stake_label": "基础比分覆盖",
+      "unit_count": 16,
       "unit_price": 2,
-      "total_amount": 16,
-      "structure": "1 x 2 x 2 x 2 = 8 注",
+      "total_amount": 32,
+      "structure": "2 x 2 x 2 x 2 = 16 注",
       "legs": [
-        { "match": "西班牙 vs 沙特", "market": "比分", "selection": "西班牙零封主线", "score_coverage": ["2:0"] },
+        { "match": "西班牙 vs 沙特", "market": "比分", "selection": "西班牙零封主线", "score_coverage": ["2:0", "3:0"] },
         { "match": "比利时 vs 伊朗", "market": "比分", "selection": "比利时小胜或平局", "score_coverage": ["2:1", "1:1"] },
         { "match": "乌拉圭 vs 佛得角", "market": "比分", "selection": "乌拉圭小胜", "score_coverage": ["1:0", "2:0"] },
         { "match": "新西兰 vs 埃及", "market": "比分", "selection": "低比分路径", "score_coverage": ["1:1", "0:1"] }
       ],
       "risk_tier": "low",
       "value_judgment": "比分组合方差高，单源赔率下仅作为小额覆盖参考",
-      "reason": "把最强方向固定为单比分，其余三场各给两个比分"
-      },
-      {
-      "name": "基础比分覆盖",
-      "stake_label": "32 元档",
-      "unit_count": 16,
-      "unit_price": 2,
-      "total_amount": 32,
-      "structure": "2 x 2 x 2 x 2 = 16 注",
-      "legs": [
-        { "match": "西班牙 vs 沙特", "market": "比分", "selection": "西班牙零封路径", "score_coverage": ["1:0", "2:0"] },
-        { "match": "比利时 vs 伊朗", "market": "比分", "selection": "比利时小胜或平局", "score_coverage": ["2:1", "1:1"] },
-        { "match": "乌拉圭 vs 佛得角", "market": "比分", "selection": "乌拉圭小胜", "score_coverage": ["1:0", "2:0"] },
-        { "match": "新西兰 vs 埃及", "market": "比分", "selection": "低比分客队不败", "score_coverage": ["1:1", "0:1"] }
-      ],
-      "risk_tier": "high",
-      "value_judgment": "比分组合方差高，仅作为基础比分覆盖参考",
-      "reason": "每场两个比分，形成截图中常见的 16 注结构"
+      "reason": "按每场核心比分区间形成基础覆盖"
       },
       {
       "name": "增强比分覆盖",
-      "stake_label": "48 元档",
-      "unit_count": 24,
+      "stake_label": "增强比分覆盖",
+      "unit_count": 54,
       "unit_price": 2,
-      "total_amount": 48,
-      "structure": "3 x 2 x 2 x 2 = 24 注",
+      "total_amount": 108,
+      "structure": "3 x 3 x 2 x 3 = 54 注",
       "legs": [
-        { "match": "西班牙 vs 沙特", "market": "比分", "selection": "西班牙零封或小胜", "score_coverage": ["1:0", "2:0", "2:1"] },
-        { "match": "比利时 vs 伊朗", "market": "比分", "selection": "比利时小胜或平局", "score_coverage": ["2:1", "1:1"] },
+        { "match": "西班牙 vs 沙特", "market": "比分", "selection": "西班牙零封路径", "score_coverage": ["1:0", "2:0", "3:0"] },
+        { "match": "比利时 vs 伊朗", "market": "比分", "selection": "比利时小胜或平局", "score_coverage": ["2:1", "1:1", "3:1"] },
         { "match": "乌拉圭 vs 佛得角", "market": "比分", "selection": "乌拉圭小胜", "score_coverage": ["1:0", "2:0"] },
-        { "match": "新西兰 vs 埃及", "market": "比分", "selection": "低比分客队不败", "score_coverage": ["1:1", "0:1"] }
+        { "match": "新西兰 vs 埃及", "market": "比分", "selection": "低比分客队不败", "score_coverage": ["1:1", "0:1", "1:2"] }
       ],
       "risk_tier": "high",
-      "value_judgment": "只在用户接受比分波动时作为增强覆盖参考",
-      "reason": "给西班牙场增加一个 2:1，覆盖强队优势兑现但未零封的路径"
+      "value_judgment": "比分组合方差高，仅作为增强比分覆盖参考",
+      "reason": "给高波动和易漏防场次增加合理比分路径"
+      },
+      {
+      "name": "补洞单",
+      "stake_label": "补洞单",
+      "unit_count": 1,
+      "unit_price": 2,
+      "total_amount": 2,
+      "structure": "1 x 1 x 1 x 1 = 1 注",
+      "legs": [
+        { "match": "西班牙 vs 沙特", "market": "比分", "selection": "西班牙小胜漏洞", "score_coverage": ["1:0"] },
+        { "match": "比利时 vs 伊朗", "market": "比分", "selection": "比利时被拖平漏洞", "score_coverage": ["1:1"] },
+        { "match": "乌拉圭 vs 佛得角", "market": "比分", "selection": "低位防守拖平漏洞", "score_coverage": ["1:1"] },
+        { "match": "新西兰 vs 埃及", "market": "比分", "selection": "埃及赢但新西兰进球", "score_coverage": ["1:2"] }
+      ],
+      "risk_tier": "high",
+      "value_judgment": "仅作为主单之外的漏洞覆盖参考",
+      "reason": "覆盖主线比分组最容易漏掉的路径"
       }
     ],
     "more_combination_candidates": [

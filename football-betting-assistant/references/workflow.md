@@ -45,13 +45,13 @@ Single-match reports must include a visible evidence chain:
 
 1. Confirm up to four concrete fixtures.
 2. Start the report with a 比赛大纲 / 今日赛程确认 section that lists every match, kickoff time, group/competition, venue context, and current data confidence.
-3. Run the Single-Match Analysis flow in compact but substantive form for each match before giving any portfolio plan.
+3. Run the Single-Match Analysis flow in compact but substantive prose for each match before giving any portfolio plan. Each match should read like a decision note, not only a row in a table.
 4. Check Portfolio Correlation: competition stage, same group/table incentives, rotation, weather clusters, and shared market assumptions.
 5. Exclude Pass matches or matches with severe Information Sufficiency gaps.
-6. Build ticket tiers: 2 元, 16 元, 32 元, and 48 元 when four matches are available and score coverage is requested or implied.
-7. Add named portfolio variants when supported by the data: 稳健方向单, 基础比分覆盖, 增强比分覆盖, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
-8. Provide More Combination Candidates when there are extra plausible directions, but keep them separate from the four ticket tiers.
-9. Provide Score Coverage with up to four scores per match only when calculating a higher ticket tier; otherwise keep compact coverage to no more than three scores per match.
+6. Build portfolio variants from the actual score concentration and user intent. Do not force fixed 2/16/32/48 元 tiers. Calculate units as the product of selected outcomes per match and show amount only as `units x 2 元/unit`.
+7. Add named portfolio variants when supported by the data: 稳健方向单, 基础比分覆盖, 增强比分覆盖, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
+8. Provide More Combination Candidates only when there are extra plausible directions, and keep them separate from the main plans.
+9. Provide Score Coverage with up to four scores per match only when a match has a meaningful secondary path, such as late-goal expansion, red-card tail risk, draw protection, or favorite-underperformance risk.
 10. Produce the Portfolio Report template.
 
 Do not output a single "only correct" portfolio. If enough data exists, always offer tiered reference purchase plans plus optional alternative combinations.
@@ -60,12 +60,13 @@ Do not compress portfolio analysis into only one summary table. The user should 
 
 ## Ticket Tier Construction
 
-Use these default tiers for four-match portfolios:
+Construct the ticket structures from the match slate:
 
-- 2 元档: 1 selection per match, usually 胜平负/让球/大小球 direction rather than exact score.
-- 16 元档: 8 units at 2 元/unit, usually `1 x 2 x 2 x 2 = 8` units.
-- 32 元档: 16 units at 2 元/unit, usually `2 x 2 x 2 x 2 = 16` units.
-- 48 元档: 24 units at 2 元/unit, usually `3 x 2 x 2 x 2 = 24` units or another explicitly shown 24-unit structure.
+- Start with the most defensible direction plan, often using 胜平负, 让球胜平负, 大小球, or 总进球 rather than exact score for every match.
+- For score portfolios, identify each match's core score cluster first, then decide whether it deserves one, two, three, or four score candidates.
+- Use wider coverage on the most volatile match, not mechanically on the first match.
+- If the user proposes their own score list, evaluate it directly: say what is合理, what is漏防, and how to补洞 if they have already bought it.
+- Show every score portfolio as `A x B x C x D = N 注`; amount is `N x 2 元/unit = X 元` unless the user gives a different unit price.
 
 Use 2 元 per unit by default only for explaining total amount, not for bankroll advice. If the user's local lottery unit price differs, state the assumed unit price and let the user adjust.
 
@@ -73,8 +74,19 @@ Default named portfolio variants:
 
 - 稳健方向单: uses result, handicap result, over-under, or total-goals directions rather than fragile exact scores.
 - 基础比分覆盖: uses the most concentrated score candidates from the Poisson matrix.
-- 增强比分覆盖: adds one plausible secondary path for the highest-variance match.
+- 增强比分覆盖: adds one plausible secondary path for the highest-variance match or for a favorite that may only win narrowly.
+- 补洞单: covers the most obvious omitted path, such as favorite 1:0, draw drag, underdog goal, or late score expansion.
 - 搏冷/高赔率小单: uses lower-probability but explainable outcomes; label it optional, high variance, and not the core plan.
+
+## Report File Output
+
+Default chat output should be complete Markdown. If the user asks for a document, report file, md, html, or saved result and local file writes are available:
+
+1. Create `reports/football-betting/` when needed.
+2. Save Markdown as `reports/football-betting/YYYY-MM-DD-[short-slug].md`.
+3. Save HTML as `reports/football-betting/YYYY-MM-DD-[short-slug].html`.
+4. Keep the same analysis content in chat or provide a concise summary plus paths.
+5. Treat generated report files as local outputs, not source files to commit.
 
 ## Post-Match Review Flow
 

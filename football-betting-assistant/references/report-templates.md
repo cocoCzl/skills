@@ -82,11 +82,19 @@ Default report language is Chinese Betting Vocabulary. Keep math visible but con
 ```markdown
 ## 四串一参考方案
 
-### 1. 比赛大纲 / 今日赛程确认
+### 1. 今天四场先看结论
+| 比赛 | 胜平负倾向 | 大小球/总进球 | 比分主区间 | 稳度 | 最大风险 |
+|---|---|---|---|---|---|
+
+稳度排序：[从高到低列出]
+主线方向：[用一句话说明四串一方向]
+比分思路：[说明是偏小比分、强弱分明、还是有一两场可能打穿]
+
+### 2. 比赛大纲 / 今日赛程确认
 | 编号 | 比赛 | 时间 | 赛事 | 主客/中立 | 数据置信度 | 赔率/盘口来源 |
 |---|---|---|---|---|---|---|
 
-### 2. 数据来源总览
+### 3. 数据来源总览
 | 类别 | 使用来源 | 观察时间 | 说明 |
 |---|---|---|---|
 | 赛程 |  |  |  |
@@ -94,60 +102,62 @@ Default report language is Chinese Betting Vocabulary. Keep math visible but con
 | 球队状态/伤停 |  |  |  |
 | 天气/场地 |  |  |  |
 
-### 3. 逐场分析
+### 4. 逐场分析
 
 #### [编号]. [主队] vs [客队]
 - 数据依据：[来源名 + 时间；不需要默认贴链接]
-- 基础面：[状态、攻防、伤停、场地、战意]
+- 基础面：[用 1-2 段自然语言说明状态、攻防、伤停、场地、战意]
+- 比赛剧本：[谁会控球、谁会收缩、早进球/久攻不下/红牌或换人会怎样影响比分]
 - 数学模型：[prior xG -> 贝叶斯修正 -> final xG；泊松比分集中]
-- 概率倾向：[胜平负、让球、大小球/总进球]
-- 比分覆盖：[2-4 个比分]
+- 胜平负概率：[主胜/平/客胜区间 + 首选]
+- 大小球/总进球：[盘口或总进球倾向 + 为什么]
+- 比分分布：[按顺序列 3-5 个候选；区分主推、覆盖、补防]
 - 等级/风险：[A/B/C/Pass + 关键风险]
 
-### 4. 赔率/盘口摘要
+### 5. 胜平负与大小球汇总
 | 比赛 | 胜平负 | 让球 | 大小球 | 来源/时间 | 置信度 |
 |---|---|---|---|---|---|
 
-### 5. 每场结论汇总
-| 比赛 | 主要倾向 | 比分覆盖 | 等级 | 核心风险 |
+### 6. 比分覆盖建议
+| 比赛 | 核心比分 | 增强覆盖 | 漏洞/补防 | 不建议 |
 |---|---|---|---|---|
 
-### 6. 组合相关性检查
+### 7. 四串一参考购买方案
+| 类型 | 注数组合 | 合计 | 每场选择 | 适用场景 | 风险 |
+|---|---:|---:|---|---|---|
+| 稳健方向单 | [例如 1 x 1 x 1 x 1 = 1 注] | [N x 2 元/unit] | [胜平负/让球/大小球组合] | [不想强压比分] |  |
+| 基础比分覆盖 | [例如 2 x 2 x 2 x 2 = 16 注] | [N x 2 元/unit] | [每场比分] | [核心比分区间] |  |
+| 增强比分覆盖 | [按实际选择数量计算] | [N x 2 元/unit] | [给高波动场次加比分] | [提高容错] |  |
+| 补洞单 | [按实际选择数量计算] | [N x 2 元/unit] | [覆盖最大漏防路径] | [已买主单或想补关键漏洞] |  |
+| 搏冷/高赔率小单 | [按实际选择数量计算] | [N x 2 元/unit] | [低概率但可解释剧本] | [只作可选参考] | 高方差 |
+
+### 8. 如果用户已有购买方案
+- 这组合理的地方：
+- 最大漏防：
+- 最该补的比分/方向：
+- 已买后可考虑的补洞单：
+
+### 9. 组合相关性检查
 - 独立性/相关性：
 - 共同风险：
 - 不建议强行纳入的场次：
 
-### 7. 分档参考购买方案
-| 档位 | 注数组合 | 合计 | 每场选择 | 适用场景 | 风险 |
-|---|---:|---:|---|---|---|
-| 2 元档 | 1 注 | 2 元 | 每场 1 个方向 | 最低覆盖 |  |
-| 16 元档 | 8 注 | 16 元 | 1 x 2 x 2 x 2 | 小额比分覆盖 |  |
-| 32 元档 | 16 注 | 32 元 | 2 x 2 x 2 x 2 | 基础比分覆盖 |  |
-| 48 元档 | 24 注 | 48 元 | 3 x 2 x 2 x 2 | 增强比分覆盖 |  |
-
-### 8. 稳健/搏冷组合候选
-| 类型 | 注数/金额 | 每场选择 | 使用条件 | 风险 |
-|---|---:|---|---|---|
-| 稳健方向单 |  |  |  |  |
-| 基础比分覆盖 |  |  |  |  |
-| 增强比分覆盖 |  |  |  |  |
-| 搏冷/高赔率小单 |  |  |  | 高方差，仅作可选参考 |
-
-### 9. 更多组合候选
+### 10. 更多组合候选
 | 组合 | 注数/金额 | 每场选择 | 使用条件 | 风险 |
 |---|---:|---|---|---|
 
-### 10. Pass / 排除项
+### 11. Pass / 排除项
 - 
 ```
 
 Portfolio rules:
 
 - Support up to four matches.
-- Provide 2 元, 16 元, 32 元, and 48 元 Ticket Tiers when enough data exists.
+- Do not hard-code 2/16/32/48 元 plans. Pick the coverage widths from the score probabilities and user intent, then calculate units and amount.
 - Keep amount and unit count explicit. With the default 2 元/unit, 16 units equals 32 元, not 16 元.
 - More Combination Candidates are optional alternatives, not extra mandatory purchases.
-- Score Coverage may include up to four scores per match only when needed to produce the declared unit count.
+- Score Coverage may include up to four scores per match only when the football case supports wider coverage.
+- When the user provides a proposed ticket, evaluate their ticket first before suggesting replacement plans.
 - Exclude matches that are Pass or have severe data gaps.
 
 ## Post-Match Review

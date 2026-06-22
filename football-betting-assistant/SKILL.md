@@ -43,7 +43,7 @@ Use scripts only when deterministic calculation or validation helps:
 5. Estimate expected goals, apply Bayesian adjustments, and use the Poisson model for every analyzable match. Use calculators when available; otherwise label approximations and downgrade confidence.
 6. Compare model probabilities with implied probabilities only when verifiable Odds Data exists.
 7. Apply downgrade and stop rules.
-8. Produce the fixed report template. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the match slate, then analyze each match, then provide reference plans.
+8. Produce the report template. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the match slate, then analyze each match in readable prose, then provide reference plans.
 9. Run a final consistency and language check before answering.
 
 ## Default Scope
@@ -56,8 +56,10 @@ Use scripts only when deterministic calculation or validation helps:
 - For odds and lines, prefer a configured The Odds API adapter via `THE_ODDS_API_KEY`; otherwise enter public-web-first mode and search/open public user-authorized pages before asking the user for missing odds.
 - For four-match score portfolios, keep unit count and amount separate. With the default 2 元/unit, `2 x 2 x 2 x 2 = 16` units means 32 元.
 - Reports should be analysis-first and source-aware. Name the sources used and their observation times in Chinese prose or tables; raw URLs are optional unless the user asks for them.
-- For four-match portfolios, include 2 元, 16 元, 32 元, and 48 元 ticket tiers when enough data exists, plus distinct reference variants for 稳健方向单, 基础比分覆盖, 增强比分覆盖, and 搏冷/高赔率小单 when the data can support them.
-- Do not output a thin table-only answer when current data and tools allow deeper analysis. Each match needs a compact evidence chain: source summary, football context, expected goals, Bayesian adjustments, Poisson score concentration, market lean, and risk.
+- For four-match portfolios, do not hard-code 2/16/32/48 元档 as mandatory plans. Choose the combination structures from the match probabilities and score concentration, then calculate units and amount from the selected counts.
+- Portfolio plans should normally include distinct variants for 稳健方向单, 基础比分覆盖, 增强比分覆盖, 补洞单, and 搏冷/高赔率小单 when the data can support them.
+- Do not output a thin table-only answer when current data and tools allow deeper analysis. Each match needs a compact but human-readable evidence chain: source summary, football context, expected goals, Bayesian adjustments, Poisson score concentration, market lean, score coverage, over-under lean, and risk.
+- When the user explicitly asks to generate a report, save Markdown and HTML outputs under `reports/football-betting/` if the local environment permits writes. The report directory is generated output and should not be committed.
 
 ## If Tools Are Unavailable
 

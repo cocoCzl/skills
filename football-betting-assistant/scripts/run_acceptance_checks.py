@@ -66,15 +66,13 @@ README_REQUIRED_SECTIONS = [
 README_REQUIRED_PHRASES = [
     "THE_ODDS_API_KEY",
     "The Odds API",
-    "2 元档",
-    "16 元档",
-    "32 元档",
-    "48 元档",
+    "不固定使用 `2/16/32/48 元` 档位",
     "更多组合候选",
     "比赛大纲",
     "贝叶斯修正",
     "泊松",
     "稳健方向单",
+    "补洞单",
     "搏冷/高赔率小单"
 ]
 
@@ -143,26 +141,29 @@ def check_readme_usage() -> None:
 def check_portfolio_template() -> None:
     text = (ROOT / "references" / "report-templates.md").read_text(encoding="utf-8")
     for phrase in (
+        "今天四场先看结论",
         "比赛大纲",
         "数据来源总览",
         "逐场分析",
+        "比赛剧本",
         "数学模型",
         "贝叶斯修正",
         "泊松比分",
-        "赔率/盘口摘要",
-        "分档参考购买方案",
-        "2 元档",
-        "16 元档",
-        "32 元档",
-        "48 元档",
+        "胜平负与大小球汇总",
+        "比分覆盖建议",
+        "四串一参考购买方案",
         "稳健方向单",
         "基础比分覆盖",
         "增强比分覆盖",
+        "补洞单",
         "搏冷/高赔率小单",
         "更多组合候选"
     ):
         if phrase not in text:
             fail(f"portfolio template missing: {phrase}")
+    for forbidden in ("2 元档", "16 元档", "32 元档", "48 元档", "分档参考购买方案"):
+        if forbidden in text:
+            fail(f"portfolio template still contains fixed tier wording: {forbidden}")
 
 
 def check_rich_examples() -> None:
@@ -171,7 +172,7 @@ def check_rich_examples() -> None:
     for phrase in ("数据来源与比赛确认", "基础面分析", "数学模型", "基础 xG prior", "贝叶斯修正", "泊松比分集中", "比分排序"):
         if phrase not in single:
             fail(f"single-match example missing rich section: {phrase}")
-    for phrase in ("比赛大纲", "数据来源总览", "逐场分析", "数学模型", "稳健方向单", "基础比分覆盖", "增强比分覆盖", "搏冷/高赔率小单"):
+    for phrase in ("今天四场先看结论", "比赛大纲", "数据来源总览", "逐场分析", "比赛剧本", "数学模型", "稳健方向单", "基础比分覆盖", "增强比分覆盖", "补洞单", "搏冷/高赔率小单"):
         if phrase not in portfolio:
             fail(f"portfolio example missing rich section: {phrase}")
 

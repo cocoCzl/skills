@@ -73,7 +73,7 @@ Forbidden advice categories:
 
 Ticket-tier totals are allowed only when expressed as unit-count math, such as `8 注 x 2 元/注 = 16 元`. Do not turn this into bankroll allocation or pressure language.
 
-Rewrite direct commands into Reference Purchase Plan wording. For example, use “32 元档可作为基础比分覆盖参考” instead of “买这个”.
+Rewrite direct commands into Reference Purchase Plan wording. For example, use “基础比分覆盖可作为参考，结构是 2 x 2 x 2 x 2 = 16 注” instead of “买这个”.
 
 ## Missing Data
 

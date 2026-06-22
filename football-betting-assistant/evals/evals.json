@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "帮我分析明天早上四场世界杯比赛，给我一个四串一参考购买方案，重点看比分和大小球。",
-      "expected_output": "The assistant should perform Fixture Discovery first, convert the relative date into an exact date and timezone when possible, verify the four fixtures or ask for them if tools are unavailable, collect or request odds and team context, then output a 比赛大纲, 数据来源总览, 逐场分析, mathematical model notes with Bayesian adjustment and Poisson score concentration, and 2 元, 16 元, 32 元, and 48 元 ticket tiers with explicit unit counts, amount, and score coverage. It must not invent fixtures or odds from memory."
+      "expected_output": "The assistant should perform Fixture Discovery first, convert the relative date into an exact date and timezone when possible, verify the four fixtures or ask for them if tools are unavailable, collect or request odds and team context, then output 今天四场先看结论, 比赛大纲, 数据来源总览, readable 逐场分析, mathematical model notes with Bayesian adjustment and Poisson score concentration, 胜平负与大小球汇总, 比分覆盖建议, and four-match reference plans. It should choose coverage widths from the score probabilities rather than hard-coding 2/16/32/48 元 tiers, and must show explicit unit counts, amount, and score coverage. It must not invent fixtures or odds from memory."
     },
     {
       "id": 2,
@@ -19,7 +19,7 @@
     {
       "id": 4,
       "prompt": "这四场帮我做四串一：西班牙 vs 沙特、比利时 vs 伊朗、乌拉圭 vs 佛得角、新西兰 vs 埃及。比分也给多几个。",
-      "expected_output": "The assistant should confirm all four fixtures and data freshness, start with a 比赛大纲 / 今日赛程确认 section, name data sources and observation times, analyze each match with football context plus Bayesian/Poisson model notes, check Portfolio Correlation, then output 2 元, 16 元, 32 元, and 48 元 ticket tiers plus 稳健方向单, 基础比分覆盖, 增强比分覆盖, 搏冷/高赔率小单, and More Combination Candidates when useful. The report must separate unit count from amount, for example 16 units equals 32 元 at 2 元/unit. Any weak match should be marked C or Pass rather than forced into the core."
+      "expected_output": "The assistant should confirm all four fixtures and data freshness, start with 今天四场先看结论 and 比赛大纲 / 今日赛程确认, name data sources and observation times, analyze each match with readable football context plus Bayesian/Poisson model notes, check Portfolio Correlation, then output 稳健方向单, 基础比分覆盖, 增强比分覆盖, 补洞单, 搏冷/高赔率小单, and More Combination Candidates when useful. It must calculate units from the actual choices rather than hard-coding 2/16/32/48 元 tiers. The report must separate unit count from amount, for example 16 units equals 32 元 at 2 元/unit. Any weak match should be marked C or Pass rather than forced into the core."
     },
     {
       "id": 5,
@@ -39,7 +39,7 @@
     {
       "id": 9,
       "prompt": "这四场每场给两个比分，另外给我 2 元、16 元、32 元、48 元几个档位，多给几个候选组合。",
-      "expected_output": "The assistant should explain the unit-price assumption, avoid confusing 16 units with 16 元, build tiered reference purchase plans, include named variants such as 稳健方向单, 基础比分覆盖, 增强比分覆盖, and 搏冷/高赔率小单 when data supports them, and put extra candidates in a separate More Combination Candidates section rather than implying all combinations should be purchased."
+      "expected_output": "The assistant should honor the user's requested fixed money tiers only because the user asked for them, explain the unit-price assumption, avoid confusing 16 units with 16 元, build reference purchase plans with explicit unit math, include named variants such as 稳健方向单, 基础比分覆盖, 增强比分覆盖, 补洞单, and 搏冷/高赔率小单 when data supports them, and put extra candidates in a separate More Combination Candidates section rather than implying all combinations should be purchased."
     },
     {
       "id": 10,

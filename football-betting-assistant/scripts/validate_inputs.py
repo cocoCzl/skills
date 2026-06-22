@@ -110,12 +110,9 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
         unit_price = tier.get("unit_price")
         if unit_count and unit_price and total_amount and abs((unit_count * unit_price) - total_amount) > 0.01:
             errors.append(f"{path}.ticket_tiers[{i}]: total_amount must equal unit_count x unit_price")
-        if tier.get("stake_label") == "16 元档" and unit_count != 8:
-            warnings.append(f"{path}.ticket_tiers[{i}]: 16 元档 should normally be 8 units at 2 元/unit")
-        if tier.get("stake_label") == "32 元档" and unit_count != 16:
-            warnings.append(f"{path}.ticket_tiers[{i}]: 32 元档 should normally be 16 units at 2 元/unit")
-        if tier.get("stake_label") == "48 元档" and unit_count != 24:
-            warnings.append(f"{path}.ticket_tiers[{i}]: 48 元档 should normally be 24 units at 2 元/unit")
+        if tier.get("stake_label") in {"稳健方向单", "基础比分覆盖", "增强比分覆盖", "补洞单", "搏冷/高赔率小单"}:
+            if not unit_count:
+                warnings.append(f"{path}.ticket_tiers[{i}]: named portfolio variants should show unit_count")
         for leg_index, leg in enumerate(tier.get("legs", []), start=1):
             coverage = leg.get("score_coverage", [])
             if len(coverage) > 4:
