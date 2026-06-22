@@ -48,11 +48,11 @@ BANNED_REPORT_PHRASES = [
 ]
 
 README_REQUIRED_SECTIONS = [
-    "## Usage",
-    "## Example Prompts",
-    "## Input Template",
-    "## Output Shape",
-    "## Development Checks"
+    "## 使用方式",
+    "## 示例提问",
+    "## 输入模板",
+    "## 输出内容",
+    "## 开发检查"
 ]
 
 EVAL_KEYWORDS = {
