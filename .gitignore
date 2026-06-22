@@ -1,1 +1,12 @@
 .DS_Store
+
+# Local agent/runtime state
+.agent/
+.agents/
+.claude/
+.pi/
+skills-lock.json
+
+# IDE project state
+.idea/
+**/.idea/

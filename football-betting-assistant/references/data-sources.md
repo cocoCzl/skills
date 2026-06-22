@@ -50,6 +50,18 @@ When browsing, search, or webpage-reading tools are available, the assistant sho
 
 If public pages require login, bypassing restrictions, captcha solving, or unauthorized scraping, stop using that source and downgrade or ask the user for authorized data.
 
+## Public-Web-First Mode Without API Keys
+
+When no odds API key is configured but browsing or search tools are available, behave like a web-enabled assistant:
+
+1. Search for the exact fixture plus odds terms, such as `[home team] [away team] odds`, `[home team] vs [away team] handicap`, `[competition] odds`, or Chinese equivalents like `赔率`, `盘口`, `让球`, `大小球`.
+2. Prefer pages that visibly publish current odds or lines, such as odds aggregators, bookmaker public pages, official lottery pages, or reputable live-score/odds pages.
+3. Open candidate pages and extract only data that is visible without login, captcha bypassing, paid access, or restricted scraping.
+4. Record source names, accessed time, market, line, and prices. If a page is a prediction article rather than an odds table, label it as prediction/context, not Odds Data.
+5. Try up to two alternative public sources after the first failure or conflict, then apply the Retrieval Stop Rule.
+
+This mode should feel as helpful as a web ChatGPT search, but it must be more explicit about source quality. If public odds are found, include them and continue with Value Judgment at the appropriate confidence level. If only predictions or stale pages are found, use them as context and say that verifiable Odds Data is still missing.
+
 ## Credential Fallback
 
 If no provider credential exists:

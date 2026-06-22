@@ -53,7 +53,7 @@ Use scripts only when deterministic calculation or validation helps:
 - Default market priority: 胜平负 / 让球胜平负 > 大小球 / 总进球 > 比分.
 - Default risk preference: conservative unless the user says otherwise.
 - Correct score should be presented as a Score Candidate Set or Score Coverage, not a single certainty.
-- For odds and lines, prefer a configured The Odds API adapter via `THE_ODDS_API_KEY`; otherwise verify public/user-authorized web sources before asking the user for missing odds.
+- For odds and lines, prefer a configured The Odds API adapter via `THE_ODDS_API_KEY`; otherwise enter public-web-first mode and search/open public user-authorized pages before asking the user for missing odds.
 - For four-match score portfolios, keep unit count and amount separate. With the default 2 元/unit, `2 x 2 x 2 x 2 = 16` units means 32 元.
 
 ## If Tools Are Unavailable

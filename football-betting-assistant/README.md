@@ -41,12 +41,28 @@
 
 ## 推荐可选数据源
 
-下面是可以考虑配置的第三方数据源。它们不是这个 skill 的内置密钥；使用前需要你自己注册账号、获取 API key，并确认额度、覆盖赛事、使用条款和地区限制。
+下面是可以考虑配置的第三方数据源。它们不是这个 skill 的内置密钥；使用前需要你自己注册账号、获取 API key，并确认额度、覆盖赛事、使用条款和地区限制。不要把真实 API key 提交到仓库。
 
 - `The Odds API`：默认推荐的赔率源。官方首页显示 Starter 免费层为 `500 credits per month`，覆盖 soccer odds、head-to-head、spreads/handicap、totals/over-under 等市场。适合专门查多来源赔率和盘口。官方页面：https://the-odds-api.com/
-- `API-Football`：偏足球全量数据，适合补充赛程、首发伤停、球队数据和部分赔率。官方页面：https://www.api-football.com/pricing
+- `API-Football`：偏足球全量数据，适合补充赛程、首发伤停、球队数据和部分赔率。官方页面通常提供免费或试用层，实际额度以你的账号页面为准。官方页面：https://www.api-football.com/pricing
 
 免费额度和接口范围可能变化，实际可用能力以官方页面和你的账号权限为准。README 只说明推荐配置方向，不保证这些服务长期免费或覆盖你要分析的每场比赛。
+
+### 这两个网站分别干嘛
+
+`The Odds API` 是赔率聚合服务，重点是从多家 bookmaker 获取盘口和赔率。这个 skill 优先把它用于：
+
+- 胜平负 / match result：`h2h`
+- 让球 / handicap：`spreads`
+- 大小球 / over-under：`totals`
+
+`API-Football` 是足球数据服务，重点是赛程、球队、阵容、伤停、技术统计和部分赔率。这个 skill 更适合把它用于：
+
+- 确认赛程、开赛时间、主客/中立场。
+- 补充首发、伤停、球队近况和赛事背景。
+- 在账号权限支持时补充赔率或赛前盘口。
+
+如果只能先配置一个，优先配置 `The Odds API`，因为用户问“赔率/盘口/价值判断”时它更直接。之后再用 `API-Football` 补球队上下文。
 
 推荐配置方式：
 
@@ -55,7 +71,22 @@
 3. 不要把 API key 写进 `README.md`、`SKILL.md`、`references/`、示例文件或报告正文。
 4. 如果只是在聊天环境中使用，没有可调用 API，就把赔率、盘口、比赛时间、伤停和近期状态按“输入模板”提供给 agent。
 
-`.env` 风格示例：
+### API key 使用方式
+
+临时只在当前终端会话使用，可以 `export`：
+
+```bash
+export THE_ODDS_API_KEY="你的_the_odds_api_key"
+export API_FOOTBALL_KEY="你的_api_football_key"
+```
+
+只对一次命令生效，可以写在命令前面：
+
+```bash
+THE_ODDS_API_KEY="你的_the_odds_api_key" codex
+```
+
+如果你的 agent 启动器会读取 `.env`，可以使用 `.env` 风格配置。不要把包含真实 key 的 `.env` 提交到 git：
 
 ```bash
 API_FOOTBALL_KEY=your_api_football_key
@@ -63,11 +94,37 @@ THE_ODDS_API_KEY=your_the_odds_api_key
 WEATHER_API_KEY=your_weather_api_key
 ```
 
+### API 调用例子
+
+下面是手动测试 The Odds API 是否可用的例子。先获取足球赛事列表：
+
+```bash
+curl "https://api.the-odds-api.com/v4/sports?apiKey=$THE_ODDS_API_KEY"
+```
+
+再选择返回结果里的 `sport_key` 查询赔率。下面例子用 `soccer_epl`，实际比赛要换成你要分析的赛事 key：
+
+```bash
+curl "https://api.the-odds-api.com/v4/sports/soccer_epl/odds?apiKey=$THE_ODDS_API_KEY&regions=eu,uk&markets=h2h,spreads,totals&oddsFormat=decimal"
+```
+
+API-Football 的请求通常使用 `x-apisports-key` 请求头。下面例子用于检查账号是否能访问指定日期的赛程；实际可用 endpoint、参数和额度以官方文档与账号权限为准：
+
+```bash
+curl --request GET \
+  --url "https://v3.football.api-sports.io/fixtures?date=2026-06-23" \
+  --header "x-apisports-key: $API_FOOTBALL_KEY"
+```
+
+如果这些命令能返回 JSON，说明你的 key 和网络基本可用。之后在同一个终端里启动 agent，它就能读取对应环境变量；如果 agent 当前没有 HTTP/API 调用能力，仍会回退到公开网页核验或让用户补充数据。
+
 这个仓库当前提供的是 skill 规则、参考文档、schema、示例和计算脚本；没有内置任何密钥。运行环境如果暴露 The Odds API 或其他数据商适配器，agent 应优先调用；没有适配器时走公开网页核验和用户补充路径。
 
 ## 未配置 API 时的默认行为
 
-未配置足球数据服务或博彩公司 API 时，默认不会调用某个“免费博彩公司 API”。原因是这个 skill 没有内置任何密钥，也不会假设某个接口在所有环境里可用、合规、稳定或免授权。大模型可以搜索公开网页，但这不等于稳定的结构化赔率 API；网页可能需要登录、验证码、地区访问或被 Cloudflare 等防护拦截。
+未配置足球数据服务或博彩公司 API 时，默认不会调用某个“免费博彩公司 API”。原因是这个 skill 没有内置任何密钥，也不会假设某个接口在所有环境里可用、合规、稳定或免授权。
+
+但这不代表直接放弃赔率。只要 agent 有搜索、浏览器或网页读取能力，就应进入 `public-web-first` 模式，尽量表现得像网页版联网 ChatGPT：先主动搜索和打开公开网页，找可见的赔率表、盘口、让球和大小球信息；找不到或无法确认时，再说明缺口。
 
 默认行为是：
 
@@ -85,6 +142,23 @@ WEATHER_API_KEY=your_weather_api_key
 - 不自动调用未知免费 API。
 - 不把公开网页上看到的接口当成已授权接口。
 - 不绕过登录、验证码、地区限制、频率限制或付费墙。
+
+### 公开网页搜索策略
+
+无 API key 但有联网工具时，agent 应主动尝试这些搜索：
+
+```text
+[主队] [客队] odds
+[主队] vs [客队] handicap
+[赛事名] odds [比赛日期]
+[主队] [客队] 赔率
+[主队] [客队] 盘口
+[主队] [客队] 让球 大小球
+```
+
+优先使用公开可见的赔率聚合页、博彩公司公开页、官方彩票页或带赔率表的比分网站。预测文章、赛前分析文章、媒体比分推荐只能作为背景信息，不能当成真实即时赔率。
+
+如果查到了公开赔率，报告要展示赔率/盘口摘要；如果只查到预测文章，就要写明“这是预测来源，不是盘口来源”。
 
 ## 公开网页核验由谁处理
 
