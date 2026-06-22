@@ -13,6 +13,9 @@ __pycache__/
 .pi/
 skills-lock.json
 
+# Generated outputs
+reports/
+
 # IDE project state
 .idea/
 **/.idea/
