@@ -20,6 +20,13 @@ Use:
 - Weather and pitch.
 - Odds movement as market information.
 
+Every analyzable pre-match report should show:
+
+- prior xG before contextual adjustment.
+- meaningful Bayesian adjustments.
+- final xG used for the Poisson calculation.
+- whether values were calculated with the bundled script, calculated manually, or approximated because tools/data were unavailable.
+
 ## Bayesian Updating
 
 Start from a prior expectation, then update with evidence.
@@ -32,6 +39,13 @@ Examples:
 - Strong under market movement confirmed by lineup news: reduce total-goal expectation.
 
 If evidence is qualitative, state that the adjustment is qualitative. Do not pretend it is a trained model.
+
+Use Bayesian updating as a disciplined adjustment layer, not as vague wording. State the prior, the evidence, the direction of the update, and the final effect in compact form. Examples:
+
+- `prior 1.80-0.75 -> final 1.70-0.70`: strong favorite, but knockout caution and slow tempo lower total goals.
+- `prior 1.35-1.10 -> final 1.25-1.20`: home striker uncertainty lowers home attack; opponent transition threat raises away scoring tail.
+
+If there is no credible evidence for a correction, say "无强修正，沿用基础 xG" rather than inventing an adjustment.
 
 ## Poisson Distribution
 
@@ -57,6 +71,14 @@ Aggregate the score matrix:
 - Push: when total goals equals an integer line.
 
 Use `scripts/poisson_calculator.py` when available. Without tools, give ranges and label them approximate.
+
+For each match, report a compact Poisson record:
+
+- Final xG.
+- Win/draw/loss probabilities.
+- Over/under or total-goals probabilities when a line is available.
+- Top three to six score candidates, depending on whether the report is single-match or portfolio coverage.
+- Tail risk, such as early goal, red card, rotation, or high-score tail, when it conflicts with the main score set.
 
 ## Implied Probability
 
@@ -86,6 +108,12 @@ edge = model probability - no-vig market probability
 ```
 
 Treat small edges cautiously. If the data confidence is low or single-source, downgrade.
+
+Use this wording discipline:
+
+- "概率倾向" can be stated from the model.
+- "赔率价值" requires verifiable odds or line data.
+- "高赔率小单" requires an explainable low-probability scenario and must be labelled high variance.
 
 ## Worked Example
 

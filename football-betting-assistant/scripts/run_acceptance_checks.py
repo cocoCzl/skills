@@ -70,7 +70,12 @@ README_REQUIRED_PHRASES = [
     "16 元档",
     "32 元档",
     "48 元档",
-    "更多组合候选"
+    "更多组合候选",
+    "比赛大纲",
+    "贝叶斯修正",
+    "泊松",
+    "稳健方向单",
+    "搏冷/高赔率小单"
 ]
 
 EVAL_KEYWORDS = {
@@ -137,9 +142,38 @@ def check_readme_usage() -> None:
 
 def check_portfolio_template() -> None:
     text = (ROOT / "references" / "report-templates.md").read_text(encoding="utf-8")
-    for phrase in ("赔率/盘口摘要", "分档参考购买方案", "2 元档", "16 元档", "32 元档", "48 元档", "更多组合候选"):
+    for phrase in (
+        "比赛大纲",
+        "数据来源总览",
+        "逐场分析",
+        "数学模型",
+        "贝叶斯修正",
+        "泊松比分",
+        "赔率/盘口摘要",
+        "分档参考购买方案",
+        "2 元档",
+        "16 元档",
+        "32 元档",
+        "48 元档",
+        "稳健方向单",
+        "基础比分覆盖",
+        "增强比分覆盖",
+        "搏冷/高赔率小单",
+        "更多组合候选"
+    ):
         if phrase not in text:
             fail(f"portfolio template missing: {phrase}")
+
+
+def check_rich_examples() -> None:
+    single = (ROOT / "examples" / "single-match-report.md").read_text(encoding="utf-8")
+    portfolio = (ROOT / "examples" / "portfolio-report.md").read_text(encoding="utf-8")
+    for phrase in ("数据来源与比赛确认", "基础面分析", "数学模型", "基础 xG prior", "贝叶斯修正", "泊松比分集中", "比分排序"):
+        if phrase not in single:
+            fail(f"single-match example missing rich section: {phrase}")
+    for phrase in ("比赛大纲", "数据来源总览", "逐场分析", "数学模型", "稳健方向单", "基础比分覆盖", "增强比分覆盖", "搏冷/高赔率小单"):
+        if phrase not in portfolio:
+            fail(f"portfolio example missing rich section: {phrase}")
 
 
 def check_evals() -> None:
@@ -157,6 +191,7 @@ def main() -> int:
     check_report_language()
     check_readme_usage()
     check_portfolio_template()
+    check_rich_examples()
     check_evals()
     print("football-betting-assistant acceptance checks passed")
     return 0

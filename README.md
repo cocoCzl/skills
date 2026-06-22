@@ -1,0 +1,67 @@
+# Skills
+
+这是一个面向 Codex / agent 工作流的开源 skill 合集仓库。每个顶层子目录都是一个可独立安装、阅读、测试和贡献的 skill。
+
+当前包含：
+
+| Skill | 用途 | 入口 |
+|---|---|---|
+| `football-betting-assistant` | 中文足球竞彩、赛前分析、胜平负、让球、比分、大小球、串关和赛后复盘辅助 | [`football-betting-assistant/SKILL.md`](football-betting-assistant/SKILL.md) |
+
+## 安装使用
+
+把需要的 skill 目录复制或链接到你的 agent skills 目录中。例如：
+
+```bash
+cp -R football-betting-assistant ~/.codex/skills/
+```
+
+不同 agent 的 skills 目录可能不同；以你使用的 agent 文档为准。仓库里的顶层 skill 目录才是开源源码，`.agent/`、`.agents/`、`.claude/`、`.pi/` 等目录是本地运行态或安装态目录，不应该提交。
+
+## 仓库结构
+
+推荐每个 skill 使用类似结构：
+
+```text
+skill-name/
+  SKILL.md
+  README.md
+  references/
+  examples/
+  schemas/
+  scripts/
+  tests/
+  evals/
+```
+
+其中 `SKILL.md` 是 agent 触发和执行 skill 的主入口；`README.md` 面向人类使用者；`references/`、`examples/`、`schemas/`、`scripts/`、`tests/` 和 `evals/` 按需提供。
+
+## 开发检查
+
+检查所有当前 skill：
+
+```bash
+python3 scripts/check_all_skills.py
+```
+
+检查单个 skill：
+
+```bash
+python3 football-betting-assistant/scripts/run_acceptance_checks.py
+```
+
+## 贡献
+
+欢迎添加新 skill 或改进已有 skill。提交前请确认：
+
+- 不提交真实 API key、token、密码或私有数据。
+- 不提交本地安装态目录，例如 `.agent/`、`.agents/`、`.claude/`、`.pi/`。
+- 不提交 IDE、系统缓存或临时文件。
+- 每个 skill 至少包含 `SKILL.md` 和面向使用者的 `README.md`。
+- 有脚本、schema 或示例输入时，提供可运行的检查命令。
+
+详细约定见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
+
+## 许可
+
+本仓库使用 [MIT License](LICENSE)。

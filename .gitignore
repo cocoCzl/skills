@@ -1,4 +1,10 @@
 .DS_Store
+*.pyc
+__pycache__/
+.pytest_cache/
+.env
+.env.*
+!.env.example
 
 # Local agent/runtime state
 .agent/
