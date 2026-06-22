@@ -19,7 +19,14 @@ Default report language is Chinese Betting Vocabulary. Keep math visible but con
 | 战意/赛制 | [出线、轮换、淘汰赛背景] | [来源] | 高/中/低 |
 | 数据缺口 | [缺失或冲突项] | [来源] | 高/中/低 |
 
-### 2. 结论摘要
+### 2. 赔率/盘口表
+| 市场 | 盘口 | 赔率/范围 | 来源 | 观察时间 | 置信度 |
+|---|---|---|---|---|---|
+| 胜平负 | - | 主胜/平/客胜 | [bookmaker/aggregator] | [time] | 高/中/低 |
+| 让球 | [line] | 主/客或让胜/让平/让负 | [bookmaker/aggregator] | [time] | 高/中/低 |
+| 大小球 | [line] | 大/小 | [bookmaker/aggregator] | [time] | 高/中/低 |
+
+### 3. 结论摘要
 - 胜平负倾向：
 - 让球胜平负倾向：
 - 大小球/总进球倾向：
@@ -27,7 +34,7 @@ Default report language is Chinese Betting Vocabulary. Keep math visible but con
 - 模型置信度：高/中/低
 - 数据置信度：高/中/低
 
-### 3. 概率判断
+### 4. 概率判断
 | 市场 | 概率/区间 | 说明 |
 |---|---:|---|
 | 主胜 |  |  |
@@ -36,24 +43,24 @@ Default report language is Chinese Betting Vocabulary. Keep math visible but con
 | 大球 |  | 盘口： |
 | 小球 |  | 盘口： |
 
-### 4. 模型依据
+### 5. 模型依据
 - 预期进球：
 - 泊松比分集中：
 - 贝叶斯修正：
 - 赔率价值：
 
-### 5. 三个比分候选
+### 6. 三个比分候选
 - 主推比分：
 - 次选比分：
 - 冷门/风险比分：
 
-### 6. 参考购买方案
+### 7. 参考购买方案
 - 胜平负/让球：
 - 大小球/总进球：
 - 比分覆盖：
 - 不建议项：
 
-### 7. 风险点
+### 8. 风险点
 - 
 ```
 
@@ -63,38 +70,33 @@ Default report language is Chinese Betting Vocabulary. Keep math visible but con
 ## 四串一参考方案
 
 ### 1. 比赛确认
-| 编号 | 比赛 | 时间 | 赛事 | 主客/中立 | 数据置信度 |
+| 编号 | 比赛 | 时间 | 赛事 | 主客/中立 | 数据置信度 | 赔率/盘口来源 |
+|---|---|---|---|---|---|---|
+
+### 2. 赔率/盘口摘要
+| 比赛 | 胜平负 | 让球 | 大小球 | 来源/时间 | 置信度 |
 |---|---|---|---|---|---|
 
-### 2. 每场简版结论
+### 3. 每场简版结论
 | 比赛 | 主要倾向 | 比分覆盖 | 等级 | 核心风险 |
 |---|---|---|---|---|
 
-### 3. 组合相关性检查
+### 4. 组合相关性检查
 - 独立性/相关性：
 - 共同风险：
 - 不建议强行纳入的场次：
 
-### 4. 主组合
-- 玩法：
-- 每场选择：
-- 比分覆盖：
-- 风险档位：
-- 价值判断：
+### 5. 分档参考购买方案
+| 档位 | 注数组合 | 合计 | 每场选择 | 适用场景 | 风险 |
+|---|---:|---:|---|---|---|
+| 2 元档 | 1 注 | 2 元 | 每场 1 个方向 | 最低覆盖 |  |
+| 16 元档 | 8 注 | 16 元 | 1 x 2 x 2 x 2 | 小额比分覆盖 |  |
+| 32 元档 | 16 注 | 32 元 | 2 x 2 x 2 x 2 | 基础比分覆盖 |  |
+| 48 元档 | 24 注 | 48 元 | 3 x 2 x 2 x 2 | 增强比分覆盖 |  |
 
-### 5. 保守替代
-- 玩法：
-- 每场选择：
-- 比分覆盖：
-- 风险档位：
-- 适用场景：
-
-### 6. 激进替代
-- 玩法：
-- 每场选择：
-- 比分覆盖：
-- 风险档位：
-- 主要风险：
+### 6. 更多组合候选
+| 组合 | 注数/金额 | 每场选择 | 使用条件 | 风险 |
+|---|---:|---|---|---|
 
 ### 7. Pass / 排除项
 - 
@@ -103,8 +105,10 @@ Default report language is Chinese Betting Vocabulary. Keep math visible but con
 Portfolio rules:
 
 - Support up to four matches.
-- Provide main, conservative, and aggressive Portfolio Variants when enough data exists.
-- Score Coverage may include up to three scores per match.
+- Provide 2 元, 16 元, 32 元, and 48 元 Ticket Tiers when enough data exists.
+- Keep amount and unit count explicit. With the default 2 元/unit, 16 units equals 32 元, not 16 元.
+- More Combination Candidates are optional alternatives, not extra mandatory purchases.
+- Score Coverage may include up to four scores per match only when needed to produce the declared unit count.
 - Exclude matches that are Pass or have severe data gaps.
 
 ## Post-Match Review
@@ -123,4 +127,4 @@ Portfolio rules:
 ### 5. 下次调整
 ```
 
-Do not include chase-loss, recovery-bet, or stake-size advice.
+Do not include chase-loss, recovery-bet, bankroll allocation, Kelly sizing, or personalized stake-size advice. Ticket-tier amounts are allowed only as unit-count totals requested by the user.

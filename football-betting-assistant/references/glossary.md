@@ -32,15 +32,17 @@ Use these terms consistently in reports, examples, schemas, and scripts.
 
 **Reference Grade**: A non-guaranteed confidence and value label: A, B, C, or Pass.
 
-**Risk Tier**: Qualitative suitability for cautious, moderate, or speculative use. It is not a stake size.
+**Risk Tier**: Qualitative suitability for cautious, moderate, or speculative use. It is not bankroll allocation advice.
 
-**Portfolio Variant**: A main, conservative, or aggressive reference combination.
+**Ticket Tier**: A reference purchase plan stated as unit count, unit price, total amount, structure, and selections. It is a formatting and coverage tool, not personalized stake sizing.
+
+**More Combination Candidates**: Optional alternative combinations separated from the main ticket tiers. They are not mandatory additional purchases.
 
 **Late Calibration**: Adjusting analysis with late-breaking context such as lineups, injuries, weather, schedule congestion, or odds movement.
 
 **Score Candidate Set**: A fixed set of three correct-score candidates for one match: primary, secondary, and upset-aware.
 
-**Score Coverage**: Portfolio-facing score suggestions with up to three correct-score candidates per match.
+**Score Coverage**: Portfolio-facing score suggestions. Keep it compact by default, and expand up to four scores only when needed for a declared ticket-tier unit count.
 
 **Market Consistency**: Result, score, total-goals, and over-under leans should tell a coherent match story. Any conflict must be recalibrated or explained.
 

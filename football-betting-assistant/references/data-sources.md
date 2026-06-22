@@ -5,7 +5,7 @@ The assistant should actively verify current information when tools are availabl
 ## Source Priority
 
 1. User-provided source, screenshot, table, link, or structured data.
-2. Configured football data provider or API result.
+2. Configured football data provider or API result. For odds and lines, prefer The Odds API when `THE_ODDS_API_KEY` is configured.
 3. Public web search or browser verification.
 4. User clarification for missing data.
 
@@ -17,7 +17,7 @@ Never write credentials into reports, examples, references, or scripts. Refer to
 
 ## Provider Configuration
 
-This skill does not bind to a specific vendor and does not include a built-in data-provider client. A "configured football data provider or API result" means the current agent environment already exposes a user-authorized data capability, such as:
+This skill does not include credentials, but it may use a configured provider adapter when the current agent environment exposes one. A "configured football data provider or API result" means the current agent environment already exposes a user-authorized data capability, such as:
 
 - MCP or tool calls for fixtures, odds, lineups, injuries, team stats, or weather.
 - A local or internal HTTP service that the agent can call.
@@ -26,9 +26,21 @@ This skill does not bind to a specific vendor and does not include a built-in da
 
 Do not assume these providers exist. If no callable provider is available, use public/user-authorized sources when tools allow it, then fall back to asking the user for the minimum missing data.
 
-## Optional Provider Examples
+## Recommended Odds Provider
 
-Optional provider examples include API-Football for football fixtures, lineups, injuries, team stats, and odds, and The Odds API for multi-bookmaker odds aggregation. These are examples only. The user must register, obtain credentials, and configure a callable tool or adapter before the assistant can use them.
+For odds and lines, the default recommended provider is **The Odds API** because it is designed for multi-bookmaker odds aggregation. The public official site shows a Starter free tier with 500 credits per month and support for soccer, head-to-head odds, spreads/handicap, and totals/over-under markets. Use `THE_ODDS_API_KEY` only when the user or environment has configured it.
+
+When The Odds API is available, request these markets first:
+
+- `h2h` for 胜平负 / match result.
+- `spreads` for handicap / 让球 lines.
+- `totals` for 大小球 / over-under lines.
+
+Normalize provider output into the skill's Odds Data fields, including source, bookmaker, observed time, line, decimal odds, and confidence. If multiple bookmakers are returned, summarize the consensus range and highlight outliers instead of copying every price.
+
+## Optional Context Providers
+
+API-Football can be useful for fixtures, lineups, injuries, team stats, and some odds. Treat it as a complementary context provider unless the user specifically configures it as the primary odds source.
 
 Discovering an API through web search does not make it a configured provider. Do not auto-register accounts, request keys on the user's behalf, guess keys, call unknown free APIs, or treat unauthenticated endpoints as authorized data sources.
 
@@ -65,6 +77,19 @@ For odds value judgment, prefer more than one odds source. If only one source is
 - Downgrade Value Judgment.
 
 Do not treat one bookmaker as market consensus.
+
+## Odds And Line Display
+
+When odds or lines are found, include a compact odds table in the report. Show:
+
+- Market: 胜平负, 让球/handicap, 大小球/totals, or 比分 if available.
+- Source/bookmaker or aggregator.
+- Observed time and timezone.
+- Line, where applicable.
+- Decimal prices or price range.
+- Confidence and whether the source is single-source or multi-source.
+
+If odds collection fails, state the failure category: no configured provider, public page blocked, login/captcha required, market unavailable, source conflict, or stale data.
 
 ## Source Conflict Handling
 

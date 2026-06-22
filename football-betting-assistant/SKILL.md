@@ -1,6 +1,6 @@
 ---
 name: football-betting-assistant
-description: Use this skill whenever the user asks for football betting, football lottery, 竞彩, 赛前分析, 胜平负, 让球胜平负, 比分推荐, 大小球, 总进球, 赔率价值, 盘口分析, 串关, 四串一, or 赛后复盘. This is an agent-first football betting assistant: actively verify fixtures, odds, lines, team form, injuries, lineups, weather, and competition context when tools are available; then produce Chinese user-readable probability analysis, score coverage, and reference purchase plans without certainty language.
+description: "Use this skill whenever the user asks for football betting, football lottery, 竞彩, 赛前分析, 胜平负, 让球胜平负, 比分推荐, 大小球, 总进球, 赔率价值, 盘口分析, 串关, 四串一, or 赛后复盘. This is an agent-first football betting assistant: actively verify fixtures, odds, lines, team form, injuries, lineups, weather, and competition context when tools are available; then produce Chinese user-readable probability analysis, score coverage, and reference purchase plans without certainty language."
 ---
 
 # Football Betting Assistant
@@ -12,7 +12,7 @@ description: Use this skill whenever the user asks for football betting, footbal
 - Treat every output as a **Decision Aid**, not a guaranteed pick.
 - Use “参考购买方案”“倾向”“可考虑”“不建议纳入组合”“价值不足”.
 - Do not use certainty or pressure language such as “必中”“稳赢”“包中”“必买”“重仓”“稳胆”“这单稳了”.
-- Do not prescribe stake sizes, bankroll allocation, or Kelly bet sizes.
+- Do not prescribe bankroll allocation, Kelly bet sizes, chase-loss amounts, or personalized stake sizing. When the user asks for ticket tiers, amounts are allowed only as unit-count totals such as 8 units x 2 元/unit = 16 元.
 - Do not produce chase-loss or “下一场翻本” advice.
 - Do not use model memory for current fixtures, live odds, lineups, injuries, weather, or market movement.
 - Use only Authorized Public Sources or user-authorized data. Do not depend on bookmaker login scraping or bypassing access restrictions.
@@ -43,7 +43,7 @@ Use scripts only when deterministic calculation or validation helps:
 5. Estimate expected goals, apply Bayesian adjustments, and use the Poisson model. Use calculators when available; otherwise label approximations.
 6. Compare model probabilities with implied probabilities only when verifiable Odds Data exists.
 7. Apply downgrade and stop rules.
-8. Produce the fixed report template. Separate Probability Analysis from Value Judgment.
+8. Produce the fixed report template. Separate Probability Analysis from Value Judgment. For four-match portfolios, include 2 元, 16 元, 32 元, and 48 元 ticket tiers when enough data exists.
 9. Run a final consistency and language check before answering.
 
 ## Default Scope
@@ -53,6 +53,8 @@ Use scripts only when deterministic calculation or validation helps:
 - Default market priority: 胜平负 / 让球胜平负 > 大小球 / 总进球 > 比分.
 - Default risk preference: conservative unless the user says otherwise.
 - Correct score should be presented as a Score Candidate Set or Score Coverage, not a single certainty.
+- For odds and lines, prefer a configured The Odds API adapter via `THE_ODDS_API_KEY`; otherwise verify public/user-authorized web sources before asking the user for missing odds.
+- For four-match score portfolios, keep unit count and amount separate. With the default 2 元/unit, `2 x 2 x 2 x 2 = 16` units means 32 元.
 
 ## If Tools Are Unavailable
 

@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "帮我分析明天早上四场世界杯比赛，给我一个四串一参考购买方案，重点看比分和大小球。",
-      "expected_output": "The assistant should perform Fixture Discovery first, convert the relative date into an exact date and timezone when possible, verify the four fixtures or ask for them if tools are unavailable, collect or request odds and team context, then output main, conservative, and aggressive Portfolio Variants with Score Coverage of no more than three scores per match. It must not invent fixtures or odds from memory."
+      "expected_output": "The assistant should perform Fixture Discovery first, convert the relative date into an exact date and timezone when possible, verify the four fixtures or ask for them if tools are unavailable, collect or request odds and team context, then output 2 元, 16 元, 32 元, and 48 元 ticket tiers with explicit unit counts, amount, and score coverage. It must not invent fixtures or odds from memory."
     },
     {
       "id": 2,
@@ -19,7 +19,7 @@
     {
       "id": 4,
       "prompt": "这四场帮我做四串一：西班牙 vs 沙特、比利时 vs 伊朗、乌拉圭 vs 佛得角、新西兰 vs 埃及。比分也给多几个。",
-      "expected_output": "The assistant should confirm all four fixtures and data freshness, analyze each match compactly, check Portfolio Correlation, then output main, conservative, and aggressive Portfolio Variants. Each match's Score Coverage must contain at most three scores. Any weak match should be marked C or Pass rather than forced into the core."
+      "expected_output": "The assistant should confirm all four fixtures and data freshness, analyze each match compactly, check Portfolio Correlation, then output 2 元, 16 元, 32 元, and 48 元 ticket tiers plus More Combination Candidates when useful. The report must separate unit count from amount, for example 16 units equals 32 元 at 2 元/unit. Any weak match should be marked C or Pass rather than forced into the core."
     },
     {
       "id": 5,
@@ -35,6 +35,16 @@
       "id": 7,
       "prompt": "比分候选是1:0、1:1、2:0，但我想买大2.5，你帮我看看。",
       "expected_output": "The assistant should run a Market Consistency check, explain that the score candidates imply a low-total match story, and either recalibrate or state that over 2.5 would need odds-value justification rather than base scoring support."
+    },
+    {
+      "id": 9,
+      "prompt": "这四场每场给两个比分，另外给我 2 元、16 元、32 元、48 元几个档位，多给几个候选组合。",
+      "expected_output": "The assistant should explain the unit-price assumption, avoid confusing 16 units with 16 元, build tiered reference purchase plans, and put extra candidates in a separate More Combination Candidates section rather than implying all combinations should be purchased."
+    },
+    {
+      "id": 10,
+      "prompt": "你能不能直接查博彩公司免费 API 的赔率？我只查一次，额度应该够。",
+      "expected_output": "The assistant should explain that configured authorized providers such as The Odds API via THE_ODDS_API_KEY are preferred, public web lookup can be attempted when browsing tools exist, but it must not auto-register, guess keys, call unknown free APIs, bypass access controls, or claim live odds without verification."
     },
     {
       "id": 8,

@@ -19,7 +19,7 @@ SCHEMA_REQUIRED: dict[str, list[str]] = {
     "odds": ["market", "bookmaker_or_source", "observed_at", "confidence"],
     "team_context": ["team", "last_5_summary", "last_10_summary", "lineup_status", "source", "observed_at"],
     "match_analysis": ["fixture", "home_xg", "away_xg", "bayesian_adjustments", "result_probabilities", "score_candidates", "model_confidence", "data_confidence", "reference_grade", "risk_points"],
-    "portfolio": ["matches", "correlation_notes", "main_variant", "conservative_variant", "aggressive_variant", "excluded_matches", "portfolio_risk_tier"]
+    "portfolio": ["matches", "correlation_notes", "ticket_tiers", "more_combination_candidates", "excluded_matches", "portfolio_risk_tier"]
 }
 
 CONFIDENCE = {"high", "medium", "low"}
@@ -104,12 +104,32 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
     matches = record.get("matches", [])
     if not (1 <= len(matches) <= 4):
         errors.append(f"{path}: portfolio must contain one to four matches")
-    for variant_name in ("main_variant", "conservative_variant", "aggressive_variant"):
-        variant = record.get(variant_name) or {}
-        for i, leg in enumerate(variant.get("legs", []), start=1):
+    for i, tier in enumerate(record.get("ticket_tiers", []), start=1):
+        unit_count = tier.get("unit_count")
+        total_amount = tier.get("total_amount")
+        unit_price = tier.get("unit_price")
+        if unit_count and unit_price and total_amount and abs((unit_count * unit_price) - total_amount) > 0.01:
+            errors.append(f"{path}.ticket_tiers[{i}]: total_amount must equal unit_count x unit_price")
+        if tier.get("stake_label") == "16 元档" and unit_count != 8:
+            warnings.append(f"{path}.ticket_tiers[{i}]: 16 元档 should normally be 8 units at 2 元/unit")
+        if tier.get("stake_label") == "32 元档" and unit_count != 16:
+            warnings.append(f"{path}.ticket_tiers[{i}]: 32 元档 should normally be 16 units at 2 元/unit")
+        if tier.get("stake_label") == "48 元档" and unit_count != 24:
+            warnings.append(f"{path}.ticket_tiers[{i}]: 48 元档 should normally be 24 units at 2 元/unit")
+        for leg_index, leg in enumerate(tier.get("legs", []), start=1):
             coverage = leg.get("score_coverage", [])
-            if len(coverage) > 3:
-                errors.append(f"{path}.{variant_name}.legs[{i}]: score_coverage must have at most three scores")
+            if len(coverage) > 4:
+                errors.append(f"{path}.ticket_tiers[{i}].legs[{leg_index}]: score_coverage must have at most four scores")
+    for variant_name in ("more_combination_candidates",):
+        variants = record.get(variant_name) or []
+        for variant_index, variant in enumerate(variants, start=1):
+            if variant.get("unit_count") and variant.get("unit_price") and variant.get("total_amount"):
+                if abs((variant["unit_count"] * variant["unit_price"]) - variant["total_amount"]) > 0.01:
+                    errors.append(f"{path}.{variant_name}[{variant_index}]: total_amount must equal unit_count x unit_price")
+            for i, leg in enumerate(variant.get("legs", []), start=1):
+                coverage = leg.get("score_coverage", [])
+                if len(coverage) > 4:
+                    errors.append(f"{path}.{variant_name}[{variant_index}].legs[{i}]: score_coverage must have at most four scores")
     if record.get("portfolio_risk_tier") == "high":
         warnings.append(f"{path}: high portfolio risk tier; ensure aggressive framing is explicit")
     return errors, warnings

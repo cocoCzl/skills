@@ -39,11 +39,23 @@ If the user asks for more than four matches in a portfolio, analyze the fixture 
 2. Run the Single-Match Analysis flow in compact form for each match.
 3. Check Portfolio Correlation: competition stage, same group/table incentives, rotation, weather clusters, and shared market assumptions.
 4. Exclude Pass matches or matches with severe Information Sufficiency gaps.
-5. Build main, conservative, and aggressive Portfolio Variants.
-6. Provide Score Coverage with up to three scores per match.
-7. Produce the Portfolio Report template.
+5. Build ticket tiers: 2 元, 16 元, 32 元, and 48 元 when four matches are available and score coverage is requested or implied.
+6. Provide More Combination Candidates when there are extra plausible directions, but keep them separate from the four ticket tiers.
+7. Provide Score Coverage with up to four scores per match only when calculating a higher ticket tier; otherwise keep compact coverage to no more than three scores per match.
+8. Produce the Portfolio Report template.
 
-Do not output a single "only correct" portfolio. If enough data exists, always offer main, conservative, and aggressive variants.
+Do not output a single "only correct" portfolio. If enough data exists, always offer tiered reference purchase plans plus optional alternative combinations.
+
+## Ticket Tier Construction
+
+Use these default tiers for four-match portfolios:
+
+- 2 元档: 1 selection per match, usually 胜平负/让球/大小球 direction rather than exact score.
+- 16 元档: 8 units at 2 元/unit, usually `1 x 2 x 2 x 2 = 8` units.
+- 32 元档: 16 units at 2 元/unit, usually `2 x 2 x 2 x 2 = 16` units.
+- 48 元档: 24 units at 2 元/unit, usually `3 x 2 x 2 x 2 = 24` units or another explicitly shown 24-unit structure.
+
+Use 2 元 per unit by default only for explaining total amount, not for bankroll advice. If the user's local lottery unit price differs, state the assumed unit price and let the user adjust.
 
 ## Post-Match Review Flow
 
@@ -62,4 +74,4 @@ Before answering:
 - Check Market Consistency.
 - Check source timestamps and data gaps.
 - Apply Reference Grade and confidence rules.
-- Remove certainty, pressure, stake-size, and chase-loss language.
+- Remove certainty, pressure, bankroll-allocation, personalized stake-size, and chase-loss language.

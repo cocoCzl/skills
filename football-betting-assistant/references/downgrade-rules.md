@@ -65,13 +65,15 @@ Forbidden certainty and pressure language:
 
 Forbidden advice categories:
 
-- Stake size.
+- Personalized stake size.
 - Bankroll allocation.
 - Kelly bet size.
 - Recovery betting.
 - Chasing losses.
 
-Rewrite direct commands into Reference Purchase Plan wording. For example, use “主组合可作为参考购买方案” instead of “买这个”.
+Ticket-tier totals are allowed only when expressed as unit-count math, such as `8 注 x 2 元/注 = 16 元`. Do not turn this into bankroll allocation or pressure language.
+
+Rewrite direct commands into Reference Purchase Plan wording. For example, use “32 元档可作为基础比分覆盖参考” instead of “买这个”.
 
 ## Missing Data
 

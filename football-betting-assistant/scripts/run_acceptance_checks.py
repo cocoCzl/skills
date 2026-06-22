@@ -63,6 +63,16 @@ README_REQUIRED_SECTIONS = [
     "## 开发检查"
 ]
 
+README_REQUIRED_PHRASES = [
+    "THE_ODDS_API_KEY",
+    "The Odds API",
+    "2 元档",
+    "16 元档",
+    "32 元档",
+    "48 元档",
+    "更多组合候选"
+]
+
 EVAL_KEYWORDS = {
     "fixture_discovery": ["明天早上四场世界杯", "Fixture Discovery"],
     "fallback": ["不能联网", "offline fallback"],
@@ -120,6 +130,16 @@ def check_readme_usage() -> None:
     for section in README_REQUIRED_SECTIONS:
         if section not in text:
             fail(f"README usage section missing: {section}")
+    for phrase in README_REQUIRED_PHRASES:
+        if phrase not in text:
+            fail(f"README required phrase missing: {phrase}")
+
+
+def check_portfolio_template() -> None:
+    text = (ROOT / "references" / "report-templates.md").read_text(encoding="utf-8")
+    for phrase in ("赔率/盘口摘要", "分档参考购买方案", "2 元档", "16 元档", "32 元档", "48 元档", "更多组合候选"):
+        if phrase not in text:
+            fail(f"portfolio template missing: {phrase}")
 
 
 def check_evals() -> None:
@@ -136,6 +156,7 @@ def main() -> int:
     check_validation_examples()
     check_report_language()
     check_readme_usage()
+    check_portfolio_template()
     check_evals()
     print("football-betting-assistant acceptance checks passed")
     return 0
