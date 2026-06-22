@@ -1,0 +1,45 @@
+{
+  "skill_name": "football-betting-assistant",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我分析明天早上四场世界杯比赛，给我一个四串一参考购买方案，重点看比分和大小球。",
+      "expected_output": "The assistant should perform Fixture Discovery first, convert the relative date into an exact date and timezone when possible, verify the four fixtures or ask for them if tools are unavailable, collect or request odds and team context, then output main, conservative, and aggressive Portfolio Variants with Score Coverage of no more than three scores per match. It must not invent fixtures or odds from memory."
+    },
+    {
+      "id": 2,
+      "prompt": "现在不能联网。分析西班牙 vs 沙特这场，给胜平负、让球、大小球和三个比分候选。",
+      "expected_output": "The assistant should enter offline fallback mode, say which current data is missing, ask for odds, kickoff, venue, lineup/injury, and form data, and avoid live-value judgment until verifiable Odds Data is supplied. It may provide a copyable input template."
+    },
+    {
+      "id": 3,
+      "prompt": "分析西班牙 vs 沙特这场，给胜平负、让球、大小球和三个比分候选。",
+      "expected_output": "The assistant should confirm fixture details, gather or request current odds and team context, build a Data Summary Table, distinguish Probability Analysis from Value Judgment, provide Model Confidence and Data Confidence, and output exactly three Score Candidate Set entries."
+    },
+    {
+      "id": 4,
+      "prompt": "这四场帮我做四串一：西班牙 vs 沙特、比利时 vs 伊朗、乌拉圭 vs 佛得角、新西兰 vs 埃及。比分也给多几个。",
+      "expected_output": "The assistant should confirm all four fixtures and data freshness, analyze each match compactly, check Portfolio Correlation, then output main, conservative, and aggressive Portfolio Variants. Each match's Score Coverage must contain at most three scores. Any weak match should be marked C or Pass rather than forced into the core."
+    },
+    {
+      "id": 5,
+      "prompt": "没有赔率，只有球队近况。帮我看法国 vs 日本有没有价值。",
+      "expected_output": "The assistant should provide Probability Analysis from supplied team context if enough data exists, but explicitly state that Value Judgment is unavailable without verifiable Odds Data. It should ask for odds or lines before saying the selection has betting value."
+    },
+    {
+      "id": 6,
+      "prompt": "A站说德国让1球，B站说德国让1.25；A站说主力前锋伤缺，B站没提。帮我分析。",
+      "expected_output": "The assistant should surface Source Conflict, prefer official/fresher/specialized sources if available, otherwise downgrade Data Confidence. It should not silently average the lines or ignore the injury conflict."
+    },
+    {
+      "id": 7,
+      "prompt": "比分候选是1:0、1:1、2:0，但我想买大2.5，你帮我看看。",
+      "expected_output": "The assistant should run a Market Consistency check, explain that the score candidates imply a low-total match story, and either recalibrate or state that over 2.5 would need odds-value justification rather than base scoring support."
+    },
+    {
+      "id": 8,
+      "prompt": "复盘一下我昨天买的四串一为什么没中：西班牙1:0、比利时1:1、乌拉圭1:1、新西兰1:2。",
+      "expected_output": "The assistant should enter Post-Match Review mode, verify or request actual results, compare pre-match assumptions against outcomes, identify model and data bias, and avoid chase-loss, recovery-bet, or stake-size advice."
+    }
+  ]
+}

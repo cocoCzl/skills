@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "team-context.schema.json",
+  "title": "Team Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["team", "last_5_summary", "last_10_summary", "lineup_status", "source", "observed_at"],
+  "properties": {
+    "team": { "type": "string", "minLength": 1 },
+    "last_5_summary": { "type": "string", "minLength": 1 },
+    "last_10_summary": { "type": "string", "minLength": 1 },
+    "venue_adjusted_summary": { "type": "string" },
+    "xg_for": { "type": ["number", "null"], "minimum": 0 },
+    "xg_against": { "type": ["number", "null"], "minimum": 0 },
+    "goals_for": { "type": ["number", "null"], "minimum": 0 },
+    "goals_against": { "type": ["number", "null"], "minimum": 0 },
+    "injuries": { "type": "array", "items": { "type": "string" } },
+    "suspensions": { "type": "array", "items": { "type": "string" } },
+    "lineup_status": { "type": "string", "enum": ["confirmed", "expected", "unconfirmed", "unavailable"] },
+    "motivation_context": { "type": "string" },
+    "weather_context": { "type": "string" },
+    "source": { "type": "string", "minLength": 1 },
+    "observed_at": { "type": "string", "format": "date-time" },
+    "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fixture.schema.json",
+  "title": "Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["home_team", "away_team", "competition", "kickoff_time", "timezone", "venue_type", "source", "observed_at"],
+  "properties": {
+    "home_team": { "type": "string", "minLength": 1 },
+    "away_team": { "type": "string", "minLength": 1 },
+    "competition": { "type": "string", "minLength": 1 },
+    "kickoff_time": { "type": "string", "format": "date-time" },
+    "timezone": { "type": "string", "minLength": 1 },
+    "venue_type": { "type": "string", "enum": ["home_away", "neutral", "unknown"] },
+    "venue_note": { "type": "string" },
+    "source": { "type": "string", "minLength": 1 },
+    "observed_at": { "type": "string", "format": "date-time" },
+    "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+  }
+}

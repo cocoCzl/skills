@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "odds.schema.json",
+  "title": "Odds",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["market", "bookmaker_or_source", "observed_at", "confidence"],
+  "properties": {
+    "market": {
+      "type": "string",
+      "enum": ["match_result", "handicap_match_result", "correct_score", "over_under", "total_goals"]
+    },
+    "bookmaker_or_source": { "type": "string", "minLength": 1 },
+    "line": { "type": ["number", "string", "null"] },
+    "home_price": { "type": ["number", "null"], "exclusiveMinimum": 1 },
+    "draw_price": { "type": ["number", "null"], "exclusiveMinimum": 1 },
+    "away_price": { "type": ["number", "null"], "exclusiveMinimum": 1 },
+    "over_price": { "type": ["number", "null"], "exclusiveMinimum": 1 },
+    "under_price": { "type": ["number", "null"], "exclusiveMinimum": 1 },
+    "observed_at": { "type": "string", "format": "date-time" },
+    "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+    "notes": { "type": "string" }
+  }
+}

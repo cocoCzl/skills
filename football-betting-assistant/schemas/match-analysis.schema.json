@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "match-analysis.schema.json",
+  "title": "Match Analysis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture",
+    "home_xg",
+    "away_xg",
+    "bayesian_adjustments",
+    "result_probabilities",
+    "score_candidates",
+    "model_confidence",
+    "data_confidence",
+    "reference_grade",
+    "risk_points"
+  ],
+  "properties": {
+    "fixture": { "type": "object" },
+    "home_xg": { "type": "number", "minimum": 0 },
+    "away_xg": { "type": "number", "minimum": 0 },
+    "bayesian_adjustments": { "type": "array", "items": { "type": "string" } },
+    "result_probabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["home_win", "draw", "away_win"],
+      "properties": {
+        "home_win": { "type": "number", "minimum": 0, "maximum": 1 },
+        "draw": { "type": "number", "minimum": 0, "maximum": 1 },
+        "away_win": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "over_under_probabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "line": { "type": "number" },
+        "over": { "type": "number", "minimum": 0, "maximum": 1 },
+        "under": { "type": "number", "minimum": 0, "maximum": 1 },
+        "push": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "score_candidates": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["score", "role"],
+        "properties": {
+          "score": { "type": "string", "pattern": "^[0-9]+:[0-9]+$" },
+          "role": { "type": "string", "enum": ["primary", "secondary", "upset_aware"] },
+          "probability": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "model_confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+    "data_confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+    "reference_grade": { "type": "string", "enum": ["A", "B", "C", "Pass"] },
+    "risk_points": { "type": "array", "items": { "type": "string" } }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "portfolio",
+  "data": {
+    "matches": [
+      { "match": "西班牙 vs 沙特", "grade": "B" },
+      { "match": "比利时 vs 伊朗", "grade": "B" },
+      { "match": "乌拉圭 vs 佛得角", "grade": "B" },
+      { "match": "新西兰 vs 埃及", "grade": "C" }
+    ],
+    "correlation_notes": [
+      "四场为同一赛事窗口，需关注小组赛轮换和赛前首发确认",
+      "盘口价值样例来自单源，组合价值判断降级"
+    ],
+    "main_variant": {
+      "name": "主组合",
+      "legs": [
+        { "match": "西班牙 vs 沙特", "market": "胜平负", "selection": "西班牙胜", "score_coverage": ["1:0", "2:0", "2:1"] },
+        { "match": "比利时 vs 伊朗", "market": "胜平负", "selection": "比利时不败倾向", "score_coverage": ["2:1", "1:1"] },
+        { "match": "乌拉圭 vs 佛得角", "market": "胜平负", "selection": "乌拉圭胜倾向", "score_coverage": ["1:0", "2:0"] },
+        { "match": "新西兰 vs 埃及", "market": "大小球", "selection": "小 2.5 倾向", "score_coverage": ["1:1", "0:1"] }
+      ],
+      "risk_tier": "medium",
+      "value_judgment": "单源赔率样例，价值判断降级"
+    },
+    "conservative_variant": {
+      "name": "保守替代",
+      "legs": [
+        { "match": "西班牙 vs 沙特", "market": "让球胜平负", "selection": "西班牙让球谨慎", "score_coverage": ["1:0", "2:0"] },
+        { "match": "比利时 vs 伊朗", "market": "大小球", "selection": "小 3.0 倾向", "score_coverage": ["1:1", "2:1"] },
+        { "match": "乌拉圭 vs 佛得角", "market": "胜平负", "selection": "乌拉圭不败倾向", "score_coverage": ["1:0", "1:1", "2:0"] }
+      ],
+      "risk_tier": "low",
+      "value_judgment": "降低一场不确定性较高的选择"
+    },
+    "aggressive_variant": {
+      "name": "激进替代",
+      "legs": [
+        { "match": "西班牙 vs 沙特", "market": "比分", "selection": "西班牙零封路径", "score_coverage": ["1:0", "2:0", "3:0"] },
+        { "match": "比利时 vs 伊朗", "market": "比分", "selection": "比利时小胜或平局", "score_coverage": ["2:1", "1:1"] },
+        { "match": "乌拉圭 vs 佛得角", "market": "比分", "selection": "乌拉圭小胜", "score_coverage": ["1:0", "2:0"] },
+        { "match": "新西兰 vs 埃及", "market": "比分", "selection": "低比分客队不败", "score_coverage": ["1:1", "0:1"] }
+      ],
+      "risk_tier": "high",
+      "value_judgment": "比分组合方差高，仅作为激进参考"
+    },
+    "excluded_matches": [],
+    "portfolio_risk_tier": "medium"
+  }
+}

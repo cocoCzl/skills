@@ -1,0 +1,67 @@
+# Glossary
+
+Use these terms consistently in reports, examples, schemas, and scripts.
+
+**Decision Aid**: A pre-match analysis output that helps a user judge probabilities, risks, and betting value. It may express a betting lean or reference portfolio, but it does not promise certainty.
+
+**Single-Match Analysis**: Analysis focused on one football match and its available betting markets.
+
+**Betting Portfolio**: A reference set of betting leans across more than one match, limited in the first version to no more than four matches.
+
+**Match Result Market**: A market on home win, draw, or away win.
+
+**Handicap Match Result Market**: A market on home win, draw, or away win after applying a stated goal handicap.
+
+**Correct Score Market**: A market on the exact final score.
+
+**Over-Under Market**: A market on whether total goals finish above or below a stated goal line such as 2.5, 2.75, or 3.0.
+
+**Total Goals Market**: A market on a discrete total-goals bucket, such as 0, 1, 2, 3, 4, 5, 6, or 7+.
+
+**Odds Data**: Market price and line information, including the source and observation time.
+
+**Probability Analysis**: Outcome likelihood estimates that can be produced without odds data.
+
+**Value Judgment**: An assessment of whether odds data appears favorable relative to estimated probabilities and risk. It requires verifiable odds data.
+
+**Fixture Discovery**: Identifying concrete matches from natural-language requests, including teams, start time, competition, and venue context.
+
+**Source Priority**: User-provided data first, configured data sources second, public web verification third, and user clarification when current data cannot be verified.
+
+**Transparent Model**: A simplified explainable model using expected goals, Poisson distributions, Bayesian updates, and implied-probability checks without claiming black-box precision.
+
+**Reference Grade**: A non-guaranteed confidence and value label: A, B, C, or Pass.
+
+**Risk Tier**: Qualitative suitability for cautious, moderate, or speculative use. It is not a stake size.
+
+**Portfolio Variant**: A main, conservative, or aggressive reference combination.
+
+**Late Calibration**: Adjusting analysis with late-breaking context such as lineups, injuries, weather, schedule congestion, or odds movement.
+
+**Score Candidate Set**: A fixed set of three correct-score candidates for one match: primary, secondary, and upset-aware.
+
+**Score Coverage**: Portfolio-facing score suggestions with up to three correct-score candidates per match.
+
+**Market Consistency**: Result, score, total-goals, and over-under leans should tell a coherent match story. Any conflict must be recalibrated or explained.
+
+**Portfolio Correlation**: Shared context between matches or markets, such as competition stage, table incentives, rotation, weather, or schedule pressure.
+
+**Information Sufficiency**: Whether available match, market, and context data can support the requested analysis.
+
+**Post-Match Review**: Retrospective analysis comparing assumptions with actual outcomes; it does not produce recovery bets.
+
+**Agent-First Skill**: A football assistant that actively uses available tools to discover fixtures, collect odds, gather team context, and verify current information.
+
+**Authorized Public Source**: A public or user-authorized source for fixture, odds, lineup, injury, weather, or team-context data.
+
+**Data Source Credential**: Optional credential for football data services, distinct from large-model API credentials.
+
+**Source Timestamp**: Source name and observation time for current data.
+
+**Source Conflict**: A mismatch between data sources on facts, odds, lines, lineups, injuries, or context.
+
+**Model Confidence**: Strength of the football outcome view after model and context analysis.
+
+**Data Confidence**: Completeness, freshness, and source agreement of collected data.
+
+**Model Basis**: Concise explanation of expected goals, score concentration, Bayesian adjustments, and odds value comparison.
