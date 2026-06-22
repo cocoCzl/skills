@@ -15,6 +15,29 @@ Data Source Credentials are optional credentials for football data providers: od
 
 Never write credentials into reports, examples, references, or scripts. Refer to environment variables or local configuration names only.
 
+## Provider Configuration
+
+This skill does not bind to a specific vendor and does not include a built-in data-provider client. A "configured football data provider or API result" means the current agent environment already exposes a user-authorized data capability, such as:
+
+- MCP or tool calls for fixtures, odds, lineups, injuries, team stats, or weather.
+- A local or internal HTTP service that the agent can call.
+- Local JSON, CSV, database, or exported files supplied by the user.
+- Environment variables or local config names that a separate adapter uses, such as `API_FOOTBALL_KEY`, `THE_ODDS_API_KEY`, or `WEATHER_API_KEY`.
+
+Do not assume these providers exist. If no callable provider is available, use public/user-authorized sources when tools allow it, then fall back to asking the user for the minimum missing data.
+
+## Optional Provider Examples
+
+Optional provider examples include API-Football for football fixtures, lineups, injuries, team stats, and odds, and The Odds API for multi-bookmaker odds aggregation. These are examples only. The user must register, obtain credentials, and configure a callable tool or adapter before the assistant can use them.
+
+Discovering an API through web search does not make it a configured provider. Do not auto-register accounts, request keys on the user's behalf, guess keys, call unknown free APIs, or treat unauthenticated endpoints as authorized data sources.
+
+## Public Web Verification Responsibility
+
+When browsing, search, or webpage-reading tools are available, the assistant should actively perform public web verification itself. The user does not need to manually paste public data unless tools are unavailable, public access fails, sources conflict, or the user has a more authoritative source.
+
+If public pages require login, bypassing restrictions, captcha solving, or unauthorized scraping, stop using that source and downgrade or ask the user for authorized data.
+
 ## Credential Fallback
 
 If no provider credential exists:
