@@ -27,6 +27,7 @@ CONFIDENCE = {"high", "medium", "low"}
 REFERENCE_GRADES = {"A", "B", "C", "Pass"}
 LINEUP_STATUSES = {"confirmed", "expected", "unconfirmed", "unavailable"}
 VENUE_TYPES = {"home_away", "neutral", "unknown"}
+MARKET_TYPES = {"ordinary_result", "handicap_result", "correct_score", "over_under", "total_goals", "mixed", "analysis_only"}
 
 
 def _missing(record: dict[str, Any], fields: list[str]) -> list[str]:
@@ -118,6 +119,13 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
             coverage = leg.get("score_coverage", [])
             if len(coverage) > 4:
                 errors.append(f"{path}.ticket_tiers[{i}].legs[{leg_index}]: score_coverage must have at most four scores")
+            if leg.get("market_type") and leg["market_type"] not in MARKET_TYPES:
+                errors.append(f"{path}.ticket_tiers[{i}].legs[{leg_index}]: market_type is invalid")
+            if leg.get("market_available") is False and leg.get("market_type") != "analysis_only":
+                errors.append(f"{path}.ticket_tiers[{i}].legs[{leg_index}]: unavailable markets cannot be used in purchase plans")
+            selection_text = " ".join(str(leg.get(field, "")) for field in ("market", "selection", "selection_basis"))
+            if any(marker in selection_text for marker in ("加 ", "加:", "加：")):
+                warnings.append(f"{path}.ticket_tiers[{i}].legs[{leg_index}]: write complete score sets instead of shorthand additions")
     for variant_name in ("more_combination_candidates",):
         variants = record.get(variant_name) or []
         for variant_index, variant in enumerate(variants, start=1):
@@ -128,6 +136,10 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
                 coverage = leg.get("score_coverage", [])
                 if len(coverage) > 4:
                     errors.append(f"{path}.{variant_name}[{variant_index}].legs[{i}]: score_coverage must have at most four scores")
+                if leg.get("market_type") and leg["market_type"] not in MARKET_TYPES:
+                    errors.append(f"{path}.{variant_name}[{variant_index}].legs[{i}]: market_type is invalid")
+                if leg.get("market_available") is False and leg.get("market_type") != "analysis_only":
+                    errors.append(f"{path}.{variant_name}[{variant_index}].legs[{i}]: unavailable markets cannot be used in purchase plans")
     if record.get("portfolio_risk_tier") == "high":
         warnings.append(f"{path}: high portfolio risk tier; ensure aggressive framing is explicit")
     return errors, warnings

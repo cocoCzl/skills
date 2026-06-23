@@ -44,11 +44,17 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["match", "market", "selection", "score_coverage"],
+            "required": ["match", "market", "market_type", "market_available", "selection", "selection_basis", "score_coverage"],
             "properties": {
               "match": { "type": "string", "minLength": 1 },
               "market": { "type": "string", "minLength": 1 },
+              "market_type": {
+                "type": "string",
+                "enum": ["ordinary_result", "handicap_result", "correct_score", "over_under", "total_goals", "mixed", "analysis_only"]
+              },
+              "market_available": { "type": "boolean" },
               "selection": { "type": "string", "minLength": 1 },
+              "selection_basis": { "type": "string", "minLength": 1 },
               "score_coverage": {
                 "type": "array",
                 "maxItems": 4,

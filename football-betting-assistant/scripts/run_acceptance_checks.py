@@ -79,8 +79,14 @@ README_REQUIRED_PHRASES = [
     "回测",
     "Brier",
     "稳健方向单",
+    "让球/胜平负方向单",
+    "大小球/总进球单",
+    "混合过关单",
     "补洞单",
-    "搏冷/高赔率小单"
+    "搏冷/高赔率小单",
+    "竞彩可买市场规则",
+    "小组赛和出线形势",
+    "reports/football-betting/YYYY-MM-DD-[slug].html"
 ]
 
 EVAL_KEYWORDS = {
@@ -154,8 +160,14 @@ def check_readme_usage() -> None:
 def check_portfolio_template() -> None:
     text = (ROOT / "references" / "report-templates.md").read_text(encoding="utf-8")
     for phrase in (
+        "北京时间比赛清单",
         "今天四场先看结论",
         "比赛大纲",
+        "小组当前战绩",
+        "当前胜平负",
+        "出线形势",
+        "潜在淘汰赛",
+        "玩法可买性",
         "数据来源总览",
         "逐场分析",
         "比赛剧本",
@@ -165,9 +177,12 @@ def check_portfolio_template() -> None:
         "胜平负与大小球汇总",
         "比分覆盖建议",
         "四串一参考购买方案",
+        "让球/胜平负方向单",
+        "大小球/总进球单",
         "稳健方向单",
         "基础比分覆盖",
         "增强比分覆盖",
+        "混合过关单",
         "补洞单",
         "搏冷/高赔率小单",
         "更多组合候选"
@@ -188,6 +203,12 @@ def check_rich_examples() -> None:
     for phrase in ("今天四场先看结论", "比赛大纲", "数据来源总览", "逐场分析", "比赛剧本", "数学模型", "稳健方向单", "基础比分覆盖", "增强比分覆盖", "补洞单", "搏冷/高赔率小单"):
         if phrase not in portfolio:
             fail(f"portfolio example missing rich section: {phrase}")
+    for phrase in ("北京时间比赛清单", "当前胜平负", "出线形势", "潜在淘汰赛", "玩法可买性", "让球/胜平负方向单", "大小球/总进球单", "混合过关单"):
+        if phrase not in portfolio:
+            fail(f"portfolio example missing requested upgrade section: {phrase}")
+    for forbidden in ("加 2:1", "加 3:0", "加 3:1"):
+        if forbidden in portfolio:
+            fail(f"portfolio example contains shorthand score coverage: {forbidden}")
 
 
 def check_evals() -> None:

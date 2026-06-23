@@ -49,9 +49,9 @@ For group-stage final-round matches, calculate qualification context before trea
 ## Betting Portfolio Flow
 
 1. Confirm up to four concrete fixtures.
-2. Default to the 经理人详版 for 四串一, 串关, and "明天早上四场" requests unless the user asks for a short answer. Use this order: 先给总方案 -> 比赛大纲/赛程确认 -> 小组排名/积分/战意 -> 赔率与市场中心 -> 模型怎么来的 -> 逐场分析 -> 比分覆盖和买法 -> 组合风险.
-3. Start with a 比赛大纲 / 今日赛程确认 section that lists every match, kickoff time in the user's timezone, group/competition, venue context, and current data confidence.
-4. For tournament group-stage slates, verify or request current group ranking, points, goal difference, qualification pressure, and rotation risk before using motivation as a model adjustment. If unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section.
+2. Default to the 经理人详版 for 四串一, 串关, and "明天早上四场" requests unless the user asks for a short answer. Use this order: 先给总方案 -> 北京时间比赛清单 -> 小组当前战绩/积分/出线形势 -> 玩法可买性 -> 赔率与市场中心 -> 模型怎么来的 -> 逐场分析 -> 分玩法购买方案 -> 组合风险.
+3. Start with a 北京时间比赛清单 / 今日赛程确认 section that lists every match, exact kickoff time in the user's timezone, group/competition, venue context, and current data confidence. If the user says "明天", convert it to an exact date using the current date and timezone.
+4. For tournament group-stage slates, verify or request current group ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context before using motivation as a model adjustment. If unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section.
 5. Build a compact 赔率与市场中心 section before the match notes. When correct-score odds are available, list the lowest-price score cluster for each match and explain what the market center implies.
 6. Explain the math model in user-readable language before or during the match notes: expected-goals prior, Bayesian adjustment direction, final xG, Poisson score concentration, odds implied/no-vig probability when odds exist, and whether the calculator/script or an approximation was used.
 7. Run the Single-Match Analysis flow in compact but substantive prose for each match before giving any portfolio plan. Each match should read like a decision note, not only a row in a table.
@@ -59,12 +59,19 @@ For group-stage final-round matches, calculate qualification context before trea
 9. Check Portfolio Correlation: competition stage, same group/table incentives, rotation, weather clusters, and shared market assumptions.
 10. Exclude Pass matches or matches with severe Information Sufficiency gaps.
 11. Build portfolio variants from the actual score concentration and user intent. Do not force fixed 2/16/32/48 元 tiers. Calculate units as the product of selected outcomes per match and show amount only as `units x 2 元/unit`.
-12. Add named portfolio variants when supported by the data: 胜平负四串一主线, 单比分主推小单, 基础比分覆盖, 增强比分覆盖, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
+12. Add named portfolio variants when supported by the data: 让球/胜平负方向单, 大小球/总进球单, 单比分主推小单, 基础比分覆盖, 增强比分覆盖, 混合过关单, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
 13. Provide More Combination Candidates only when there are extra plausible directions, and keep them separate from the main plans.
 14. Provide Score Coverage with up to four scores per match only when a match has a meaningful secondary path, such as late-goal expansion, red-card tail risk, draw protection, favorite-underperformance risk, or underdog transition threat.
 15. Produce the Portfolio Report template.
 
-Do not output a single "only correct" portfolio. If enough data exists, always offer tiered reference purchase plans plus optional alternative combinations.
+Do not output a single "only correct" portfolio. If enough data exists, always offer separate market-family plans plus optional alternative combinations.
+
+When the user asks for 比分、胜平负、大小球 together, cover all requested families:
+
+- 让球/胜平负方向单: use only markets confirmed as buyable from the user's screenshot/source. If ordinary 胜平负 is unavailable, state it is analysis-only and build the ticket from 让球胜平负 or another visible market.
+- 大小球/总进球单: provide at least one pure total-goals or over-under structure when the market exists in the supplied odds.
+- 比分单: provide single-score, core coverage, enhanced coverage, and补洞 score sets with complete score lists per match.
+- 混合过关单: combine the strongest buyable direction legs with totals or selected scores to reduce dependence on exact-score hits. Describe it as higher tolerance than pure score strings, not as a guarantee.
 
 Do not compress portfolio analysis into only one summary table. The user should see why each match is included: source notes, model direction, top scores, risk, and grade.
 
@@ -84,21 +91,27 @@ Use 2 元 per unit by default only for explaining total amount, not for bankroll
 
 Default named portfolio variants:
 
+- 让球/胜平负方向单: uses buyable ordinary result or handicap result markets rather than fragile exact scores.
+- 大小球/总进球单: uses over-under or discrete total-goals markets when visible in the supplied odds.
 - 稳健方向单: uses result, handicap result, over-under, or total-goals directions rather than fragile exact scores.
 - 基础比分覆盖: uses the most concentrated score candidates from the Poisson matrix.
 - 增强比分覆盖: adds one plausible secondary path for the highest-variance match or for a favorite that may only win narrowly.
+- 混合过关单: combines buyable direction, total-goals, and limited score legs. It is usually less exact-score-dependent than a pure score fourfold, but still has串关 risk.
 - 补洞单: covers the most obvious omitted path, such as favorite 1:0, draw drag, underdog goal, or late score expansion.
 - 搏冷/高赔率小单: uses lower-probability but explainable outcomes; label it optional, high variance, and not the core plan.
 
+Write full selections in every score coverage cell. Do not write "加 2:1"; write the complete set, such as `2:0 / 3:0 / 2:1`.
+
 ## Report File Output
 
-Default chat output should be complete Markdown. If the user asks for a document, report file, md, html, or saved result and local file writes are available:
+Default chat output should be complete Markdown. If the user asks for a document, report file, md, html, saved result, or says the answer should only be in files, and local file writes are available:
 
 1. Create `reports/football-betting/` when needed.
 2. Save Markdown as `reports/football-betting/YYYY-MM-DD-[short-slug].md`.
 3. Save HTML as `reports/football-betting/YYYY-MM-DD-[short-slug].html`.
-4. Keep the same analysis content in chat or provide a concise summary plus paths.
+4. If the user explicitly requested file-only or complained that chat output is wrong, provide only a concise summary plus paths in chat. Otherwise, include either the complete Markdown or a concise summary plus paths, depending on length.
 5. Treat generated report files as local outputs, not source files to commit.
+6. Before finalizing, verify both files exist and contain the same core section headings.
 
 ## Post-Match Review Flow
 
