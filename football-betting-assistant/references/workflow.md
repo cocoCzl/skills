@@ -44,6 +44,8 @@ Single-match reports must include a visible evidence chain:
 - 玩法判断：separate probability lean from odds value.
 - 风险：why the grade is not higher, and what late information could change it.
 
+For group-stage final-round matches, calculate qualification context before treating motivation as a model adjustment. Include current points, goal difference, ranking routes under plausible results, rotation probability, and potential knockout-stage opponents. Treat "避强队" or "选路线" only as a motivation/risk modifier, not as certain team behavior.
+
 ## Betting Portfolio Flow
 
 1. Confirm up to four concrete fixtures.
@@ -123,4 +125,5 @@ Before answering:
 - Check source timestamps and data gaps.
 - Apply Reference Grade and confidence rules.
 - For backtests, check that every sample used only pre-match data and that sample size is shown.
+- For group-stage final-round matches, check that qualification context uses potential knockout-stage opponents instead of assuming the next opponent is always a round-of-16 opponent.
 - Remove certainty, pressure, bankroll-allocation, personalized stake-size, and chase-loss language.
