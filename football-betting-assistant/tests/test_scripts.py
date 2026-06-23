@@ -24,6 +24,7 @@ def load_module(name: str, relative_path: str):
 poisson = load_module("poisson_calculator", "scripts/poisson_calculator.py")
 implied = load_module("implied_probability", "scripts/implied_probability.py")
 validator = load_module("validate_inputs", "scripts/validate_inputs.py")
+backtest = load_module("backtest_predictions", "scripts/backtest_predictions.py")
 
 
 class PoissonCalculatorTests(unittest.TestCase):
@@ -80,6 +81,30 @@ class ValidatorTests(unittest.TestCase):
         result = validator.validate_document({"kind": "fixture", "data": {"home_team": "A"}})
         self.assertFalse(result["valid"])
         self.assertTrue(any("missing required field" in error for error in result["errors"]))
+
+    def test_valid_backtest_sample(self):
+        path = ROOT / "examples" / "backtest-sample.json"
+        document = json.loads(path.read_text(encoding="utf-8"))
+        result = validator.validate_document(document)
+        self.assertTrue(result["valid"], result)
+
+
+class BacktestTests(unittest.TestCase):
+    def test_backtest_metrics_are_calculated(self):
+        path = ROOT / "examples" / "backtest-sample.json"
+        samples = backtest.load_samples(path)
+        result = backtest.calculate(samples)
+        self.assertEqual(result["sample_count"], 2)
+        self.assertAlmostEqual(result["result_hit_rate"], 0.5)
+        self.assertAlmostEqual(result["score_top3_hit_rate"], 1.0)
+        self.assertAlmostEqual(result["grade_breakdown"]["B"]["result_hit_rate"], 1.0)
+        self.assertAlmostEqual(result["grade_breakdown"]["C"]["result_hit_rate"], 0.0)
+        self.assertIn("B", result["grade_breakdown"])
+        self.assertIn("calibration_buckets", result)
+
+    def test_backtest_load_rejects_wrong_kind(self):
+        with self.assertRaises(ValueError):
+            backtest.load_samples(ROOT / "examples" / "single-match-input.json")
 
 
 if __name__ == "__main__":

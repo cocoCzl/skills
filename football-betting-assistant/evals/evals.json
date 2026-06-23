@@ -50,6 +50,11 @@
       "id": 8,
       "prompt": "复盘一下我昨天买的四串一为什么没中：西班牙1:0、比利时1:1、乌拉圭1:1、新西兰1:2。",
       "expected_output": "The assistant should enter Post-Match Review mode, verify or request actual results, compare pre-match assumptions against outcomes, identify model and data bias, and avoid chase-loss, recovery-bet, or stake-size advice."
+    },
+    {
+      "id": 11,
+      "prompt": "我想提高这个竞彩模型的命中率。我有一批历史赛前预测和赛果 JSON，帮我做回测，看看 A/B/C/Pass、比分覆盖和大小球哪里需要校准。",
+      "expected_output": "The assistant should route to Historical Backtest / Calibration, require pre-match snapshots rather than post-match data, validate the JSON when possible, run or recommend scripts/backtest_predictions.py, and report separate metrics for result hit rate, over-under hit rate, score Top 1/Top 3/coverage hit rate, Brier score, log loss, calibration buckets, and reference_grade breakdown. It should convert repeated measured patterns into specific downgrade or calibration changes, and must not claim guaranteed future hit-rate improvement."
     }
   ]
 }

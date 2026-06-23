@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "backtest-sample.schema.json",
+  "title": "Backtest Sample Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "data"],
+  "properties": {
+    "kind": { "const": "backtest_samples" },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["samples"],
+      "properties": {
+        "samples": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sample_id",
+              "fixture",
+              "prediction",
+              "actual_result"
+            ],
+            "properties": {
+              "sample_id": { "type": "string", "minLength": 1 },
+              "fixture": { "type": "object" },
+              "prediction": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "observed_at",
+                  "result_probabilities",
+                  "score_candidates",
+                  "reference_grade",
+                  "model_confidence",
+                  "data_confidence"
+                ],
+                "properties": {
+                  "observed_at": { "type": "string", "minLength": 1 },
+                  "result_probabilities": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["home_win", "draw", "away_win"],
+                    "properties": {
+                      "home_win": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "draw": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "away_win": { "type": "number", "minimum": 0, "maximum": 1 }
+                    }
+                  },
+                  "over_under_probabilities": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["line", "over", "under"],
+                    "properties": {
+                      "line": { "type": "number" },
+                      "over": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "under": { "type": "number", "minimum": 0, "maximum": 1 },
+                      "push": { "type": "number", "minimum": 0, "maximum": 1 }
+                    }
+                  },
+                  "score_candidates": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 6,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["score"],
+                      "properties": {
+                        "score": { "type": "string", "pattern": "^[0-9]+:[0-9]+$" },
+                        "probability": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+                      }
+                    }
+                  },
+                  "reference_grade": { "type": "string", "enum": ["A", "B", "C", "Pass"] },
+                  "model_confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+                  "data_confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+                  "risk_points": { "type": "array", "items": { "type": "string" } }
+                }
+              },
+              "actual_result": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["home_goals", "away_goals"],
+                "properties": {
+                  "home_goals": { "type": "integer", "minimum": 0 },
+                  "away_goals": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

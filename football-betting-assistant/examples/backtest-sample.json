@@ -1,0 +1,83 @@
+{
+  "kind": "backtest_samples",
+  "data": {
+    "samples": [
+      {
+        "sample_id": "sample-001",
+        "fixture": {
+          "home_team": "西班牙",
+          "away_team": "沙特",
+          "competition": "世界杯 小组赛",
+          "kickoff_time": "2026-06-23T08:00:00+08:00",
+          "timezone": "Asia/Shanghai",
+          "venue_type": "neutral"
+        },
+        "prediction": {
+          "observed_at": "2026-06-22T20:00:00+08:00",
+          "result_probabilities": {
+            "home_win": 0.66,
+            "draw": 0.22,
+            "away_win": 0.12
+          },
+          "over_under_probabilities": {
+            "line": 2.5,
+            "over": 0.45,
+            "under": 0.55,
+            "push": 0
+          },
+          "score_candidates": [
+            { "score": "1:0", "probability": 0.16 },
+            { "score": "2:0", "probability": 0.15 },
+            { "score": "2:1", "probability": 0.1 }
+          ],
+          "reference_grade": "B",
+          "model_confidence": "medium",
+          "data_confidence": "medium",
+          "risk_points": ["首发未确认，赔率为示例单源"]
+        },
+        "actual_result": {
+          "home_goals": 2,
+          "away_goals": 0
+        }
+      },
+      {
+        "sample_id": "sample-002",
+        "fixture": {
+          "home_team": "法国",
+          "away_team": "日本",
+          "competition": "友谊赛",
+          "kickoff_time": "2026-06-24T03:00:00+08:00",
+          "timezone": "Asia/Shanghai",
+          "venue_type": "neutral"
+        },
+        "prediction": {
+          "observed_at": "2026-06-23T12:00:00+08:00",
+          "result_probabilities": {
+            "home_win": 0.48,
+            "draw": 0.27,
+            "away_win": 0.25
+          },
+          "over_under_probabilities": {
+            "line": 2.5,
+            "over": 0.53,
+            "under": 0.47,
+            "push": 0
+          },
+          "score_candidates": [
+            { "score": "1:1", "probability": 0.12 },
+            { "score": "2:1", "probability": 0.1 },
+            { "score": "1:0", "probability": 0.09 }
+          ],
+          "reference_grade": "C",
+          "model_confidence": "low",
+          "data_confidence": "medium",
+          "risk_points": ["友谊赛轮换不确定"]
+        },
+        "actual_result": {
+          "home_goals": 1,
+          "away_goals": 1
+        }
+      }
+    ]
+  }
+}

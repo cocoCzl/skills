@@ -15,6 +15,7 @@ REQUIRED_FILES = [
     "references/workflow.md",
     "references/data-sources.md",
     "references/math-model.md",
+    "references/backtesting.md",
     "references/report-templates.md",
     "references/downgrade-rules.md",
     "references/glossary.md",
@@ -23,11 +24,14 @@ REQUIRED_FILES = [
     "schemas/team-context.schema.json",
     "schemas/match-analysis.schema.json",
     "schemas/portfolio.schema.json",
+    "schemas/backtest-sample.schema.json",
     "scripts/poisson_calculator.py",
     "scripts/implied_probability.py",
     "scripts/validate_inputs.py",
+    "scripts/backtest_predictions.py",
     "examples/single-match-input.json",
     "examples/portfolio-input.json",
+    "examples/backtest-sample.json",
     "examples/single-match-report.md",
     "examples/portfolio-report.md",
     "examples/post-match-review.md",
@@ -55,6 +59,7 @@ README_REQUIRED_SECTIONS = [
     "## 未配置 API 时的默认行为",
     "## 公开网页核验由谁处理",
     "## 数学计算引擎",
+    "## 回测和校准",
     "## 数据不足时如何处理",
     "## 示例提问",
     "## 带盘口赔率的使用例子",
@@ -71,6 +76,8 @@ README_REQUIRED_PHRASES = [
     "比赛大纲",
     "贝叶斯修正",
     "泊松",
+    "回测",
+    "Brier",
     "稳健方向单",
     "补洞单",
     "搏冷/高赔率小单"
@@ -114,10 +121,16 @@ def check_tests() -> None:
 
 
 def check_validation_examples() -> None:
-    for relative in ("examples/single-match-input.json", "examples/portfolio-input.json"):
+    for relative in ("examples/single-match-input.json", "examples/portfolio-input.json", "examples/backtest-sample.json"):
         result = subprocess.run([sys.executable, str(ROOT / "scripts" / "validate_inputs.py"), str(ROOT / relative)], cwd=ROOT, text=True)
         if result.returncode != 0:
             fail(f"validation failed for {relative}")
+
+
+def check_backtest_example() -> None:
+    result = subprocess.run([sys.executable, str(ROOT / "scripts" / "backtest_predictions.py"), str(ROOT / "examples" / "backtest-sample.json")], cwd=ROOT, text=True)
+    if result.returncode != 0:
+        fail("backtest example failed")
 
 
 def check_report_language() -> None:
@@ -182,6 +195,9 @@ def check_evals() -> None:
     for name, needles in EVAL_KEYWORDS.items():
         if not any(needle in text for needle in needles):
             fail(f"eval coverage missing: {name}")
+    for phrase in ("回测", "Brier", "log loss", "reference_grade"):
+        if phrase not in text:
+            fail(f"eval coverage missing backtesting phrase: {phrase}")
 
 
 def main() -> int:
@@ -189,6 +205,7 @@ def main() -> int:
     check_json()
     check_tests()
     check_validation_examples()
+    check_backtest_example()
     check_report_language()
     check_readme_usage()
     check_portfolio_template()

@@ -19,7 +19,8 @@ SCHEMA_REQUIRED: dict[str, list[str]] = {
     "odds": ["market", "bookmaker_or_source", "observed_at", "confidence"],
     "team_context": ["team", "last_5_summary", "last_10_summary", "lineup_status", "source", "observed_at"],
     "match_analysis": ["fixture", "home_xg", "away_xg", "bayesian_adjustments", "result_probabilities", "score_candidates", "model_confidence", "data_confidence", "reference_grade", "risk_points"],
-    "portfolio": ["matches", "correlation_notes", "ticket_tiers", "more_combination_candidates", "excluded_matches", "portfolio_risk_tier"]
+    "portfolio": ["matches", "correlation_notes", "ticket_tiers", "more_combination_candidates", "excluded_matches", "portfolio_risk_tier"],
+    "backtest_sample": ["sample_id", "fixture", "prediction", "actual_result"]
 }
 
 CONFIDENCE = {"high", "medium", "low"}
@@ -132,12 +133,38 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
     return errors, warnings
 
 
+def validate_backtest_sample(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    for field in _missing(record, SCHEMA_REQUIRED["backtest_sample"]):
+        errors.append(f"{path}: missing required field '{field}'")
+    prediction = record.get("prediction") or {}
+    actual = record.get("actual_result") or {}
+    probabilities = prediction.get("result_probabilities") or {}
+    probability_total = sum(probabilities.get(key, 0.0) for key in ("home_win", "draw", "away_win"))
+    if probabilities and abs(probability_total - 1.0) > 0.03:
+        warnings.append(f"{path}: result probabilities sum to {probability_total:.3f}; check calibration input")
+    if prediction.get("reference_grade") not in REFERENCE_GRADES:
+        errors.append(f"{path}: prediction.reference_grade must be A, B, C, or Pass")
+    for field in ("home_goals", "away_goals"):
+        if field not in actual:
+            errors.append(f"{path}: actual_result missing '{field}'")
+        elif not isinstance(actual[field], int) or actual[field] < 0:
+            errors.append(f"{path}: actual_result.{field} must be a non-negative integer")
+    if not prediction.get("observed_at"):
+        errors.append(f"{path}: prediction.observed_at is required to prove pre-match timing")
+    if not prediction.get("score_candidates"):
+        warnings.append(f"{path}: no score candidates supplied; score coverage cannot be evaluated")
+    return errors, warnings
+
+
 VALIDATORS = {
     "fixture": validate_fixture,
     "odds": validate_odds,
     "team_context": validate_team_context,
     "match_analysis": validate_match_analysis,
-    "portfolio": validate_portfolio
+    "portfolio": validate_portfolio,
+    "backtest_sample": validate_backtest_sample
 }
 
 BUNDLE_KEYS = {
@@ -149,7 +176,8 @@ BUNDLE_KEYS = {
     "match_analysis": "match_analysis",
     "match_analyses": "match_analysis",
     "portfolio": "portfolio",
-    "portfolios": "portfolio"
+    "portfolios": "portfolio",
+    "samples": "backtest_sample"
 }
 
 
@@ -162,6 +190,14 @@ def validate_document(document: dict[str, Any]) -> dict[str, Any]:
         e, w = VALIDATORS[kind](document.get("data", {}), "data")
         errors.extend(e)
         warnings.extend(w)
+    elif kind == "backtest_samples":
+        samples = document.get("data", {}).get("samples", [])
+        if not isinstance(samples, list) or not samples:
+            errors.append("data.samples must be a non-empty list")
+        for i, item in enumerate(samples):
+            e, w = validate_backtest_sample(item, f"data.samples[{i}]")
+            errors.extend(e)
+            warnings.extend(w)
     elif kind == "bundle":
         for key, value in document.get("data", {}).items():
             items = value if isinstance(value, list) else [value]
@@ -175,7 +211,7 @@ def validate_document(document: dict[str, Any]) -> dict[str, Any]:
                 errors.extend(e)
                 warnings.extend(w)
     else:
-        errors.append("top-level 'kind' must be one of fixture, odds, team_context, match_analysis, portfolio, bundle")
+        errors.append("top-level 'kind' must be one of fixture, odds, team_context, match_analysis, portfolio, backtest_samples, bundle")
 
     return {"valid": not errors, "errors": errors, "warnings": warnings}
 

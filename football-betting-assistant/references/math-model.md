@@ -115,6 +115,27 @@ Use this wording discipline:
 - "赔率价值" requires verifiable odds or line data.
 - "高赔率小单" requires an explainable low-probability scenario and must be labelled high variance.
 
+## Calibration And Backtesting
+
+Treat model probabilities as forecasts that need calibration, not as fixed truth.
+
+When historical samples are available, evaluate:
+
+- Match-result calibration with Brier score and log loss.
+- Over-under calibration when an observed line and final total goals exist.
+- Score coverage hit rate for Top 1, Top 3, and portfolio coverage sets.
+- Reference-grade reliability: A should outperform B, B should outperform C, and Pass should show weak value or insufficient data.
+- Bucket reliability: predictions around 60% should win materially more often than predictions around 40%.
+
+Use backtest findings to tune rules, not to overfit one slate. Prefer changes that are explainable from repeated patterns, such as:
+
+- Lowering grade when odds are single-source and edge is small.
+- Reducing favorite xG when knockout or qualification incentives slow tempo.
+- Widening score coverage when final xG total is high or both teams have clear scoring paths.
+- Passing matches where source conflicts or lineup uncertainty create large probability swings.
+
+Never present a historical ROI or hit-rate improvement as a guarantee for future tickets.
+
 ## Worked Example
 
 Input assumptions:

@@ -17,8 +17,11 @@ Classify the user request as one of:
 1. Single-Match Analysis.
 2. Betting Portfolio, up to four matches.
 3. Post-Match Review.
+4. Historical Backtest / Calibration.
 
 If the user asks for more than four matches in a portfolio, analyze the fixture list but ask them to reduce the portfolio to four matches or fewer for the first version.
+
+If the user asks to improve hit rate, accuracy, calibration, or model quality, route to Historical Backtest / Calibration. Do not claim the skill can improve future outcomes without measured historical evidence.
 
 ## Single-Match Analysis Flow
 
@@ -97,6 +100,20 @@ Default chat output should be complete Markdown. If the user asks for a document
 5. Suggest future weighting adjustments.
 6. Do not produce chase-loss, recovery-bet, or "下一场翻本" advice.
 
+## Historical Backtest / Calibration Flow
+
+Use this flow when the user wants to improve hit rate, audit predictions, or evaluate historical model quality.
+
+1. Require historical pre-match snapshots: fixture, kickoff time, odds/line observed before kickoff, team context observed before kickoff, model probabilities, score candidates, reference grade, and actual result.
+2. Reject or flag samples that mix in post-match information. If a field was not known before kickoff, mark it unavailable rather than backfilling it.
+3. Validate samples with `scripts/validate_inputs.py` when they are supplied as JSON bundles.
+4. Run `scripts/backtest_predictions.py` on the historical sample file when local execution is available.
+5. Report hit rates for match result, over-under, and score coverage separately. Do not collapse them into one "命中率".
+6. Report probability calibration with Brier score, log loss, and probability buckets. Favor better-calibrated probabilities over louder single-pick language.
+7. Break results down by `reference_grade`, `model_confidence`, `data_confidence`, competition, and market type when sample size allows.
+8. Convert findings into specific rule changes, such as downgrading low-data A/B picks, widening score coverage for high-total matches, or passing single-source odds edges below the edge threshold.
+9. State sample size and limitations before giving model-improvement conclusions.
+
 ## Final Checks
 
 Before answering:
@@ -105,4 +122,5 @@ Before answering:
 - Check Market Consistency.
 - Check source timestamps and data gaps.
 - Apply Reference Grade and confidence rules.
+- For backtests, check that every sample used only pre-match data and that sample size is shown.
 - Remove certainty, pressure, bankroll-allocation, personalized stake-size, and chase-loss language.

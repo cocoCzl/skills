@@ -25,6 +25,7 @@ Read only the files needed for the request:
 - For Single-Match Analysis, Betting Portfolio, runtime modes, and Post-Match Review flow, read `references/workflow.md`.
 - For fixture, odds, team-context collection, source priority, credential fallback, timestamps, and conflicts, read `references/data-sources.md`.
 - For expected goals, Bayesian updating, Poisson score matrices, and implied probability, read `references/math-model.md`.
+- For historical backtesting, probability calibration, hit-rate review, and model improvement, read `references/backtesting.md`.
 - For output format, read `references/report-templates.md`.
 - For Reference Grades, Information Sufficiency, downgrade rules, stop rules, and language guardrails, read `references/downgrade-rules.md`.
 
@@ -33,10 +34,11 @@ Use scripts only when deterministic calculation or validation helps:
 - `scripts/poisson_calculator.py`: score matrix, result probabilities, over-under probabilities.
 - `scripts/implied_probability.py`: raw implied probability, margin, normalized no-vig probability.
 - `scripts/validate_inputs.py`: schema and data-quality validation for example or collected JSON.
+- `scripts/backtest_predictions.py`: historical hit-rate, score coverage, Brier score, log loss, calibration buckets, and grade breakdown.
 
 ## Default Workflow
 
-1. Classify the request as Single-Match Analysis, Betting Portfolio, or Post-Match Review.
+1. Classify the request as Single-Match Analysis, Betting Portfolio, Post-Match Review, or Historical Backtest / Calibration.
 2. If concrete fixtures are missing, perform Fixture Discovery. If verification is unavailable, ask the user for the missing match list.
 3. Collect or request Odds Data and team context according to `references/data-sources.md`.
 4. Build a Data Summary Table before analysis.
@@ -45,6 +47,8 @@ Use scripts only when deterministic calculation or validation helps:
 7. Apply downgrade and stop rules.
 8. Produce the report template. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the match slate, then analyze each match in readable prose, then provide reference plans.
 9. Run a final consistency and language check before answering.
+
+For backtesting or "提高命中率" requests, do not change recommendations by intuition alone. Use historical pre-match snapshots and actual results, run `scripts/backtest_predictions.py` when data is available, then adjust downgrade/calibration guidance based on measured error patterns.
 
 ## Default Scope
 
