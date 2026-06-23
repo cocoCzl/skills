@@ -49,19 +49,26 @@ For group-stage final-round matches, calculate qualification context before trea
 ## Betting Portfolio Flow
 
 1. Confirm up to four concrete fixtures.
-2. Start the report with a 比赛大纲 / 今日赛程确认 section that lists every match, kickoff time, group/competition, venue context, and current data confidence.
-3. Run the Single-Match Analysis flow in compact but substantive prose for each match before giving any portfolio plan. Each match should read like a decision note, not only a row in a table.
-4. Check Portfolio Correlation: competition stage, same group/table incentives, rotation, weather clusters, and shared market assumptions.
-5. Exclude Pass matches or matches with severe Information Sufficiency gaps.
-6. Build portfolio variants from the actual score concentration and user intent. Do not force fixed 2/16/32/48 元 tiers. Calculate units as the product of selected outcomes per match and show amount only as `units x 2 元/unit`.
-7. Add named portfolio variants when supported by the data: 稳健方向单, 基础比分覆盖, 增强比分覆盖, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
-8. Provide More Combination Candidates only when there are extra plausible directions, and keep them separate from the main plans.
-9. Provide Score Coverage with up to four scores per match only when a match has a meaningful secondary path, such as late-goal expansion, red-card tail risk, draw protection, or favorite-underperformance risk.
-10. Produce the Portfolio Report template.
+2. Default to the 经理人详版 for 四串一, 串关, and "明天早上四场" requests unless the user asks for a short answer. Use this order: 先给总方案 -> 比赛大纲/赛程确认 -> 小组排名/积分/战意 -> 赔率与市场中心 -> 模型怎么来的 -> 逐场分析 -> 比分覆盖和买法 -> 组合风险.
+3. Start with a 比赛大纲 / 今日赛程确认 section that lists every match, kickoff time in the user's timezone, group/competition, venue context, and current data confidence.
+4. For tournament group-stage slates, verify or request current group ranking, points, goal difference, qualification pressure, and rotation risk before using motivation as a model adjustment. If unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section.
+5. Build a compact 赔率与市场中心 section before the match notes. When correct-score odds are available, list the lowest-price score cluster for each match and explain what the market center implies.
+6. Explain the math model in user-readable language before or during the match notes: expected-goals prior, Bayesian adjustment direction, final xG, Poisson score concentration, odds implied/no-vig probability when odds exist, and whether the calculator/script or an approximation was used.
+7. Run the Single-Match Analysis flow in compact but substantive prose for each match before giving any portfolio plan. Each match should read like a decision note, not only a row in a table.
+8. For each match, include source notes, group/table context, basic football context, match script, model record, result lean, handicap lean, over-under/total-goals lean, score ranking, reference grade, and risk.
+9. Check Portfolio Correlation: competition stage, same group/table incentives, rotation, weather clusters, and shared market assumptions.
+10. Exclude Pass matches or matches with severe Information Sufficiency gaps.
+11. Build portfolio variants from the actual score concentration and user intent. Do not force fixed 2/16/32/48 元 tiers. Calculate units as the product of selected outcomes per match and show amount only as `units x 2 元/unit`.
+12. Add named portfolio variants when supported by the data: 胜平负四串一主线, 单比分主推小单, 基础比分覆盖, 增强比分覆盖, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
+13. Provide More Combination Candidates only when there are extra plausible directions, and keep them separate from the main plans.
+14. Provide Score Coverage with up to four scores per match only when a match has a meaningful secondary path, such as late-goal expansion, red-card tail risk, draw protection, favorite-underperformance risk, or underdog transition threat.
+15. Produce the Portfolio Report template.
 
 Do not output a single "only correct" portfolio. If enough data exists, always offer tiered reference purchase plans plus optional alternative combinations.
 
 Do not compress portfolio analysis into only one summary table. The user should see why each match is included: source notes, model direction, top scores, risk, and grade.
+
+For four-match score portfolios, the default answer should be detailed enough that a user can understand why a 2:0 is preferred over 3:0, why a favorite may win but not cover, and which draw or underdog-goal score is the most important missing path. Avoid terse "model summary only" reports when data is available.
 
 ## Ticket Tier Construction
 

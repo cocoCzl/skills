@@ -54,15 +54,18 @@ For backtesting or "提高命中率" requests, do not change recommendations by 
 
 - Support Single-Match Analysis.
 - Support Betting Portfolio analysis for up to four matches.
+- For Betting Portfolio, 四串一, 串关, or "明天早上四场" requests, default to a **经理人详版** unless the user explicitly asks for a short answer. The report should feel like a senior football betting manager's decision note: start with the total plan, then the confirmed slate, group/table context, market center, model explanation, readable match-by-match analysis, and finally tiered reference purchase plans.
 - Default market priority: 胜平负 / 让球胜平负 > 大小球 / 总进球 > 比分.
 - Default risk preference: conservative unless the user says otherwise.
 - Correct score should be presented as a Score Candidate Set or Score Coverage, not a single certainty.
 - For odds and lines, prefer a configured The Odds API adapter via `THE_ODDS_API_KEY`; otherwise enter public-web-first mode and search/open public user-authorized pages before asking the user for missing odds.
 - For four-match score portfolios, keep unit count and amount separate. With the default 2 元/unit, `2 x 2 x 2 x 2 = 16` units means 32 元.
 - Reports should be analysis-first and source-aware. Name the sources used and their observation times in Chinese prose or tables; raw URLs are optional unless the user asks for them.
+- For tournament group-stage slates, always try to include current group ranking, points, goal difference, qualification pressure, and rotation risk before treating motivation as an input. If these cannot be verified, mark them unavailable and downgrade data confidence instead of inventing standings.
 - For four-match portfolios, do not hard-code 2/16/32/48 元档 as mandatory plans. Choose the combination structures from the match probabilities and score concentration, then calculate units and amount from the selected counts.
 - Portfolio plans should normally include distinct variants for 稳健方向单, 基础比分覆盖, 增强比分覆盖, 补洞单, and 搏冷/高赔率小单 when the data can support them.
-- Do not output a thin table-only answer when current data and tools allow deeper analysis. Each match needs a compact but human-readable evidence chain: source summary, football context, expected goals, Bayesian adjustments, Poisson score concentration, market lean, score coverage, over-under lean, and risk.
+- Do not output a thin table-only answer when current data and tools allow deeper analysis. Each match needs a compact but human-readable evidence chain: source summary, group/competition context, football context, expected goals, Bayesian adjustments, Poisson score concentration, market lean, score coverage, over-under lean, and risk.
+- In four-match score reports, list the low-odds correct-score cluster when odds are available, then explain why the recommended score set is selected. Include 主单比分, 核心覆盖, 增强覆盖, and 漏洞/补防 for each match when data sufficiency allows.
 - When the user explicitly asks to generate a report, save Markdown and HTML outputs under `reports/football-betting/` if the local environment permits writes. The report directory is generated output and should not be committed.
 
 ## If Tools Are Unavailable

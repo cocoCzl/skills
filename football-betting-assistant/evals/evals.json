@@ -55,6 +55,11 @@
       "id": 11,
       "prompt": "我想提高这个竞彩模型的命中率。我有一批历史赛前预测和赛果 JSON，帮我做回测，看看 A/B/C/Pass、比分覆盖和大小球哪里需要校准。",
       "expected_output": "The assistant should route to Historical Backtest / Calibration, require pre-match snapshots rather than post-match data, validate the JSON when possible, run or recommend scripts/backtest_predictions.py, and report separate metrics for result hit rate, over-under hit rate, score Top 1/Top 3/coverage hit rate, Brier score, log loss, calibration buckets, and reference_grade breakdown. It should convert repeated measured patterns into specific downgrade or calibration changes, and must not claim guaranteed future hit-rate improvement."
+    },
+    {
+      "id": 12,
+      "prompt": "北京时间明天早上四场世界杯比赛，帮我做一个四串一参考购买方案，重点看比分和胜平负以及大小球，然后这四场的赔率在截图里。",
+      "expected_output": "The assistant should default to a 经理人详版 portfolio report. It should first identify the exact Beijing date and list the four fixtures with kickoff times, then include current group ranking/points/goal difference/qualification pressure or explicitly mark that group-table data is unverified. It should show the user-provided screenshot odds as the primary Odds Data source, extract or summarize win-draw-win, handicap, total-goals/over-under, and low-price correct-score clusters when visible, and name the screenshot observation time if available. The report must explain the math model in readable Chinese: expected-goals prior, Bayesian adjustments, final xG, Poisson score concentration, odds implied/no-vig probability, and whether the calculation is script-based or approximate. Each match must have a substantive note covering source basis, group/motivation context, football match script, result lean, handicap lean, over-under or total-goals lean, score ranking, reference grade, and risk. The final plan must include 胜平负四串一主线, 单比分主推小单, 基础比分覆盖, 增强比分覆盖, 补洞单, and optional 搏冷/高赔率小单 when supported, with correct unit math such as 2 x 2 x 2 x 3 = 24 注 and 24 注 x 2 元/注 = 48 元. It must avoid certainty language and must not produce only a short table or thin model summary."
     }
   ]
 }

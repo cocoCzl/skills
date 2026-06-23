@@ -27,6 +27,14 @@ Every analyzable pre-match report should show:
 - final xG used for the Poisson calculation.
 - whether values were calculated with the bundled script, calculated manually, or approximated because tools/data were unavailable.
 
+For Chinese user-facing portfolio reports, also include a short "模型怎么来的" explanation before the recommendations. Use plain language:
+
+- 预期进球不是单纯猜比分；它 starts from team strength, attack/defense level, venue, competition scoring environment, and market strength.
+- 贝叶斯修正 means new evidence moves the prior up or down, such as injuries, rotation, group-table incentives, weather, or market movement.
+- 泊松模型 converts final xG into a score matrix, then aggregates the matrix into 胜平负, 大小球/总进球, and correct-score concentration.
+- 赔率隐含概率 shows what the market is pricing. A favorite can have a high win probability while still being weak on a deep handicap if the score cluster is 1-0 or 2-0.
+- This is a transparent decision aid, not a trained guarantee engine.
+
 ## Bayesian Updating
 
 Start from a prior expectation, then update with evidence.
@@ -79,6 +87,13 @@ For each match, report a compact Poisson record:
 - Over/under or total-goals probabilities when a line is available.
 - Top three to six score candidates, depending on whether the report is single-match or portfolio coverage.
 - Tail risk, such as early goal, red card, rotation, or high-score tail, when it conflicts with the main score set.
+
+For four-match score portfolios, use the score matrix to explain the purchase structure:
+
+- 主单比分: the single most coherent score path after market and football-context checks.
+- 核心覆盖: usually one to three high-concentration scores per match.
+- 增强覆盖: add the best secondary path, such as favorite concedes once, favorite only wins by one, or late expansion to a higher total.
+- 漏洞/补防: the score that would most obviously beat the main ticket logic, such as 1:1, 1:0, 2:1, or 3:1 depending on the match script.
 
 ## Implied Probability
 
