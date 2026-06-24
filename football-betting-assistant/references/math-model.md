@@ -9,7 +9,9 @@ Estimate:
 - `home_xg`: expected goals for home or nominal-home team.
 - `away_xg`: expected goals for away or nominal-away team.
 
-Use:
+When xG/xGA and competition average inputs are available, calculate the prior
+with `scripts/xg_prior_calculator.py` and the parameter rules in
+`references/model-parameters.md`. Use:
 
 - Team attacking and defensive output.
 - Competition scoring environment.
@@ -46,7 +48,7 @@ Examples:
 - Knockout match with conservative incentives: reduce total-goal expectation and increase draw/under likelihood.
 - Strong under market movement confirmed by lineup news: reduce total-goal expectation.
 
-If evidence is qualitative, state that the adjustment is qualitative. Do not pretend it is a trained model.
+If evidence is qualitative, state that the adjustment is qualitative. Do not pretend it is a trained model. When a listed adjustment code applies, keep the delta inside the bounded ranges in `references/model-parameters.md` and record the code, target, delta, and reason.
 
 Use Bayesian updating as a disciplined adjustment layer, not as vague wording. State the prior, the evidence, the direction of the update, and the final effect in compact form. Examples:
 
@@ -122,7 +124,7 @@ Useful comparison:
 edge = model probability - no-vig market probability
 ```
 
-Treat small edges cautiously. If the data confidence is low or single-source, downgrade.
+Treat small edges cautiously. Use `scripts/grade_calculator.py` when model and market probabilities are available, then apply any additional football-context downgrade. If the data confidence is low or single-source, downgrade.
 
 Use this wording discipline:
 

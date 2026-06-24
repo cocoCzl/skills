@@ -23,6 +23,9 @@ def load_module(name: str, relative_path: str):
 
 poisson = load_module("poisson_calculator", "scripts/poisson_calculator.py")
 implied = load_module("implied_probability", "scripts/implied_probability.py")
+xg_prior = load_module("xg_prior_calculator", "scripts/xg_prior_calculator.py")
+grade_calc = load_module("grade_calculator", "scripts/grade_calculator.py")
+match_model = load_module("match_model_calculator", "scripts/match_model_calculator.py")
 validator = load_module("validate_inputs", "scripts/validate_inputs.py")
 backtest = load_module("backtest_predictions", "scripts/backtest_predictions.py")
 
@@ -66,6 +69,70 @@ class ImpliedProbabilityTests(unittest.TestCase):
     def test_invalid_odds_fail(self):
         with self.assertRaises(ValueError):
             implied.calculate({"home": 1.0})
+
+
+class XgPriorCalculatorTests(unittest.TestCase):
+    def test_prior_and_bounded_adjustments_are_calculated(self):
+        adjustments = [
+            xg_prior.Adjustment("defensive_rotation", "home", 0.12, "away fullback doubtful"),
+            xg_prior.Adjustment("knockout_caution", "total", -0.12, "slow tempo"),
+        ]
+        result = xg_prior.calculate_prior(1.85, 0.85, 0.9, 1.65, venue_type="neutral", adjustments=adjustments)
+        self.assertGreater(result["prior_xg"]["home_xg"], result["prior_xg"]["away_xg"])
+        self.assertEqual(len(result["adjustments"]), 2)
+        self.assertGreater(result["final_xg"]["home_xg"], 0)
+        self.assertGreater(result["final_xg"]["away_xg"], 0)
+
+    def test_adjustment_outside_range_fails(self):
+        with self.assertRaises(ValueError):
+            xg_prior.parse_adjustment("main_striker_absent:home:-0.50")
+
+
+class GradeCalculatorTests(unittest.TestCase):
+    def test_clear_edge_can_be_a_with_strong_inputs(self):
+        result = grade_calc.calculate(0.58, 0.52, model_confidence="high", data_confidence="high", odds_confidence="high")
+        self.assertEqual(result["value_label"], "clear_value")
+        self.assertEqual(result["reference_grade"], "A")
+
+    def test_single_source_caps_grade_at_b(self):
+        result = grade_calc.calculate(0.58, 0.52, model_confidence="high", data_confidence="high", odds_confidence="high", single_source_odds=True)
+        self.assertEqual(result["reference_grade"], "B")
+        self.assertTrue(result["grade_caps"])
+        self.assertTrue(result["downgrade_reasons"])
+
+    def test_unresolved_conflict_forces_pass(self):
+        result = grade_calc.calculate(0.58, 0.52, source_conflict="unresolved")
+        self.assertEqual(result["reference_grade"], "Pass")
+
+
+class MatchModelCalculatorTests(unittest.TestCase):
+    def test_match_model_record_is_calculated_from_example(self):
+        path = ROOT / "examples" / "single-match-model-input.json"
+        document = json.loads(path.read_text(encoding="utf-8"))
+        result = match_model.calculate(document)
+        record = result["model_record"]
+        self.assertIn("prior", record)
+        self.assertIn("poisson", record)
+        self.assertIn("grade", record)
+        self.assertTrue(record["grade"]["value_judgment_available"])
+        self.assertIsNotNone(record["grade"]["edge"])
+        self.assertTrue(record["grade"]["grade_caps"])
+
+    def test_match_model_without_odds_has_no_value_judgment(self):
+        document = {
+            "teams": {
+                "home_xg_for": 1.4,
+                "home_xg_against": 1.0,
+                "away_xg_for": 1.1,
+                "away_xg_against": 1.2
+            },
+            "context": {"venue_type": "home_away"},
+            "grading": {"market_key": "home"}
+        }
+        result = match_model.calculate(document)
+        grade = result["model_record"]["grade"]
+        self.assertFalse(grade["value_judgment_available"])
+        self.assertIsNone(grade["edge"])
 
 
 class ValidatorTests(unittest.TestCase):

@@ -21,6 +21,63 @@
     "home_xg": { "type": "number", "minimum": 0 },
     "away_xg": { "type": "number", "minimum": 0 },
     "bayesian_adjustments": { "type": "array", "items": { "type": "string" } },
+    "model_record": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "prior": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["prior_xg", "adjustments", "final_xg"],
+          "properties": {
+            "prior_xg": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["home_xg", "away_xg"],
+              "properties": {
+                "home_xg": { "type": "number", "minimum": 0 },
+                "away_xg": { "type": "number", "minimum": 0 }
+              }
+            },
+            "adjustments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["code", "target", "delta"],
+                "properties": {
+                  "code": { "type": "string" },
+                  "target": { "type": "string", "enum": ["home", "away", "total"] },
+                  "delta": { "type": "number" },
+                  "note": { "type": "string" }
+                }
+              }
+            },
+            "final_xg": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["home_xg", "away_xg"],
+              "properties": {
+                "home_xg": { "type": "number", "minimum": 0 },
+                "away_xg": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "grade": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "edge": { "type": ["number", "null"] },
+            "value_label": { "type": "string" },
+            "value_judgment_available": { "type": "boolean" },
+            "reference_grade": { "type": "string", "enum": ["A", "B", "C", "Pass"] },
+            "grade_caps": { "type": "array", "items": { "type": "string" } },
+            "downgrade_reasons": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
     "result_probabilities": {
       "type": "object",
       "additionalProperties": false,

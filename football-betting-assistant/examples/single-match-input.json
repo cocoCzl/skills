@@ -9,8 +9,7 @@
         "kickoff_time": "2026-06-23T08:00:00+08:00",
         "timezone": "Asia/Shanghai",
         "venue_type": "neutral",
-        "venue_note": "中立场",
-        "source": "示例数据",
+        "source": "示例赛程源",
         "observed_at": "2026-06-22T20:00:00+08:00",
         "confidence": "medium"
       }
@@ -18,67 +17,35 @@
     "odds": [
       {
         "market": "match_result",
-        "bookmaker_or_source": "示例赔率源A",
-        "line": null,
+        "bookmaker_or_source": "示例赔率源",
         "home_price": 1.52,
         "draw_price": 4.1,
         "away_price": 7.2,
-        "over_price": null,
-        "under_price": null,
         "observed_at": "2026-06-22T20:00:00+08:00",
         "confidence": "medium",
-        "notes": "示例单源赔率，价值判断需降级"
-      },
-      {
-        "market": "over_under",
-        "bookmaker_or_source": "示例赔率源A",
-        "line": 2.5,
-        "home_price": null,
-        "draw_price": null,
-        "away_price": null,
-        "over_price": 1.92,
-        "under_price": 1.9,
-        "observed_at": "2026-06-22T20:00:00+08:00",
-        "confidence": "medium",
-        "notes": "示例大小球盘口"
+        "notes": "单源示例，价值判断需降级"
       }
     ],
     "team_contexts": [
       {
         "team": "西班牙",
-        "last_5_summary": "3胜1平1负，控球优势明显",
-        "last_10_summary": "7胜2平1负，进攻稳定",
-        "venue_adjusted_summary": "中立场样本有限",
+        "last_5_summary": "控球和压制力稳定",
+        "last_10_summary": "进攻稳定，防守失球偏少",
         "xg_for": 1.85,
         "xg_against": 0.85,
-        "goals_for": 1.9,
-        "goals_against": 0.8,
-        "injuries": [],
-        "suspensions": [],
         "lineup_status": "expected",
-        "motivation_context": "小组赛首轮，倾向稳健开局",
-        "weather_context": "无明显不利天气",
         "source": "示例球队数据",
-        "observed_at": "2026-06-22T20:00:00+08:00",
-        "confidence": "medium"
+        "observed_at": "2026-06-22T20:00:00+08:00"
       },
       {
         "team": "沙特",
-        "last_5_summary": "1胜2平2负，面对强队防守压力大",
-        "last_10_summary": "3胜3平4负，进攻效率波动",
-        "venue_adjusted_summary": "中立场防守反击倾向明显",
+        "last_5_summary": "面对强队防守压力较大",
+        "last_10_summary": "进攻效率波动",
         "xg_for": 0.9,
         "xg_against": 1.65,
-        "goals_for": 0.9,
-        "goals_against": 1.6,
-        "injuries": ["主力边后卫出战成疑"],
-        "suspensions": [],
         "lineup_status": "expected",
-        "motivation_context": "弱势方可能先稳守",
-        "weather_context": "无明显不利天气",
         "source": "示例球队数据",
-        "observed_at": "2026-06-22T20:00:00+08:00",
-        "confidence": "medium"
+        "observed_at": "2026-06-22T20:00:00+08:00"
       }
     ],
     "match_analysis": {
@@ -89,19 +56,13 @@
       "home_xg": 1.85,
       "away_xg": 0.65,
       "bayesian_adjustments": [
-        "沙特边路防守人员不稳，西班牙进球预期小幅上调",
-        "小组赛首轮节奏可能偏谨慎，总进球预期不过度上调"
+        "沙特防线压力大，西班牙进球预期小幅上调",
+        "首轮节奏偏谨慎，总进球预期不过度上调"
       ],
       "result_probabilities": {
         "home_win": 0.66,
         "draw": 0.22,
         "away_win": 0.12
-      },
-      "over_under_probabilities": {
-        "line": 2.5,
-        "over": 0.45,
-        "under": 0.55,
-        "push": 0
       },
       "score_candidates": [
         { "score": "1:0", "role": "primary", "probability": 0.16 },
@@ -111,7 +72,7 @@
       "model_confidence": "medium",
       "data_confidence": "medium",
       "reference_grade": "B",
-      "risk_points": ["首发未确认，A 级不可用", "赔率为示例单源，价值判断降级"]
+      "risk_points": ["首发未确认", "单源赔率"]
     }
   }
 }

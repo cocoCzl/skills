@@ -29,18 +29,18 @@ If the user asks to improve hit rate, accuracy, calibration, or model quality, r
 2. Collect Odds Data when Value Judgment is requested or implied.
 3. Collect Team Form Window and current team context.
 4. Build a Data Summary Table.
-5. Estimate expected goals from attack/defense strength, venue, competition scoring environment, and recent form.
-6. Apply Bayesian updates for injuries, lineups, motivation, schedule, weather, and market movement. Show the direction of each meaningful adjustment.
+5. Estimate expected goals from attack/defense strength, venue, competition scoring environment, and recent form. Prefer `scripts/xg_prior_calculator.py` when xG/xGA and league-average inputs exist.
+6. Apply bounded Bayesian-style updates for injuries, lineups, motivation, schedule, weather, and market movement. Show the code/range when using `references/model-parameters.md`; otherwise label the adjustment qualitative.
 7. Use the Poisson model to derive result, goals, and score probabilities. Use `scripts/poisson_calculator.py` when available; otherwise label the probabilities approximate.
 8. Compare model probabilities with implied probabilities when odds exist.
-9. Apply downgrade rules.
+9. Apply edge thresholds and downgrade rules. Prefer `scripts/grade_calculator.py` when model probability and no-vig market probability exist.
 10. Produce the Single-Match Report template.
 
 Single-match reports must include a visible evidence chain:
 
 - 数据来源：name the source categories used, such as official fixture page, odds aggregator/bookmaker, team news outlet, stats site, weather source, or user-provided data.
 - 基础面：form, attack/defense, injuries/lineups, venue/weather, motivation/schedule.
-- 数学模型：prior xG, Bayesian adjustments, final xG, Poisson concentration, and result/total-goals probabilities.
+- 数学模型：prior xG, bounded Bayesian adjustments, final xG, Poisson concentration, and result/total-goals probabilities.
 - 玩法判断：separate probability lean from odds value.
 - 风险：why the grade is not higher, and what late information could change it.
 
@@ -53,7 +53,7 @@ For group-stage final-round matches, calculate qualification context before trea
 3. Start with a 北京时间比赛清单 / 今日赛程确认 section that lists every match, exact kickoff time in the user's timezone, group/competition, venue context, and current data confidence. If the user says "明天", convert it to an exact date using the current date and timezone.
 4. For tournament group-stage slates, verify or request current group ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context before using motivation as a model adjustment. If unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section.
 5. Build a compact 赔率与市场中心 section before the match notes. When correct-score odds are available, list the lowest-price score cluster for each match and explain what the market center implies.
-6. Explain the math model in user-readable language before or during the match notes: expected-goals prior, Bayesian adjustment direction, final xG, Poisson score concentration, odds implied/no-vig probability when odds exist, and whether the calculator/script or an approximation was used.
+6. Explain the math model in user-readable language before or during the match notes: expected-goals prior, bounded Bayesian adjustment direction, final xG, Poisson score concentration, odds implied/no-vig probability when odds exist, edge/grade caps, and whether the calculator/script or an approximation was used.
 7. Run the Single-Match Analysis flow in compact but substantive prose for each match before giving any portfolio plan. Each match should read like a decision note, not only a row in a table.
 8. For each match, include source notes, group/table context, basic football context, match script, model record, result lean, handicap lean, over-under/total-goals lean, score ranking, reference grade, and risk.
 9. Check Portfolio Correlation: competition stage, same group/table incentives, rotation, weather clusters, and shared market assumptions.

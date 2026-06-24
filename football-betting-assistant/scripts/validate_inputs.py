@@ -95,6 +95,20 @@ def validate_match_analysis(record: dict[str, Any], path: str) -> tuple[list[str
         errors.append(f"{path}: score_candidates must contain exactly three entries")
     if record.get("data_confidence") == "low" and record.get("reference_grade") == "A":
         errors.append(f"{path}: A grade cannot be used with low data confidence")
+    model_record = record.get("model_record") or {}
+    if model_record:
+        prior = model_record.get("prior") or {}
+        final_xg = prior.get("final_xg") or {}
+        if final_xg:
+            for source_key, record_key in (("home_xg", "home_xg"), ("away_xg", "away_xg")):
+                if record.get(record_key) is not None and final_xg.get(source_key) is not None:
+                    if abs(record[record_key] - final_xg[source_key]) > 0.03:
+                        warnings.append(f"{path}: {record_key} differs from model_record.prior.final_xg.{source_key}")
+        grade = model_record.get("grade") or {}
+        if grade.get("reference_grade") and grade["reference_grade"] != record.get("reference_grade"):
+            warnings.append(f"{path}: reference_grade differs from model_record.grade.reference_grade")
+        if grade.get("value_judgment_available") is False and grade.get("edge") is not None:
+            warnings.append(f"{path}: edge present while value judgment is marked unavailable")
     return errors, warnings
 
 

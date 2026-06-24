@@ -1,0 +1,36 @@
+{
+  "teams": {
+    "home_xg_for": 1.85,
+    "home_xg_against": 0.85,
+    "away_xg_for": 0.9,
+    "away_xg_against": 1.65
+  },
+  "league": {
+    "home_xg": 1.45,
+    "away_xg": 1.15
+  },
+  "context": {
+    "venue_type": "neutral",
+    "adjustments": [
+      "defensive_rotation:home:0.12:沙特边路防守人员不稳",
+      "knockout_caution:total:-0.12:小组赛首轮节奏偏谨慎"
+    ]
+  },
+  "odds": {
+    "home_price": 1.52,
+    "draw_price": 4.1,
+    "away_price": 7.2,
+    "over_under_line": 2.5
+  },
+  "grading": {
+    "market_key": "home",
+    "model_confidence": "medium",
+    "data_confidence": "medium",
+    "odds_confidence": "medium",
+    "single_source_odds": true,
+    "lineup_status": "expected",
+    "risk_tier": "medium"
+  },
+  "max_goals": 8,
+  "top_n": 6
+}

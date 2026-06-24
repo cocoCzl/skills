@@ -2,6 +2,12 @@
 
 Use these rules to decide Reference Grade, Model Confidence, Data Confidence, and when to stop.
 
+When model probability and no-vig market probability are available, run
+`scripts/grade_calculator.py` first. Treat its grade as the maximum mechanical
+grade after edge thresholds and hard caps; the agent may downgrade further for
+football context, but should not upgrade above the scripted cap without new
+verified information.
+
 ## Reference Grades
 
 **A**: Strong model support and strong data confidence. Requires current fixture, odds, team context, and no unresolved major source conflict. Do not assign A close to kickoff without late lineup/injury/weather/market context.

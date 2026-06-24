@@ -5,11 +5,11 @@
       { "match": "葡萄牙 vs 乌兹别克", "grade": "B" },
       { "match": "英格兰 vs 加纳", "grade": "B" },
       { "match": "巴拿马 vs 克罗地亚", "grade": "B" },
-      { "match": "哥伦比亚 vs 刚果（金）", "grade": "B" }
+      { "match": "哥伦比亚 vs 刚果（金）", "grade": "B-" }
     ],
     "correlation_notes": [
-      "四场为世界杯小组赛同一比赛日窗口，需要先核验当前胜平负、积分、净胜球和出线压力",
-      "葡萄牙、英格兰示例截图未提供普通胜平负购买项，购买方案只能使用让球胜平负、比分、总进球或其他可见市场"
+      "四场均需先核验赛程、赔率和小组形势",
+      "普通胜平负不可买时，购买方案只能使用可见市场"
     ],
     "ticket_tiers": [
       {
@@ -26,7 +26,7 @@
             "market_type": "handicap_result",
             "market_available": true,
             "selection": "葡萄牙 -2 让平/让胜方向",
-            "selection_basis": "普通胜平负不可买，使用截图可见让球胜平负",
+            "selection_basis": "普通胜平负不可买，使用可见让球市场",
             "score_coverage": ["2:0", "3:0"]
           },
           {
@@ -35,7 +35,7 @@
             "market_type": "handicap_result",
             "market_available": true,
             "selection": "英格兰 -2 让平/让胜方向",
-            "selection_basis": "普通胜平负不可买，使用截图可见让球胜平负",
+            "selection_basis": "普通胜平负不可买，使用可见让球市场",
             "score_coverage": ["2:0", "3:0"]
           },
           {
@@ -44,8 +44,8 @@
             "market_type": "ordinary_result",
             "market_available": true,
             "selection": "克罗地亚胜",
-            "selection_basis": "截图可见普通胜平负，市场支持客胜但需防一球小胜",
-            "score_coverage": ["0:1", "0:2", "1:2"]
+            "selection_basis": "普通胜平负可买，方向强于比分单点",
+            "score_coverage": ["0:1", "0:2"]
           },
           {
             "match": "哥伦比亚 vs 刚果（金）",
@@ -53,160 +53,13 @@
             "market_type": "ordinary_result",
             "market_available": true,
             "selection": "哥伦比亚胜",
-            "selection_basis": "截图可见普通胜平负，低赔支持主胜但需防1:1",
-            "score_coverage": ["1:0", "2:0", "2:1"]
-          }
-        ],
-        "risk_tier": "medium",
-        "value_judgment": "示例为单源截图赔率，方向判断可用但价值判断降级",
-        "reason": "只使用截图中可买市场，不把不可买普通胜平负放入购买方案"
-      },
-      {
-        "name": "大小球/总进球单",
-        "stake_label": "大小球/总进球单",
-        "unit_count": 16,
-        "unit_price": 2,
-        "total_amount": 32,
-        "structure": "2 x 2 x 2 x 2 = 16 注",
-        "legs": [
-          {
-            "match": "葡萄牙 vs 乌兹别克",
-            "market": "总进球",
-            "market_type": "total_goals",
-            "market_available": true,
-            "selection": "2/3球为核心，4球补防",
-            "selection_basis": "截图总进球低赔集中在3球和4球附近",
-            "score_coverage": ["2:0", "3:0", "3:1"]
-          },
-          {
-            "match": "英格兰 vs 加纳",
-            "market": "总进球",
-            "market_type": "total_goals",
-            "market_available": true,
-            "selection": "2/3球为核心",
-            "selection_basis": "比分低赔与总进球均支持2-3球中心",
-            "score_coverage": ["2:0", "1:0", "2:1"]
-          },
-          {
-            "match": "巴拿马 vs 克罗地亚",
-            "market": "大小球",
-            "market_type": "over_under",
-            "market_available": true,
-            "selection": "2-3球倾向",
-            "selection_basis": "克罗地亚胜面高但打穿风险一般",
-            "score_coverage": ["0:1", "0:2", "1:2"]
-          },
-          {
-            "match": "哥伦比亚 vs 刚果（金）",
-            "market": "大小球",
-            "market_type": "over_under",
-            "market_available": true,
-            "selection": "1-3球倾向",
-            "selection_basis": "哥伦比亚优势明确但平局和小比分尾部需要保留",
-            "score_coverage": ["1:0", "2:0", "1:1"]
-          }
-        ],
-        "risk_tier": "medium",
-        "value_judgment": "总进球/大小球作为比分之外的独立参考，不等同保证命中",
-        "reason": "回应用户同时要求大小球/总进球玩法"
-      },
-      {
-        "name": "基础比分覆盖",
-        "stake_label": "基础比分覆盖",
-        "unit_count": 16,
-        "unit_price": 2,
-        "total_amount": 32,
-        "structure": "2 x 2 x 2 x 2 = 16 注",
-        "legs": [
-          {
-            "match": "葡萄牙 vs 乌兹别克",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "2:0 / 3:0",
-            "selection_basis": "比分低赔与模型集中在葡萄牙零封两到三球",
-            "score_coverage": ["2:0", "3:0"]
-          },
-          {
-            "match": "英格兰 vs 加纳",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "2:0 / 1:0",
-            "selection_basis": "英格兰胜面清楚但穿-2不稳定",
-            "score_coverage": ["2:0", "1:0"]
-          },
-          {
-            "match": "巴拿马 vs 克罗地亚",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "0:1 / 0:2",
-            "selection_basis": "克罗地亚客胜但一球小胜权重高",
-            "score_coverage": ["0:1", "0:2"]
-          },
-          {
-            "match": "哥伦比亚 vs 刚果（金）",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "1:0 / 2:0",
-            "selection_basis": "哥伦比亚主胜低赔，小比分优先",
+            "selection_basis": "普通胜平负可买，但需保留小比分风险",
             "score_coverage": ["1:0", "2:0"]
           }
         ],
-        "risk_tier": "high",
-        "value_judgment": "比分组合方差高，仅作为比分覆盖参考",
-        "reason": "按每场核心比分区间形成基础覆盖"
-      },
-      {
-        "name": "增强比分覆盖",
-        "stake_label": "增强比分覆盖",
-        "unit_count": 81,
-        "unit_price": 2,
-        "total_amount": 162,
-        "structure": "3 x 3 x 3 x 3 = 81 注",
-        "legs": [
-          {
-            "match": "葡萄牙 vs 乌兹别克",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "2:0 / 3:0 / 3:1",
-            "selection_basis": "完整写出增强集合，覆盖乌兹别克进球尾部",
-            "score_coverage": ["2:0", "3:0", "3:1"]
-          },
-          {
-            "match": "英格兰 vs 加纳",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "2:0 / 1:0 / 3:0",
-            "selection_basis": "完整写出增强集合，覆盖只赢一球和打穿",
-            "score_coverage": ["2:0", "1:0", "3:0"]
-          },
-          {
-            "match": "巴拿马 vs 克罗地亚",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "0:1 / 0:2 / 1:2",
-            "selection_basis": "完整写出增强集合，覆盖巴拿马进球",
-            "score_coverage": ["0:1", "0:2", "1:2"]
-          },
-          {
-            "match": "哥伦比亚 vs 刚果（金）",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "1:0 / 2:0 / 2:1",
-            "selection_basis": "完整写出增强集合，覆盖刚果（金）反击进球",
-            "score_coverage": ["1:0", "2:0", "2:1"]
-          }
-        ],
-        "risk_tier": "high",
-        "value_judgment": "比分组合成本和方差均高，只作增强覆盖参考",
-        "reason": "给每场最合理的次级比分路径增加容错"
+        "risk_tier": "medium",
+        "value_judgment": "示例为单源赔率，价值判断降级",
+        "reason": "只使用可买市场，不把不可买普通胜平负放入购买方案"
       },
       {
         "name": "混合过关单",
@@ -222,7 +75,7 @@
             "market_type": "total_goals",
             "market_available": true,
             "selection": "3/4球方向",
-            "selection_basis": "用总进球替代不可买普通胜平负，降低精确比分依赖",
+            "selection_basis": "用总进球替代不可买普通胜平负",
             "score_coverage": ["2:1", "3:0", "3:1"]
           },
           {
@@ -231,7 +84,7 @@
             "market_type": "handicap_result",
             "market_available": true,
             "selection": "英格兰 -2 让平/让胜方向",
-            "selection_basis": "截图可买让球市场，防赢两球或三球分叉",
+            "selection_basis": "可买让球市场，防赢两球或三球分叉",
             "score_coverage": ["2:0", "3:0"]
           },
           {
@@ -240,7 +93,7 @@
             "market_type": "ordinary_result",
             "market_available": true,
             "selection": "克罗地亚胜",
-            "selection_basis": "普通胜平负可买，方向强于比分单点",
+            "selection_basis": "普通胜平负可买",
             "score_coverage": ["0:1", "0:2", "1:2"]
           },
           {
@@ -255,56 +108,7 @@
         ],
         "risk_tier": "medium",
         "value_judgment": "混合过关减少对纯比分四串一的依赖，但仍有串关波动",
-        "reason": "同时回应方向、大小球/总进球和比分三类需求"
-      },
-      {
-        "name": "补洞单",
-        "stake_label": "补洞单",
-        "unit_count": 1,
-        "unit_price": 2,
-        "total_amount": 2,
-        "structure": "1 x 1 x 1 x 1 = 1 注",
-        "legs": [
-          {
-            "match": "葡萄牙 vs 乌兹别克",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "1:0",
-            "selection_basis": "防葡萄牙赢球但不穿",
-            "score_coverage": ["1:0"]
-          },
-          {
-            "match": "英格兰 vs 加纳",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "2:1",
-            "selection_basis": "防加纳反击进球",
-            "score_coverage": ["2:1"]
-          },
-          {
-            "match": "巴拿马 vs 克罗地亚",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "1:1",
-            "selection_basis": "防克罗地亚优势未兑现",
-            "score_coverage": ["1:1"]
-          },
-          {
-            "match": "哥伦比亚 vs 刚果（金）",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "1:1",
-            "selection_basis": "防哥伦比亚被拖平",
-            "score_coverage": ["1:1"]
-          }
-        ],
-        "risk_tier": "high",
-        "value_judgment": "仅作为主单之外的漏洞覆盖参考",
-        "reason": "覆盖主线最明显的只赢一球或平局漏洞"
+        "reason": "同时覆盖方向、总进球和比分需求"
       }
     ],
     "more_combination_candidates": [
@@ -322,35 +126,8 @@
             "market_type": "correct_score",
             "market_available": true,
             "selection": "4:0",
-            "selection_basis": "强队早进球后的扩张比分",
+            "selection_basis": "低概率扩张比分",
             "score_coverage": ["4:0"]
-          },
-          {
-            "match": "英格兰 vs 加纳",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "3:1",
-            "selection_basis": "英格兰打穿但丢一球的尾部",
-            "score_coverage": ["3:1"]
-          },
-          {
-            "match": "巴拿马 vs 克罗地亚",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "0:3",
-            "selection_basis": "克罗地亚早领先后的扩张比分",
-            "score_coverage": ["0:3"]
-          },
-          {
-            "match": "哥伦比亚 vs 刚果（金）",
-            "market": "比分",
-            "market_type": "correct_score",
-            "market_available": true,
-            "selection": "3:0",
-            "selection_basis": "哥伦比亚早破门后的扩张比分",
-            "score_coverage": ["3:0"]
           }
         ],
         "risk_tier": "high",

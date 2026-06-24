@@ -25,6 +25,7 @@ Read only the files needed for the request:
 - For Single-Match Analysis, Betting Portfolio, runtime modes, and Post-Match Review flow, read `references/workflow.md`.
 - For fixture, odds, team-context collection, source priority, credential fallback, timestamps, and conflicts, read `references/data-sources.md`.
 - For expected goals, Bayesian updating, Poisson score matrices, and implied probability, read `references/math-model.md`.
+- For reproducible xG priors, bounded adjustment ranges, edge thresholds, and grade caps, read `references/model-parameters.md`.
 - For historical backtesting, probability calibration, hit-rate review, and model improvement, read `references/backtesting.md`.
 - For output format, read `references/report-templates.md`.
 - For Reference Grades, Information Sufficiency, downgrade rules, stop rules, and language guardrails, read `references/downgrade-rules.md`.
@@ -33,6 +34,9 @@ Use scripts only when deterministic calculation or validation helps:
 
 - `scripts/poisson_calculator.py`: score matrix, result probabilities, over-under probabilities.
 - `scripts/implied_probability.py`: raw implied probability, margin, normalized no-vig probability.
+- `scripts/xg_prior_calculator.py`: reproducible base xG prior and bounded contextual adjustments.
+- `scripts/grade_calculator.py`: edge label, initial Reference Grade, and rule-based grade caps.
+- `scripts/match_model_calculator.py`: end-to-end single-match model record when structured inputs are available.
 - `scripts/validate_inputs.py`: schema and data-quality validation for example or collected JSON.
 - `scripts/backtest_predictions.py`: historical hit-rate, score coverage, Brier score, log loss, calibration buckets, and grade breakdown.
 
@@ -42,7 +46,7 @@ Use scripts only when deterministic calculation or validation helps:
 2. If concrete fixtures are missing, perform Fixture Discovery. If verification is unavailable, ask the user for the missing match list.
 3. Collect or request Odds Data and team context according to `references/data-sources.md`.
 4. Build a Data Summary Table before analysis.
-5. Estimate expected goals, apply Bayesian adjustments, and use the Poisson model for every analyzable match. Use calculators when available; otherwise label approximations and downgrade confidence.
+5. Estimate expected goals, apply bounded Bayesian-style adjustments, and use the Poisson model for every analyzable match. Use `xg_prior_calculator.py`, `poisson_calculator.py`, and `grade_calculator.py` when the needed inputs exist; otherwise label approximations and downgrade confidence.
 6. Compare model probabilities with implied probabilities only when verifiable Odds Data exists.
 7. Apply downgrade and stop rules.
 8. Produce the report template. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the exact Beijing-time match slate, then group/table context, then analyze each match in readable prose, then provide reference plans.
