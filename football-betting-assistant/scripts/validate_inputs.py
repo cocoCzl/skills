@@ -118,8 +118,8 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
     for field in _missing(record, SCHEMA_REQUIRED["portfolio"]):
         errors.append(f"{path}: missing required field '{field}'")
     matches = record.get("matches", [])
-    if not (1 <= len(matches) <= 4):
-        errors.append(f"{path}: portfolio must contain one to four matches")
+    if len(matches) < 1:
+        errors.append(f"{path}: portfolio must contain at least one match")
     for i, tier in enumerate(record.get("ticket_tiers", []), start=1):
         unit_count = tier.get("unit_count")
         total_amount = tier.get("total_amount")
@@ -129,7 +129,15 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
         if tier.get("stake_label") in {"稳健方向单", "基础比分覆盖", "增强比分覆盖", "补洞单", "搏冷/高赔率小单"}:
             if not unit_count:
                 warnings.append(f"{path}.ticket_tiers[{i}]: named portfolio variants should show unit_count")
-        for leg_index, leg in enumerate(tier.get("legs", []), start=1):
+        legs = tier.get("legs", [])
+        if len(legs) > 8:
+            errors.append(f"{path}.ticket_tiers[{i}]: direction-style tickets must contain at most eight legs")
+        correct_score_legs = [leg for leg in legs if leg.get("market_type") == "correct_score"]
+        if correct_score_legs and len(correct_score_legs) == len(legs) and len(legs) > 4:
+            errors.append(f"{path}.ticket_tiers[{i}]: exact-score tickets must contain at most four legs")
+        if "比分" in str(tier.get("stake_label", "")) and len(legs) > 4:
+            errors.append(f"{path}.ticket_tiers[{i}]: score-labeled tickets must contain at most four legs")
+        for leg_index, leg in enumerate(legs, start=1):
             coverage = leg.get("score_coverage", [])
             if len(coverage) > 4:
                 errors.append(f"{path}.ticket_tiers[{i}].legs[{leg_index}]: score_coverage must have at most four scores")

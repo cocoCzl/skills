@@ -6,7 +6,7 @@ Use these terms consistently in reports, examples, schemas, and scripts.
 
 **Single-Match Analysis**: Analysis focused on one football match and its available betting markets.
 
-**Betting Portfolio**: A reference set of betting leans across more than one match, limited in the first version to no more than four matches.
+**Betting Portfolio**: A reference set of betting leans across more than one match. Analyze every confirmed match in the user's slate; apply ticket limits by market family rather than limiting the analysis slate.
 
 **Match Result Market**: A market on home win, draw, or away win.
 

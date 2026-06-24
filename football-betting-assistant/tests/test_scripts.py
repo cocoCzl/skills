@@ -155,6 +155,87 @@ class ValidatorTests(unittest.TestCase):
         result = validator.validate_document(document)
         self.assertTrue(result["valid"], result)
 
+    def test_portfolio_allows_six_match_direction_ticket(self):
+        legs = [
+            {
+                "match": f"Match {index}",
+                "market": "胜平负",
+                "market_type": "ordinary_result",
+                "market_available": True,
+                "selection": "主胜",
+                "selection_basis": "方向置信度较高",
+                "score_coverage": []
+            }
+            for index in range(1, 7)
+        ]
+        document = {
+            "kind": "portfolio",
+            "data": {
+                "matches": [{"match": f"Match {index}"} for index in range(1, 7)],
+                "correlation_notes": ["方向单最多8腿，6场可校验"],
+                "ticket_tiers": [
+                    {
+                        "name": "模型最稳主单",
+                        "stake_label": "让球/胜平负方向单",
+                        "unit_count": 1,
+                        "unit_price": 2,
+                        "total_amount": 2,
+                        "structure": "1 x 1 x 1 x 1 x 1 x 1 = 1 注",
+                        "legs": legs,
+                        "risk_tier": "medium",
+                        "value_judgment": "示例方向单",
+                        "reason": "6场方向类组合在8腿上限内"
+                    }
+                ],
+                "more_combination_candidates": [],
+                "excluded_matches": [],
+                "portfolio_risk_tier": "medium"
+            }
+        }
+        result = validator.validate_document(document)
+        self.assertTrue(result["valid"], result)
+
+    def test_portfolio_rejects_five_leg_exact_score_ticket(self):
+        legs = [
+            {
+                "match": f"Match {index}",
+                "market": "比分",
+                "market_type": "correct_score",
+                "market_available": True,
+                "selection": "1:0",
+                "selection_basis": "比分集中",
+                "score_coverage": ["1:0"]
+            }
+            for index in range(1, 6)
+        ]
+        document = {
+            "kind": "portfolio",
+            "data": {
+                "matches": [{"match": f"Match {index}"} for index in range(1, 7)],
+                "correlation_notes": [],
+                "ticket_tiers": [
+                    {
+                        "name": "错误比分单",
+                        "stake_label": "比分4串1",
+                        "unit_count": 1,
+                        "unit_price": 2,
+                        "total_amount": 2,
+                        "structure": "1 x 1 x 1 x 1 x 1 = 1 注",
+                        "legs": legs,
+                        "risk_tier": "high",
+                        "value_judgment": "示例",
+                        "reason": "应被比分最多4场规则拒绝"
+                    }
+                ],
+                "more_combination_candidates": [],
+                "excluded_matches": [],
+                "portfolio_risk_tier": "medium"
+            }
+        }
+        result = validator.validate_document(document)
+        self.assertFalse(result["valid"], result)
+        self.assertTrue(any("exact-score tickets" in error or "score-labeled tickets" in error for error in result["errors"]))
+
 
 class BacktestTests(unittest.TestCase):
     def test_backtest_metrics_are_calculated(self):

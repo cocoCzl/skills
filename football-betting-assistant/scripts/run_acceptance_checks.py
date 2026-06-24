@@ -83,6 +83,11 @@ README_REQUIRED_PHRASES = [
     "log loss",
     "让球/胜平负方向单",
     "大小球/总进球单",
+    "比分4串1",
+    "备选/替换",
+    "可选小组合",
+    "精确比分串关最多 4 场",
+    "胜平负 / 让球胜平负最多 8 场",
     "混合过关单",
     "reports/football-betting/YYYY-MM-DD-[slug].html"
 ]
@@ -92,6 +97,7 @@ EVAL_KEYWORDS = {
     "fallback": ["不能联网", "offline fallback"],
     "single_match": ["西班牙 vs 沙特"],
     "portfolio": ["四串一"],
+    "large_slate": ["第三轮小组赛", "6 场", "比分4串1", "最多 8 场"],
     "missing_odds": ["没有赔率", "Value Judgment"],
     "conflict": ["A站说德国让1球", "Source Conflict"],
     "consistency": ["大2.5", "Market Consistency"],
@@ -172,7 +178,7 @@ def check_portfolio_template() -> None:
     text = (ROOT / "references" / "report-templates.md").read_text(encoding="utf-8")
     for phrase in (
         "北京时间比赛清单",
-        "今天四场先看结论",
+        "全场次先看结论",
         "比赛大纲",
         "小组当前战绩",
         "当前胜平负",
@@ -188,13 +194,17 @@ def check_portfolio_template() -> None:
         "edge/评级封顶",
         "胜平负与大小球汇总",
         "比分覆盖建议",
-        "四串一参考购买方案",
+        "参考购买方案",
+        "模型最稳主单",
         "让球/胜平负方向单",
         "大小球/总进球单",
+        "比分4串1",
         "稳健方向单",
         "基础比分覆盖",
         "增强比分覆盖",
         "混合过关单",
+        "备选/替换",
+        "可选小组合",
         "补洞单",
         "搏冷/高赔率小单",
         "更多组合候选"
@@ -204,6 +214,39 @@ def check_portfolio_template() -> None:
     for forbidden in ("2 元档", "16 元档", "32 元档", "48 元档", "分档参考购买方案"):
         if forbidden in text:
             fail(f"portfolio template still contains fixed tier wording: {forbidden}")
+    for required in (
+        "Analyze every confirmed match in the slate",
+        "exact-score tickets up to four matches",
+        "direction tickets up to eight matches",
+        "Do not force a 4/6/8-leg ticket"
+    ):
+        if required not in text:
+            fail(f"portfolio template missing multi-match rule: {required}")
+
+
+def check_large_slate_rules() -> None:
+    combined = "\n".join(
+        (ROOT / relative).read_text(encoding="utf-8")
+        for relative in ("SKILL.md", "references/workflow.md", "references/report-templates.md", "references/glossary.md")
+    )
+    forbidden_phrases = (
+        "Support Betting Portfolio analysis for up to four matches",
+        "Betting Portfolio, up to four matches",
+        "Support up to four matches.",
+        "ask them to reduce the portfolio to four matches"
+    )
+    for phrase in forbidden_phrases:
+        if phrase in combined:
+            fail(f"obsolete four-match portfolio limit remains: {phrase}")
+    for phrase in (
+        "analyze every match",
+        "exact-score",
+        "up to four matches",
+        "direction tickets may include up to eight matches",
+        "model may select fewer than the maximum"
+    ):
+        if phrase not in combined:
+            fail(f"large-slate rule missing: {phrase}")
 
 
 def check_evals() -> None:
@@ -226,6 +269,7 @@ def main() -> int:
     check_report_language()
     check_readme_usage()
     check_portfolio_template()
+    check_large_slate_rules()
     check_evals()
     print("football-betting-assistant acceptance checks passed")
     return 0

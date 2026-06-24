@@ -15,11 +15,11 @@ Follow this workflow before producing any football betting report.
 Classify the user request as one of:
 
 1. Single-Match Analysis.
-2. Betting Portfolio, up to four matches.
+2. Betting Portfolio, full-slate analysis with ticket limits by market family.
 3. Post-Match Review.
 4. Historical Backtest / Calibration.
 
-If the user asks for more than four matches in a portfolio, analyze the fixture list but ask them to reduce the portfolio to four matches or fewer for the first version.
+If the user asks for 6, 8, 10, or more matches in a portfolio, analyze every fixture individually. Do not ask them to reduce the slate before analysis. Apply limits only when constructing ticket plans: exact-score tickets up to four matches; 胜平负 / 让球胜平负 direction tickets up to eight matches; 大小球 / 总进球 direction tickets up to eight matches.
 
 If the user asks to improve hit rate, accuracy, calibration, or model quality, route to Historical Backtest / Calibration. Do not claim the skill can improve future outcomes without measured historical evidence.
 
@@ -48,8 +48,8 @@ For group-stage final-round matches, calculate qualification context before trea
 
 ## Betting Portfolio Flow
 
-1. Confirm up to four concrete fixtures.
-2. Default to the 经理人详版 for 四串一, 串关, and "明天早上四场" requests unless the user asks for a short answer. Use this order: 先给总方案 -> 北京时间比赛清单 -> 小组当前战绩/积分/出线形势 -> 玩法可买性 -> 赔率与市场中心 -> 模型怎么来的 -> 逐场分析 -> 分玩法购买方案 -> 组合风险.
+1. Confirm the full concrete fixture slate. For 6, 8, 10, or more matches, keep the full slate in the report and analyze every match.
+2. Default to the 经理人详版 for 四串一, 串关, "明天第三轮", "明天早上", and multi-group final-round requests unless the user asks for a short answer. Use this order: 先给全场次结论 -> 北京时间比赛清单 -> 小组当前战绩/积分/出线形势 -> 玩法可买性 -> 赔率与市场中心 -> 模型怎么来的 -> 全场逐场分析 -> 模型最稳主单 -> 比分4串1 -> 方向类组合 -> 备选/替换 -> 可选小组合 -> 组合风险.
 3. Start with a 北京时间比赛清单 / 今日赛程确认 section that lists every match, exact kickoff time in the user's timezone, group/competition, venue context, and current data confidence. If the user says "明天", convert it to an exact date using the current date and timezone.
 4. For tournament group-stage slates, verify or request current group ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context before using motivation as a model adjustment. If unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section.
 5. Build a compact 赔率与市场中心 section before the match notes. When correct-score odds are available, list the lowest-price score cluster for each match and explain what the market center implies.
@@ -57,40 +57,45 @@ For group-stage final-round matches, calculate qualification context before trea
 7. Run the Single-Match Analysis flow in compact but substantive prose for each match before giving any portfolio plan. Each match should read like a decision note, not only a row in a table.
 8. For each match, include source notes, group/table context, basic football context, match script, model record, result lean, handicap lean, over-under/total-goals lean, score ranking, reference grade, and risk.
 9. Check Portfolio Correlation: competition stage, same group/table incentives, rotation, weather clusters, and shared market assumptions.
-10. Exclude Pass matches or matches with severe Information Sufficiency gaps.
-11. Build portfolio variants from the actual score concentration and user intent. Do not force fixed 2/16/32/48 元 tiers. Calculate units as the product of selected outcomes per match and show amount only as `units x 2 元/unit`.
-12. Add named portfolio variants when supported by the data: 让球/胜平负方向单, 大小球/总进球单, 单比分主推小单, 基础比分覆盖, 增强比分覆盖, 混合过关单, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
-13. Provide More Combination Candidates only when there are extra plausible directions, and keep them separate from the main plans.
-14. Provide Score Coverage with up to four scores per match only when a match has a meaningful secondary path, such as late-goal expansion, red-card tail risk, draw protection, favorite-underperformance risk, or underdog transition threat.
-15. Produce the Portfolio Report template.
+10. Exclude Pass matches or matches with severe Information Sufficiency gaps from tickets, but still show their single-match analysis and explain why they are not in the main plan.
+11. Build portfolio variants from the actual model confidence, score concentration, market availability, and user intent. Do not force fixed 2/16/32/48 元 tiers or force a 4/6/8-leg ticket. Calculate units as the product of selected outcomes per match and show amount only as `units x 2 元/unit`.
+12. Apply ticket limits by market family: exact-score tickets may use up to four matches; 胜平负 / 让球胜平负 direction tickets may use up to eight matches; 大小球 / 总进球 direction tickets may use up to eight matches. Mixed tickets may use up to eight matches, but if exact-score legs dominate, keep them to four matches.
+13. Add named portfolio variants when supported by the data: 模型最稳主单, 让球/胜平负方向单, 大小球/总进球单, 单比分主推小单, 比分4串1, 基础比分覆盖, 增强比分覆盖, 混合过关单, 备选/替换, 可选小组合, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
+14. Provide More Combination Candidates only when there are extra plausible directions, and keep them separate from the main plans.
+15. Provide Score Coverage for every analyzed match. Use up to four scores per match only when a match has a meaningful secondary path, such as late-goal expansion, red-card tail risk, draw protection, favorite-underperformance risk, or underdog transition threat.
+16. Produce the Portfolio Report template.
 
 Do not output a single "only correct" portfolio. If enough data exists, always offer separate market-family plans plus optional alternative combinations.
 
 When the user asks for 比分、胜平负、大小球 together, cover all requested families:
 
-- 让球/胜平负方向单: use only markets confirmed as buyable from the user's screenshot/source. If ordinary 胜平负 is unavailable, state it is analysis-only and build the ticket from 让球胜平负 or another visible market.
-- 大小球/总进球单: provide at least one pure total-goals or over-under structure when the market exists in the supplied odds.
-- 比分单: provide single-score, core coverage, enhanced coverage, and补洞 score sets with complete score lists per match.
+- 让球/胜平负方向单: use only markets confirmed as buyable from the user's screenshot/source, up to eight legs. If ordinary 胜平负 is unavailable, state it is analysis-only and build the ticket from 让球胜平负 or another visible market.
+- 大小球/总进球单: provide at least one pure total-goals or over-under structure when the market exists in the supplied odds, up to eight legs.
+- 比分单: provide single-score, core coverage, enhanced coverage, and补洞 score sets with complete score lists for every match, but put only the four best score-concentration matches into a 比分4串1 ticket.
 - 混合过关单: combine the strongest buyable direction legs with totals or selected scores to reduce dependence on exact-score hits. Describe it as higher tolerance than pure score strings, not as a guarantee.
 
 Do not compress portfolio analysis into only one summary table. The user should see why each match is included: source notes, model direction, top scores, risk, and grade.
 
-For four-match score portfolios, the default answer should be detailed enough that a user can understand why a 2:0 is preferred over 3:0, why a favorite may win but not cover, and which draw or underdog-goal score is the most important missing path. Avoid terse "model summary only" reports when data is available.
+For score portfolios, the default answer should be detailed enough that a user can understand why a 2:0 is preferred over 3:0, why a favorite may win but not cover, and which draw or underdog-goal score is the most important missing path. Avoid terse "model summary only" reports when data is available.
 
 ## Ticket Tier Construction
 
-Construct the ticket structures from the match slate:
+Construct the ticket structures from the full match slate:
 
-- Start with the most defensible direction plan, often using 胜平负, 让球胜平负, 大小球, or 总进球 rather than exact score for every match.
+- Start with the model's most defensible main plan, often using 胜平负, 让球胜平负, 大小球, or 总进球 rather than exact score for every match. The main plan may be 2串1, 3串1, 4串1, 5串1, 6串1, 7串1, or 8串1 depending on confidence; do not force a leg count.
 - For score portfolios, identify each match's core score cluster first, then decide whether it deserves one, two, three, or four score candidates.
+- For exact-score tickets, select only the four matches with the strongest score concentration and acceptable data confidence.
+- For 胜平负 / 让球胜平负 tickets, select up to eight matches with the strongest direction confidence and confirmed buyable markets.
+- For 大小球 / 总进球 tickets, select up to eight matches with the clearest total-goals or over-under edge.
 - Use wider coverage on the most volatile match, not mechanically on the first match.
 - If the user proposes their own score list, evaluate it directly: say what is合理, what is漏防, and how to补洞 if they have already bought it.
-- Show every score portfolio as `A x B x C x D = N 注`; amount is `N x 2 元/unit = X 元` unless the user gives a different unit price.
+- Show every ticket as `A x B x C... = N 注`; amount is `N x 2 元/unit = X 元` unless the user gives a different unit price.
 
 Use 2 元 per unit by default only for explaining total amount, not for bankroll advice. If the user's local lottery unit price differs, state the assumed unit price and let the user adjust.
 
 Default named portfolio variants:
 
+- 模型最稳主单 / 稳健方向单: selects the strongest buyable legs across market families from the full slate; fewer legs are better than forcing weak matches.
 - 让球/胜平负方向单: uses buyable ordinary result or handicap result markets rather than fragile exact scores.
 - 大小球/总进球单: uses over-under or discrete total-goals markets when visible in the supplied odds.
 - 稳健方向单: uses result, handicap result, over-under, or total-goals directions rather than fragile exact scores.
@@ -99,6 +104,8 @@ Default named portfolio variants:
 - 混合过关单: combines buyable direction, total-goals, and limited score legs. It is usually less exact-score-dependent than a pure score fourfold, but still has串关 risk.
 - 补洞单: covers the most obvious omitted path, such as favorite 1:0, draw drag, underdog goal, or late score expansion.
 - 搏冷/高赔率小单: uses lower-probability but explainable outcomes; label it optional, high variance, and not the core plan.
+- 备选/替换: lists which matches can replace a risky leg, why the replacement is more conservative or more aggressive, and which ticket it affects.
+- 可选小组合: groups 2串1, 3串1, or 4串1 alternatives by stability, value, or score concentration.
 
 Write full selections in every score coverage cell. Do not write "加 2:1"; write the complete set, such as `2:0 / 3:0 / 2:1`.
 
