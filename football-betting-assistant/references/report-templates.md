@@ -211,6 +211,31 @@ Portfolio rules:
 - When the user provides a proposed ticket, evaluate their ticket first before suggesting replacement plans.
 - Exclude matches that are Pass or have severe data gaps.
 
+## HTML Report Structure
+
+Completed pre-match reports should be rendered as a single self-contained HTML Report through `scripts/render_html_report.py`. The assistant should build structured JSON instead of hand-writing HTML.
+
+Required top-level sections:
+
+- 报告摘要 / Report Summary
+- 北京时间比赛清单 / Beijing-Time Fixture List
+- 赛制背景总分析 / Competition Context Analysis
+- 先给方向总表 / Direction Summary Table
+- 模型排序 / Model Rankings
+- 逐场深度分析 / Per-Match Deep Analysis
+- 购买方案 / Ticket Plans
+- 入选与排除理由 / Selection Rationale
+- 备选/替换与可选小组合 / Backup / Replacement and Optional Small Combination
+- 风险与数据缺口 / Risks and Data Gaps
+
+HTML Report rules:
+
+- Generate HTML only for completed pre-match analysis; do not create Markdown reports.
+- Save under the current working directory's `reports/football-betting/`.
+- Chat output after generation is only a concise summary plus the HTML path.
+- If actual odds/lines are unavailable, use Data Status `no-actual-odds-lines` and label Ticket Plans as reference structures rather than full value judgments.
+- The renderer validates Score 4-Fold and Direction Ticket limits before writing the file.
+
 ## Post-Match Review
 
 ```markdown

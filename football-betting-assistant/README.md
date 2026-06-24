@@ -187,7 +187,9 @@ python3 football-betting-assistant/scripts/match_model_calculator.py football-be
 
 组合候选通常按玩法拆开写，包括 `模型最稳主单`、`让球/胜平负方向单`、`大小球/总进球单`、`比分4串1`、比分覆盖、`混合过关单`、`备选/替换` 和 `可选小组合`。不可买的普通胜平负只能作为概率分析，不能写进购买方案。精确比分串关最多 4 场；胜平负 / 让球胜平负最多 8 场；大小球 / 总进球最多 8 场。模型可以少选，不强行凑满。
 
-如果用户要求生成 Markdown、HTML 或保存报告，输出到 `reports/football-betting/YYYY-MM-DD-[slug].md` 和 `reports/football-betting/YYYY-MM-DD-[slug].html`。`reports/` 是运行结果目录，不应提交。
+完成赛前单场或多场分析时，默认生成一个自包含 HTML 报告，输出到当前工作目录下的 `reports/football-betting/YYYY-MM-DD-[slug]-[场次数]matches.html`。不再为完成的赛前分析生成 Markdown 报告。HTML 可直接用 Chrome 打开，不需要本地服务器；除非用户明确要求打开，否则只在聊天里返回 2-4 行摘要和路径。
+
+如果未取得实际赔率/盘口，但赛程和球队上下文足够，仍生成 HTML 报告，并在报告顶部标注“无实际赔率/盘口”；购买方案降级为概率倾向和参考结构，不写完整赔率价值判断。`reports/` 是运行结果目录，不应提交。
 
 ## 回测和校准
 
@@ -202,13 +204,7 @@ python3 football-betting-assistant/scripts/backtest_predictions.py football-bett
 
 回测会输出胜平负命中率、大小球命中率、比分 Top 1/Top 3/覆盖命中率、Brier、log loss、概率分桶和 `A/B/C/Pass` 等级表现。这些指标用于校准模型，不是未来保证。
 
-## 开发检查
-
-运行脚本单测：
-
-```bash
-python3 football-betting-assistant/tests/test_scripts.py
-```
+## 本地校验
 
 校验最小开发样例：
 
@@ -218,8 +214,8 @@ python3 football-betting-assistant/scripts/validate_inputs.py football-betting-a
 python3 football-betting-assistant/scripts/validate_inputs.py football-betting-assistant/examples/backtest-sample.json
 ```
 
-运行验收检查：
+渲染 HTML 报告：
 
 ```bash
-python3 football-betting-assistant/scripts/run_acceptance_checks.py
+python3 football-betting-assistant/scripts/render_html_report.py path/to/report-input.json --out-dir reports/football-betting
 ```

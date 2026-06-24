@@ -39,6 +39,7 @@ Use scripts only when deterministic calculation or validation helps:
 - `scripts/match_model_calculator.py`: end-to-end single-match model record when structured inputs are available.
 - `scripts/validate_inputs.py`: schema and data-quality validation for example or collected JSON.
 - `scripts/backtest_predictions.py`: historical hit-rate, score coverage, Brier score, log loss, calibration buckets, and grade breakdown.
+- `scripts/render_html_report.py`: render completed pre-match analysis into a single self-contained HTML Report from structured JSON.
 
 ## Default Workflow
 
@@ -49,8 +50,9 @@ Use scripts only when deterministic calculation or validation helps:
 5. Estimate expected goals, apply bounded Bayesian-style adjustments, and use the Poisson model for every analyzable match. Use `xg_prior_calculator.py`, `poisson_calculator.py`, and `grade_calculator.py` when the needed inputs exist; otherwise label approximations and downgrade confidence.
 6. Compare model probabilities with implied probabilities only when verifiable Odds Data exists.
 7. Apply downgrade and stop rules.
-8. Produce the report template. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the exact Beijing-time match slate, then group/table context, then analyze each match in readable prose, then provide reference plans.
-9. Run a final consistency and language check before answering.
+8. Produce an HTML Report for completed pre-match Single-Match Analysis or Betting Portfolio analysis. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the exact Beijing-time match slate, then Competition Context Analysis, then analyze each selected match with Bayesian adjustment and Poisson concentration, then provide Ticket Plans.
+9. Run `scripts/render_html_report.py` with structured report JSON and save a single HTML file under the current working directory's `reports/football-betting/`.
+10. Keep the chat response to 2-4 concise summary lines plus the HTML path. Do not paste the full report into chat after successful HTML generation.
 
 For backtesting or "提高命中率" requests, do not change recommendations by intuition alone. Use historical pre-match snapshots and actual results, run `scripts/backtest_predictions.py` when data is available, then adjust downgrade/calibration guidance based on measured error patterns.
 
@@ -73,7 +75,8 @@ For backtesting or "提高命中率" requests, do not change recommendations by 
 - Do not output a thin table-only answer when current data and tools allow deeper analysis. Each match needs a compact but human-readable evidence chain: source summary, group/competition context, football context, expected goals, Bayesian adjustments, Poisson score concentration, market lean, score coverage, over-under lean, and risk.
 - In score reports, list the low-odds correct-score cluster when odds are available for every analyzed match, then explain why the score-ticket subset is selected. Include 主单比分, 核心覆盖, 增强覆盖, and 漏洞/补防 for each match when data sufficiency allows, but only put up to four matches into any exact-score ticket.
 - In score-coverage purchase tables, write every match's complete score set. Use `葡萄牙：2:0 / 3:0 / 2:1`, not shorthand such as `葡萄牙加 2:1`.
-- When the user explicitly asks to generate a report, document, saved output, HTML, Markdown, or says the result should only be in files, save Markdown and HTML outputs under `reports/football-betting/` if the local environment permits writes. In that case, keep the chat response to a concise summary plus file paths; do not paste the full report only into chat. The report directory is generated output and should not be committed.
+- Completed pre-match Single-Match Analysis and Betting Portfolio analysis should generate an HTML Report by default when local writes are available. Do not generate Markdown reports for completed pre-match analysis. If critical fixture or team context is missing, ask for the missing inputs before generating a formal report. If actual odds/lines are unavailable but fixture and team context are sufficient, still generate the HTML Report with `no-actual-odds-lines` Data Status and downgrade value judgment.
+- HTML Reports are generated from structured JSON via `scripts/render_html_report.py`. They are saved under the current working directory's `reports/football-betting/`, not inside the skill package. The report directory is generated output and should not be committed.
 
 ## If Tools Are Unavailable
 

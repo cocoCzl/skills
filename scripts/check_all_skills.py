@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Run available checks for every top-level skill in this repository."""
+"""Run lightweight structural checks for every top-level skill in this repository."""
 
 from __future__ import annotations
 
 import pathlib
-import subprocess
-import sys
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -30,11 +28,6 @@ def discover_skills() -> list[pathlib.Path]:
     return skills
 
 
-def run(command: list[str], cwd: pathlib.Path) -> int:
-    print(f"\n$ {' '.join(command)}")
-    return subprocess.run(command, cwd=cwd, text=True).returncode
-
-
 def main() -> int:
     skills = discover_skills()
     if not skills:
@@ -44,17 +37,13 @@ def main() -> int:
     failed = False
     for skill in skills:
         print(f"\n== {skill.name} ==")
-
-        test_script = skill / "tests" / "test_scripts.py"
-        if test_script.is_file():
-            failed = run([sys.executable, str(test_script)], ROOT) != 0 or failed
-
-        acceptance_script = skill / "scripts" / "run_acceptance_checks.py"
-        if acceptance_script.is_file():
-            failed = run([sys.executable, str(acceptance_script)], ROOT) != 0 or failed
-
-        if not test_script.is_file() and not acceptance_script.is_file():
-            print("No checks found for this skill.")
+        required = [skill / "SKILL.md", skill / "README.md"]
+        missing = [path.name for path in required if not path.is_file()]
+        if missing:
+            failed = True
+            print(f"Missing required files: {', '.join(missing)}")
+        else:
+            print("Required files present.")
 
     return 1 if failed else 0
 

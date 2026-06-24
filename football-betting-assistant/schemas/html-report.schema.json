@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "html-report.schema.json",
+  "title": "Football Betting HTML Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["report", "fixtures", "direction_summary", "match_analyses", "ticket_plans"],
+  "properties": {
+    "report": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["title", "date", "topic", "data_status"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "minLength": 1 },
+        "topic": { "type": "string", "minLength": 1 },
+        "generated_at": { "type": "string" },
+        "data_status": {
+          "type": "string",
+          "enum": ["complete", "usable-but-downgraded", "no-actual-odds-lines", "insufficient-data"]
+        },
+        "odds_status": { "type": "string" },
+        "risk_level": { "type": "string" },
+        "summary": { "type": "string" },
+        "chat_summary": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/fixture" }
+    },
+    "competition_context": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "direction_summary": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/direction_row" }
+    },
+    "model_rankings": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "result": { "type": "array", "items": { "type": "string" } },
+        "totals": { "type": "array", "items": { "type": "string" } },
+        "score_concentration": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "match_analyses": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/match_analysis" }
+    },
+    "ticket_plans": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ticket_plan" }
+    },
+    "selection_rationale": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "backup_replacements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/backup_replacement" }
+    },
+    "optional_small_combinations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ticket_plan" }
+    },
+    "risks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "data_gaps": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "fixture": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["match", "kickoff_time", "competition", "data_confidence"],
+      "properties": {
+        "match": { "type": "string", "minLength": 1 },
+        "kickoff_time": { "type": "string", "minLength": 1 },
+        "competition": { "type": "string", "minLength": 1 },
+        "group": { "type": "string" },
+        "records": { "type": "string" },
+        "venue": { "type": "string" },
+        "data_confidence": { "type": "string", "enum": ["高", "中", "低", "high", "medium", "low"] }
+      }
+    },
+    "direction_row": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["match", "main_direction", "protection", "totals_pick", "score_lean"],
+      "properties": {
+        "match": { "type": "string", "minLength": 1 },
+        "main_direction": { "type": "string", "minLength": 1 },
+        "protection": { "type": "string" },
+        "handicap_pick": { "type": "string" },
+        "totals_pick": { "type": "string" },
+        "score_lean": { "type": "string" },
+        "stability": { "type": "string" },
+        "risk": { "type": "string" }
+      }
+    },
+    "match_analysis": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "match",
+        "kickoff_time",
+        "competition",
+        "data_confidence",
+        "result_pick",
+        "result_protection",
+        "handicap_pick",
+        "totals_pick",
+        "score_candidates",
+        "bayesian_adjustments",
+        "poisson_summary",
+        "risk_notes"
+      ],
+      "properties": {
+        "match": { "type": "string", "minLength": 1 },
+        "kickoff_time": { "type": "string", "minLength": 1 },
+        "competition": { "type": "string", "minLength": 1 },
+        "data_confidence": { "type": "string" },
+        "result_pick": { "type": "string" },
+        "result_protection": { "type": "string" },
+        "handicap_pick": { "type": "string" },
+        "totals_pick": { "type": "string" },
+        "score_candidates": { "type": "array", "items": { "type": "string" } },
+        "bayesian_adjustments": { "type": "array", "items": { "type": "string" } },
+        "poisson_summary": { "type": "string" },
+        "risk_notes": { "type": "array", "items": { "type": "string" } },
+        "analysis": { "type": "string" },
+        "model_confidence": { "type": "string" },
+        "odds_status": { "type": "string" }
+      }
+    },
+    "ticket_plan": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "type", "legs", "unit_math", "amount_text", "odds_status", "risk_level", "reason"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "enum": [
+            "model_best",
+            "result_handicap",
+            "totals",
+            "score_4fold",
+            "score_coverage",
+            "stable_small_combo",
+            "aggressive",
+            "big_score",
+            "backup",
+            "mixed"
+          ]
+        },
+        "legs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ticket_leg" }
+        },
+        "unit_math": { "type": "string" },
+        "amount_text": { "type": "string" },
+        "odds_status": { "type": "string" },
+        "risk_level": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    },
+    "ticket_leg": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["match", "selection"],
+      "properties": {
+        "match": { "type": "string", "minLength": 1 },
+        "market": { "type": "string" },
+        "selection": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string" }
+      }
+    },
+    "backup_replacement": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["original", "replacement", "reason"],
+      "properties": {
+        "original": { "type": "string" },
+        "replacement": { "type": "string" },
+        "effect": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}

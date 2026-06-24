@@ -1,6 +1,6 @@
 # Skills
 
-这是一个面向 Codex / agent 工作流的开源 skill 合集仓库。每个顶层子目录都是一个可独立安装、阅读、测试和贡献的 skill。
+这是一个面向 Codex / agent 工作流的开源 skill 合集仓库。每个顶层子目录都是一个可独立安装和阅读的 skill。
 
 当前包含：
 
@@ -30,24 +30,16 @@ skill-name/
   examples/
   schemas/
   scripts/
-  tests/
-  evals/
 ```
 
-其中 `SKILL.md` 是 agent 触发和执行 skill 的主入口；`README.md` 面向人类使用者；`references/`、`examples/`、`schemas/`、`scripts/`、`tests/` 和 `evals/` 按需提供。
+其中 `SKILL.md` 是 agent 触发和执行 skill 的主入口；`README.md` 面向人类使用者；`references/`、`examples/`、`schemas/`、`scripts/` 按需提供。运行时 skill 目录不放测试代码。
 
 ## 开发检查
 
-检查所有当前 skill：
+如需做仓库级开发检查，使用仓库根目录下的工具脚本，不把测试入口放进单个 skill 运行时目录：
 
 ```bash
 python3 scripts/check_all_skills.py
-```
-
-检查单个 skill：
-
-```bash
-python3 football-betting-assistant/scripts/run_acceptance_checks.py
 ```
 
 ## 贡献

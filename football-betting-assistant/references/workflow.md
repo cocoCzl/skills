@@ -109,16 +109,19 @@ Default named portfolio variants:
 
 Write full selections in every score coverage cell. Do not write "加 2:1"; write the complete set, such as `2:0 / 3:0 / 2:1`.
 
-## Report File Output
+## HTML Report Output
 
-Default chat output should be complete Markdown. If the user asks for a document, report file, md, html, saved result, or says the answer should only be in files, and local file writes are available:
+Completed pre-match Single-Match Analysis and Betting Portfolio analysis should produce an HTML Report by default when local file writes are available.
 
-1. Create `reports/football-betting/` when needed.
-2. Save Markdown as `reports/football-betting/YYYY-MM-DD-[short-slug].md`.
-3. Save HTML as `reports/football-betting/YYYY-MM-DD-[short-slug].html`.
-4. If the user explicitly requested file-only or complained that chat output is wrong, provide only a concise summary plus paths in chat. Otherwise, include either the complete Markdown or a concise summary plus paths, depending on length.
-5. Treat generated report files as local outputs, not source files to commit.
-6. Before finalizing, verify both files exist and contain the same core section headings.
+1. Use the data priority from `references/data-sources.md`: configured API first, then user-provided odds/lines/table/screenshot, then public/authorized web lookup, then no-odds downgraded analysis when enough fixture and team context exists.
+2. Do not generate a formal HTML Report when critical fixture or team context is missing. Ask for the missing inputs instead.
+3. If actual odds/lines are unavailable but fixture and team context are sufficient, generate the report with Data Status `no-actual-odds-lines`. State that Ticket Plans are probability/reference structures, not complete value judgments.
+4. Build structured report JSON according to `schemas/html-report.schema.json`.
+5. Run `scripts/render_html_report.py <json-input> --out-dir reports/football-betting` from the current working directory. The renderer writes one self-contained HTML file and prevents overwriting by suffixing duplicate filenames.
+6. Do not generate Markdown reports for completed pre-match analysis.
+7. Keep the chat response to 2-4 concise summary lines plus the HTML path. Do not paste the full report into chat after successful HTML generation.
+8. Treat generated report files as local outputs, not source files to commit.
+9. Do not automatically open the HTML file unless the user explicitly asks.
 
 ## Post-Match Review Flow
 
