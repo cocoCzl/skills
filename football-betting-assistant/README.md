@@ -1,10 +1,10 @@
-# 足球竞彩助手
+# ⚽ 足球竞彩助手
 
 `足球竞彩助手` 是面向中文足球竞彩分析的 Codex/agent skill，包名为 `football-betting-assistant`。它用于赛前单场分析、竞彩组合、比分覆盖、大小球/总进球、胜平负/让球胜平负、串关、四串一和赛后复盘。
 
-所有输出都必须是决策辅助，不是确定性推荐。报告可以给出“倾向”“参考购买方案”“价值不足”“Pass”，但不能使用“必中”“稳赢”“包中”“必买”“这单稳了”等确定或施压语言。
+> ⚠️ 所有输出都必须是决策辅助，不是确定性推荐。报告可以给出“倾向”“参考购买方案”“价值不足”“Pass”，但不能使用“必中”“稳赢”“包中”“必买”“这单稳了”等确定或施压语言。
 
-## 目录说明
+## 🗂️ 目录说明
 
 运行时 skill 只需要 `football-betting-assistant/` 目录：
 
@@ -23,7 +23,7 @@
 
 真实报告输出格式以 `references/report-templates.md` 和 HTML renderer 为准，不以 `examples/` 或 `tests/fixtures/` 为准。
 
-## 默认使用方式
+## 🚀 默认使用方式
 
 把 `football-betting-assistant/` 放到 Codex 或其他 agent 的 skills 目录中。用户提出足球投注分析、竞彩、胜平负、让球胜平负、比分推荐、大小球、总进球、串关、四串一或赛后复盘相关请求时，这个 skill 应自动触发。
 
@@ -44,17 +44,32 @@
 
 `sporttery` provider 是公开页面/公开接口的 best-effort 采集器，不是中国体育彩票官方稳定 API。它不会登录、不会绕过验证码/WAF、不会突破访问限制。页面变化或访问被拦截时，报告必须降级或追问，不能编造赔率。
 
-## 能做什么
+## 🧭 工作流概览
 
-- 根据自然语言请求确认比赛、玩法和运行模式。
-- 在工具可用时核验赛程、赔率、盘口、球队近况、伤停、首发、天气和赛事背景。
-- 使用透明模型做预期进球、贝叶斯式修正、泊松比分概率和赔率隐含概率对比。
-- 输出单场分析、组合分析、比分覆盖、参考购买方案、HTML 报告和赛后复盘。
-- 对历史样本做回测，输出命中率、Brier、log loss、校准分桶和等级表现。
+```mermaid
+flowchart LR
+  A[用户请求] --> B[确认比赛和玩法]
+  B --> C{有可验证数据?}
+  C -->|有| D[读取快照 / provider / 用户数据]
+  C -->|无| E[降级为概率分析或追问]
+  D --> F[模型计算和赔率对比]
+  F --> G[参考等级 / Pass]
+  G --> H[生成 HTML 报告]
+  H --> I[保存 prediction snapshot]
+  I --> J[赛后复盘]
+```
+
+## ✅ 能做什么
+
+- 🧭 根据自然语言请求确认比赛、玩法和运行模式。
+- 🔎 在工具可用时核验赛程、赔率、盘口、球队近况、伤停、首发、天气和赛事背景。
+- 📊 使用透明模型做预期进球、贝叶斯式修正、泊松比分概率和赔率隐含概率对比。
+- 🧾 输出单场分析、组合分析、比分覆盖、参考购买方案、HTML 报告和赛后复盘。
+- 📈 对历史样本做回测，输出命中率、Brier、log loss、校准分桶和等级表现。
 
 默认范围是成年男足俱乐部和成年男足国家队比赛。青年队、年龄组比赛和女足比赛不生成正式参考购买方案；如果被数据源采到，应标记为 `unsupported`，并按 analysis-only 或 Pass 处理。
 
-## 数据和赔率规则
+## 🧮 数据和赔率规则
 
 这个 skill 不会声称自己天然拥有当前盘口。赔率、盘口、首发、伤停、天气等当前数据必须来自本地快照、用户提供内容、授权数据源或公开可核验来源，并记录来源和观察时间。
 
@@ -69,10 +84,10 @@
 
 明确不会做的事：
 
-- 不登录投注平台账号。
-- 不绕过验证码、地区限制、频率限制或付费访问限制。
-- 不硬编码投注平台账号、数据源密钥或大模型 API key。
-- 没有核验来源时，不声称拥有实时赔率。
+- 🚫 不登录投注平台账号。
+- 🚫 不绕过验证码、地区限制、频率限制或付费访问限制。
+- 🚫 不硬编码投注平台账号、数据源密钥或大模型 API key。
+- 🚫 没有核验来源时，不声称拥有实时赔率。
 
 当没有从中国竞彩、用户截图/文本、授权 API、公开网页或本地快照中核验到赔率和盘口时，必须提示：
 
@@ -83,7 +98,7 @@
 
 这种情况下可以输出赛程确认、球队背景、数据缺口、概率倾向、比分候选、大小球倾向和风险点；不能编造赔率/盘口，也不能输出“值得买”“赔率有价值”“可买方案已确认”等完整价值判断。若生成 HTML 报告，Data Status 应写为 `no-actual-odds-lines`。
 
-## 运行模式
+## 🎛️ 运行模式
 
 `china-lottery` 是中文竞彩、中国体育彩票、四串一、参考购买方案等语境的默认模式。购买方案只能使用已确认的中国竞彩可买市场，第三方国际赔率最多作为参考背景。
 
@@ -99,7 +114,7 @@
 我不需要购买方案，也没有赔率。只看法国 vs 日本的比赛走势、比分概率和大小球倾向。
 ```
 
-## 可选数据服务
+## 🔌 可选数据服务
 
 这个 skill 不自带 API key。可以在 agent 运行环境中配置 MCP 工具、命令行工具、内部 HTTP 服务、本地 JSON/CSV 文件，或用户授权的第三方足球数据 API。
 
@@ -118,7 +133,7 @@ export API_FOOTBALL_KEY="your_api_football_key"
 export FOOTBALL_DATA_API_KEY="your_football_data_key"
 ```
 
-### API key 从哪里获取
+### 🔑 API key 从哪里获取
 
 - The Odds API：到 https://the-odds-api.com/ 注册账号，在 dashboard 里创建 API key。官方 v4 文档在 https://the-odds-api.com/liveapi/guides/v4/ 。这个 key 主要用于海外赔率、h2h/spreads/totals，以及部分 sport key 的 scores 赛果查询。
 - API-Football：到 https://www.api-football.com/ 注册并订阅可用套餐，文档在 https://www.api-football.com/documentation-v3 。这个 key 适合补赛程、赛果、积分榜、阵容、伤停和球队近期数据。
@@ -134,7 +149,7 @@ export FOOTBALL_DATA_API_KEY="your_football_data_key"
 
 不要把真实 key 写进 `README.md`、`SKILL.md`、`references/`、仓库级 `examples/`、报告正文、issue、PR 或聊天记录。没有这些 key 时，skill 仍可尝试用 `sporttery` 快照和公开网页做中国竞彩分析；球队近期数据、阵容、积分榜和自动赛果覆盖可能降级。
 
-### 这些 key 会被怎么用
+### 🧩 这些 key 会被怎么用
 
 - 赛前竞彩：`sporttery` 仍是中国竞彩可买市场的默认来源。第三方 provider 不能替代中国竞彩赔率。
 - 海外赔率：`THE_ODDS_API_KEY` 可用于 `international-odds` 模式的 h2h、spreads、totals 赔率。
@@ -143,7 +158,7 @@ export FOOTBALL_DATA_API_KEY="your_football_data_key"
 
 如果 provider 不可用、限频、无覆盖或返回冲突数据，报告会标记来源缺口并降级，而不是编造赛果、赔率或盘口。
 
-## 数学模型说明
+## 📐 数学模型说明
 
 这个 skill 使用透明、可复核的简化模型，不声称能保证赛果。完整参数在 `references/math-model.md` 和 `references/model-parameters.md`，README 只解释主流程：
 
@@ -162,11 +177,11 @@ export FOOTBALL_DATA_API_KEY="your_football_data_key"
 - `scripts/grade_calculator.py`、`scripts/market_grade_calculator.py`：edge、参考等级和降级封顶。
 - `scripts/score_coverage_analyzer.py`：比分集中度与覆盖宽度。
 
-## 开发者常用命令
+## 🛠️ 开发者常用命令
 
 普通用户不需要运行这些命令。它们用于开发、调试、离线复现和测试。
 
-### 数据采集和快照检查
+### 📥 数据采集和快照检查
 
 生成当前/未来竞彩足球快照：
 
@@ -204,7 +219,7 @@ python3 football-betting-assistant/scripts/select_snapshot_matches.py \
   --match-no 周四055
 ```
 
-### 报告生成
+### 🧾 报告生成
 
 从标准快照生成 HTML 报告和 prediction snapshot：
 
@@ -235,7 +250,7 @@ python3 football-betting-assistant/scripts/render_html_report.py \
 - `data/football/reviews/*.review.json`
 - `data/football/competition-context/*.json`
 
-### 小组赛上下文
+### 🏆 小组赛上下文
 
 从已赛比分和剩余赛程计算小组积分、出线压力、轮换风险和路线选择标记：
 
@@ -257,7 +272,7 @@ python3 football-betting-assistant/scripts/build_snapshot_report.py \
   --data-out-dir data/football
 ```
 
-### 模型计算
+### 🧠 模型计算
 
 常用确定性计算脚本：
 
@@ -281,7 +296,7 @@ python3 football-betting-assistant/scripts/match_model_calculator.py examples/fo
 
 如果脚本不可用，agent 可以给区间或近似值，但必须标注为近似，不能伪装成精确计算。
 
-### 回测、复盘和 smoke
+### 🔁 回测、复盘和 smoke
 
 回测开发样例：
 
@@ -340,7 +355,7 @@ python3 football-betting-assistant/scripts/auto_post_match_review.py \
 
 低层单场复盘仍可直接使用 `scripts/post_match_review.py` 给已有 prediction snapshot 附加赛果。普通“赛后复盘”请求应优先走自动复盘入口。不要把赛后事实回填进原始赛前预测。
 
-## 输出要求
+## 📤 输出要求
 
 输出必须区分“概率分析”和“可买方案”。如果用户截图或数据源里某场没有普通胜平负，只显示让球胜平负、比分、总进球或大小球，则购买方案不得写普通胜平负。
 
@@ -354,7 +369,7 @@ python3 football-betting-assistant/scripts/auto_post_match_review.py \
 
 完成赛前单场或多场分析时，默认生成一个自包含 HTML 报告到 `reports/football-betting/`，并在聊天里只返回 2-4 行摘要、HTML 路径和 prediction snapshot 路径。除非用户明确要求，不生成 Markdown 报告。
 
-## 本地校验
+## ✅ 本地校验
 
 校验最小开发样例：
 
