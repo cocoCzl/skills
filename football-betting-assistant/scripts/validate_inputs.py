@@ -20,7 +20,9 @@ SCHEMA_REQUIRED: dict[str, list[str]] = {
     "team_context": ["team", "last_5_summary", "last_10_summary", "lineup_status", "source", "observed_at"],
     "match_analysis": ["fixture", "home_xg", "away_xg", "bayesian_adjustments", "result_probabilities", "score_candidates", "model_confidence", "data_confidence", "reference_grade", "risk_points"],
     "portfolio": ["matches", "correlation_notes", "ticket_tiers", "more_combination_candidates", "excluded_matches", "portfolio_risk_tier"],
-    "backtest_sample": ["sample_id", "fixture", "prediction", "actual_result"]
+    "backtest_sample": ["sample_id", "fixture", "prediction", "actual_result"],
+    "football_snapshot": ["snapshot_id", "mode", "provider", "sport", "observed_at", "timezone", "sources", "matches"],
+    "prediction_snapshot": ["report_id", "generated_at", "source_snapshot_id", "source_provider", "html_report_path", "html_report_input_path", "pre_match_data", "model_outputs"]
 }
 
 CONFIDENCE = {"high", "medium", "low"}
@@ -28,6 +30,13 @@ REFERENCE_GRADES = {"A", "B", "C", "Pass"}
 LINEUP_STATUSES = {"confirmed", "expected", "unconfirmed", "unavailable"}
 VENUE_TYPES = {"home_away", "neutral", "unknown"}
 MARKET_TYPES = {"ordinary_result", "handicap_result", "correct_score", "over_under", "total_goals", "mixed", "analysis_only"}
+SNAPSHOT_MODES = {"china-lottery", "international-odds", "analysis-only"}
+SNAPSHOT_PROVIDERS = {"sporttery", "the-odds-api", "api-football", "football-data", "manual", "public-web", "custom"}
+SNAPSHOT_MARKETS = {"match_result", "handicap_match_result", "correct_score", "over_under", "total_goals", "unsupported_market"}
+SNAPSHOT_AVAILABILITY = {"available", "unavailable", "unknown", "parse_failed"}
+SNAPSHOT_AVAILABILITY_REASONS = {"available", "not_offered", "source_missing", "waf_blocked", "parser_error", "stale_source", "unknown"}
+SNAPSHOT_SOURCE_STATUSES = {"ok", "blocked", "missing", "parse_failed", "stale"}
+TEAM_TYPES = {"club", "national", "unknown", "unsupported"}
 
 
 def _missing(record: dict[str, Any], fields: list[str]) -> list[str]:
@@ -192,13 +201,194 @@ def validate_backtest_sample(record: dict[str, Any], path: str) -> tuple[list[st
     return errors, warnings
 
 
+def _validate_snapshot_source(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    for field in _missing(record, ["name", "url", "observed_at", "status"]):
+        errors.append(f"{path}: missing required field '{field}'")
+    if record.get("status") not in SNAPSHOT_SOURCE_STATUSES:
+        errors.append(f"{path}: status must be one of {sorted(SNAPSHOT_SOURCE_STATUSES)}")
+    if record.get("status") in {"blocked", "missing", "parse_failed"} and not record.get("notes"):
+        warnings.append(f"{path}: failed source should include notes")
+    return errors, warnings
+
+
+def _validate_snapshot_source_ref(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    for field in _missing(record, ["name", "url", "observed_at"]):
+        errors.append(f"{path}: missing required field '{field}'")
+    return errors, warnings
+
+
+def _validate_snapshot_market(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    for field in _missing(record, ["market", "source_market_name", "availability", "selections"]):
+        errors.append(f"{path}: missing required field '{field}'")
+    if record.get("market") not in SNAPSHOT_MARKETS:
+        errors.append(f"{path}: market must be one of {sorted(SNAPSHOT_MARKETS)}")
+    availability = record.get("availability") or {}
+    if availability.get("status") not in SNAPSHOT_AVAILABILITY:
+        errors.append(f"{path}.availability: status must be one of {sorted(SNAPSHOT_AVAILABILITY)}")
+    if availability.get("reason") not in SNAPSHOT_AVAILABILITY_REASONS:
+        errors.append(f"{path}.availability: reason must be one of {sorted(SNAPSHOT_AVAILABILITY_REASONS)}")
+    if availability.get("status") == "available" and availability.get("reason") != "available":
+        errors.append(f"{path}.availability: available status must use reason 'available'")
+    if availability.get("status") != "available" and availability.get("reason") == "available":
+        errors.append(f"{path}.availability: unavailable status cannot use reason 'available'")
+    selections = record.get("selections", [])
+    if not isinstance(selections, list):
+        errors.append(f"{path}.selections: must be a list")
+        selections = []
+    if availability.get("status") == "available" and not selections:
+        warnings.append(f"{path}: available market has no selections; value judgment unavailable")
+    if availability.get("status") in {"unavailable", "parse_failed"} and selections:
+        warnings.append(f"{path}: non-available market should normally not include selections")
+    for i, selection in enumerate(selections):
+        if not selection.get("name"):
+            errors.append(f"{path}.selections[{i}]: missing required field 'name'")
+        odds = selection.get("odds")
+        if odds is not None and (not isinstance(odds, (int, float)) or odds <= 1):
+            errors.append(f"{path}.selections[{i}]: odds must be a number greater than 1 or null")
+    if record.get("source"):
+        e, w = _validate_snapshot_source_ref(record["source"], f"{path}.source")
+        errors.extend(e)
+        warnings.extend(w)
+    return errors, warnings
+
+
+def _validate_snapshot_match(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    required = [
+        "match_id",
+        "match_no",
+        "competition",
+        "kickoff_time",
+        "timezone",
+        "home_team",
+        "away_team",
+        "team_type",
+        "markets",
+        "source",
+        "data_confidence",
+    ]
+    for field in _missing(record, required):
+        if field == "match_no" and field in record:
+            continue
+        errors.append(f"{path}: missing required field '{field}'")
+    if record.get("venue_type") and record.get("venue_type") not in VENUE_TYPES:
+        errors.append(f"{path}: venue_type must be one of {sorted(VENUE_TYPES)}")
+    if record.get("team_type") not in TEAM_TYPES:
+        errors.append(f"{path}: team_type must be one of {sorted(TEAM_TYPES)}")
+    if record.get("team_type") == "unsupported":
+        warnings.append(f"{path}: unsupported team type; formal purchase plans should be withheld")
+    if record.get("data_confidence") not in CONFIDENCE:
+        errors.append(f"{path}: data_confidence must be one of {sorted(CONFIDENCE)}")
+    if record.get("source"):
+        e, w = _validate_snapshot_source_ref(record["source"], f"{path}.source")
+        errors.extend(e)
+        warnings.extend(w)
+    markets = record.get("markets", [])
+    if not isinstance(markets, list):
+        errors.append(f"{path}.markets: must be a list")
+        markets = []
+    seen_markets: set[str] = set()
+    for i, market in enumerate(markets):
+        e, w = _validate_snapshot_market(market, f"{path}.markets[{i}]")
+        errors.extend(e)
+        warnings.extend(w)
+        market_name = market.get("market")
+        if market_name in seen_markets and market_name != "unsupported_market":
+            warnings.append(f"{path}.markets[{i}]: duplicate market '{market_name}'")
+        seen_markets.add(str(market_name))
+    return errors, warnings
+
+
+def validate_football_snapshot(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    for field in _missing(record, SCHEMA_REQUIRED["football_snapshot"]):
+        errors.append(f"{path}: missing required field '{field}'")
+    if record.get("mode") not in SNAPSHOT_MODES:
+        errors.append(f"{path}: mode must be one of {sorted(SNAPSHOT_MODES)}")
+    if record.get("provider") not in SNAPSHOT_PROVIDERS and record.get("provider"):
+        warnings.append(f"{path}: provider '{record.get('provider')}' is not a built-in provider; treat as custom")
+    if record.get("sport") != "football":
+        errors.append(f"{path}: sport must be 'football'")
+    if record.get("confidence") and record.get("confidence") not in CONFIDENCE:
+        errors.append(f"{path}: confidence must be one of {sorted(CONFIDENCE)}")
+    sources = record.get("sources", [])
+    if not isinstance(sources, list) or not sources:
+        errors.append(f"{path}.sources: must be a non-empty list")
+        sources = []
+    for i, source in enumerate(sources):
+        e, w = _validate_snapshot_source(source, f"{path}.sources[{i}]")
+        errors.extend(e)
+        warnings.extend(w)
+    matches = record.get("matches", [])
+    if not isinstance(matches, list):
+        errors.append(f"{path}.matches: must be a list")
+        matches = []
+    for i, match in enumerate(matches):
+        e, w = _validate_snapshot_match(match, f"{path}.matches[{i}]")
+        errors.extend(e)
+        warnings.extend(w)
+    if not matches and not record.get("errors"):
+        warnings.append(f"{path}: no matches found and no error details supplied")
+    return errors, warnings
+
+
+def validate_prediction_snapshot(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    for field in _missing(record, SCHEMA_REQUIRED["prediction_snapshot"]):
+        errors.append(f"{path}: missing required field '{field}'")
+    pre_match = record.get("pre_match_data") or {}
+    if not isinstance(pre_match, dict):
+        errors.append(f"{path}.pre_match_data: must be an object")
+        pre_match = {}
+    if not isinstance(pre_match.get("fixtures"), list) or not pre_match.get("fixtures"):
+        errors.append(f"{path}.pre_match_data.fixtures: must be a non-empty list")
+    if not isinstance(pre_match.get("data_gaps", []), list):
+        errors.append(f"{path}.pre_match_data.data_gaps: must be a list")
+    model_outputs = record.get("model_outputs") or {}
+    if not isinstance(model_outputs, dict):
+        errors.append(f"{path}.model_outputs: must be an object")
+        model_outputs = {}
+    if not isinstance(model_outputs.get("match_analyses"), list) or not model_outputs.get("match_analyses"):
+        errors.append(f"{path}.model_outputs.match_analyses: must be a non-empty list")
+    ticket_plans = model_outputs.get("ticket_plans", [])
+    if not isinstance(ticket_plans, list):
+        errors.append(f"{path}.model_outputs.ticket_plans: must be a list")
+        ticket_plans = []
+    for index, plan in enumerate(ticket_plans):
+        for field in ("name", "type", "legs", "odds_status", "risk_level", "reason"):
+            if field not in plan:
+                errors.append(f"{path}.model_outputs.ticket_plans[{index}]: missing required field '{field}'")
+        for leg_index, leg in enumerate(plan.get("legs", []) or []):
+            market_status = leg.get("market_available")
+            if market_status is False:
+                errors.append(f"{path}.model_outputs.ticket_plans[{index}].legs[{leg_index}]: unavailable markets cannot be used in purchase plans")
+            if not leg.get("source_snapshot_market"):
+                warnings.append(f"{path}.model_outputs.ticket_plans[{index}].legs[{leg_index}]: missing source_snapshot_market")
+    if not record.get("html_report_path"):
+        errors.append(f"{path}: html_report_path is required")
+    if not record.get("html_report_input_path"):
+        errors.append(f"{path}: html_report_input_path is required")
+    return errors, warnings
+
+
 VALIDATORS = {
     "fixture": validate_fixture,
     "odds": validate_odds,
     "team_context": validate_team_context,
     "match_analysis": validate_match_analysis,
     "portfolio": validate_portfolio,
-    "backtest_sample": validate_backtest_sample
+    "backtest_sample": validate_backtest_sample,
+    "football_snapshot": validate_football_snapshot,
+    "prediction_snapshot": validate_prediction_snapshot
 }
 
 BUNDLE_KEYS = {
@@ -211,7 +401,11 @@ BUNDLE_KEYS = {
     "match_analyses": "match_analysis",
     "portfolio": "portfolio",
     "portfolios": "portfolio",
-    "samples": "backtest_sample"
+    "samples": "backtest_sample",
+    "football_snapshot": "football_snapshot",
+    "football_snapshots": "football_snapshot",
+    "prediction_snapshot": "prediction_snapshot",
+    "prediction_snapshots": "prediction_snapshot"
 }
 
 
@@ -245,7 +439,7 @@ def validate_document(document: dict[str, Any]) -> dict[str, Any]:
                 errors.extend(e)
                 warnings.extend(w)
     else:
-        errors.append("top-level 'kind' must be one of fixture, odds, team_context, match_analysis, portfolio, backtest_samples, bundle")
+        errors.append("top-level 'kind' must be one of fixture, odds, team_context, match_analysis, portfolio, football_snapshot, prediction_snapshot, backtest_samples, bundle")
 
     return {"valid": not errors, "errors": errors, "warnings": warnings}
 

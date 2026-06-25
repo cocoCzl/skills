@@ -18,6 +18,8 @@ verified information.
 
 **Pass**: Value insufficient, data insufficient, source conflict unresolved, market inconsistency unresolved, or risk too high.
 
+Youth teams, age-group teams, and women's matches are unsupported for formal purchase plans. They should be marked `Pass` for purchase-plan purposes even when fixture and odds data are present.
+
 ## Model Confidence
 
 Model Confidence describes the strength of the football outcome view:
@@ -44,6 +46,16 @@ Value Judgment requires verifiable Odds Data. If odds are missing or unconfirmed
 
 When a match is close to kickoff, missing or unconfirmed lineups, injuries, weather, or market movement prevents an A grade. Continue with Base Analysis only if the user accepts elevated uncertainty.
 
+Use `scripts/late_update_rules.py` when timing inputs are structured:
+
+- More than 12 hours before kickoff: early analysis is capped at `B`.
+- Two to six hours before kickoff: attempt or request injury, lineup, and market updates.
+- Within 60 minutes of kickoff: missing confirmed lineups prevent A grade.
+- Match-result odds movement of at least 0.08 creates a warning.
+- Match-result odds movement of at least 0.15 requires reevaluation.
+- Handicap-line or total-goals center movement requires reevaluation.
+- Already-started matches or matches not confirmed available for sale do not receive new pre-match purchase plans.
+
 ## Withhold Reference Purchase Plans
 
 Withhold Reference Purchase Plans or Portfolio Variants when:
@@ -54,6 +66,8 @@ Withhold Reference Purchase Plans or Portfolio Variants when:
 - Core source conflicts remain unresolved.
 - Data confidence is low across multiple matches.
 - Portfolio Correlation risk is high and cannot be explained or reduced.
+- Team type is unsupported, including youth teams, age-group teams, or women's matches.
+- Team type is unknown and no suitable same-type competition parameter pool can be verified; in that case keep analysis-only or cap at `C`.
 
 ## Language Guardrails
 

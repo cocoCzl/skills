@@ -97,6 +97,20 @@ For four-match score portfolios, use the score matrix to explain the purchase st
 - 增强覆盖: add the best secondary path, such as favorite concedes once, favorite only wins by one, or late expansion to a higher total.
 - 漏洞/补防: the score that would most obviously beat the main ticket logic, such as 1:1, 1:0, 2:1, or 3:1 depending on the match script.
 
+Before a correct-score ticket is promoted to a core plan, run or apply
+`scripts/score_coverage_analyzer.py`:
+
+- Single top score below 10% cannot be called a strong single-score pick.
+- Top 3 cumulative probability below 25% means weak score coverage.
+- Top 4-5 cumulative probability below 33% prevents score tickets from
+  becoming the core portfolio.
+- High total xG or credible both-teams-to-score paths widen the distribution;
+  downgrade or add conceded-goal / late-expansion protection.
+
+Every score coverage section should explain primary path, secondary path, and
+missed-path protection. If coverage is weak, keep score picks as analysis or
+optional high-variance ideas rather than a main ticket.
+
 ## Implied Probability
 
 For decimal odds:
@@ -125,6 +139,24 @@ edge = model probability - no-vig market probability
 ```
 
 Treat small edges cautiously. Use `scripts/grade_calculator.py` when model and market probabilities are available, then apply any additional football-context downgrade. If the data confidence is low or single-source, downgrade.
+
+For market-by-market grading, use `scripts/market_grade_calculator.py` when structured market selections and model probabilities are available. It should produce separate grades for market families such as:
+
+- `match_result`
+- `handicap_match_result`
+- `total_goals` / `over_under`
+- `correct_score`
+- overall match view, if the report needs a summary
+
+Complete markets calculate raw implied probability, market margin, return rate,
+and no-vig probability for every selection. Incomplete markets, missing odds,
+unknown availability, source-missing markets, and parser-failed markets must be
+marked approximate or unavailable for full Value Judgment.
+
+Market strength can be used only as a bounded correction to the independent
+model probability. It must not replace the football model. If market direction
+and model direction conflict and the reason is not explained by team news,
+lineups, injuries, or tactical context, downgrade or Pass the affected market.
 
 Use this wording discipline:
 

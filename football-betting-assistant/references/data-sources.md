@@ -4,10 +4,83 @@ The assistant should actively verify current information when tools are availabl
 
 ## Source Priority
 
-1. User-provided source, screenshot, table, link, or structured data.
-2. Configured football data provider or API result. For odds and lines, prefer The Odds API when `THE_ODDS_API_KEY` is configured.
-3. Public web search or browser verification.
-4. User clarification for missing data.
+1. Local normalized football snapshots generated from public or user-authorized data.
+2. In `china-lottery` mode, the built-in `sporttery` provider for publicly visible China Sports Lottery football data.
+3. User-provided source, screenshot, table, link, or structured data.
+4. Configured football data provider or API result. For international odds and lines, prefer The Odds API when `THE_ODDS_API_KEY` is configured.
+5. Public web search or browser verification.
+6. User clarification for missing data.
+
+## Runtime Data Modes
+
+**china-lottery** is the default for 中国体育彩票 / 竞彩 requests. Purchase plans may use only China Sports Lottery buyable markets from `sporttery` snapshots or user-provided China lottery data. Third-party bookmaker odds may be shown as international market reference, but they must not replace China lottery odds in a China lottery purchase plan.
+
+**international-odds** is used only when the user explicitly asks for overseas bookmaker / international odds analysis or configures that mode. It may use The Odds API or a user-authorized bookmaker/aggregator provider.
+
+**analysis-only** is used when fixture and football context are available but verifiable odds, lines, or buyable markets are missing. It can produce Probability Analysis, but not Value Judgment or Reference Purchase Plans.
+
+## Built-In Sporttery Provider
+
+The built-in `sporttery` provider is a best-effort public-data collector for current or future China Sports Lottery football pages. It is not an official stable API client and does not guarantee coverage for every date, market, or page layout.
+
+The first provider implementation uses public endpoints and pages that are referenced by Sporttery's own public pages, including the football match-list endpoint exposed by the public schedule page. If that endpoint stops returning structured data, is blocked, or omits a market's odds, the provider must save the raw response when possible and mark the affected fields as missing or parser-failed.
+
+Normal user flow:
+
+1. The user asks naturally, such as "帮我看北京时间明天的几场世界杯比赛".
+2. The assistant checks local snapshots under `data/football/snapshots/`.
+3. If needed and local execution is available, the assistant runs `scripts/fetch_match_data.py` automatically.
+4. The assistant reads the normalized snapshot and uses only confirmed buyable markets for China lottery purchase plans.
+5. For completed snapshot-backed analysis, the assistant generates an HTML report and linked prediction snapshot with `scripts/build_snapshot_report.py`.
+6. If odds/handicap data is missing, it applies the stop rules and asks for the minimum missing data.
+
+Developer/debug CLI:
+
+```bash
+python3 football-betting-assistant/scripts/fetch_match_data.py \
+  --mode china-lottery \
+  --provider sporttery \
+  --football \
+  --out data/football/snapshots
+```
+
+For repeatable parser/debug checks, a local raw fixture can be supplied:
+
+```bash
+python3 football-betting-assistant/scripts/fetch_match_data.py \
+  --mode china-lottery \
+  --provider sporttery \
+  --football \
+  --raw-input tests/fixtures/football_betting_assistant/raw/sporttery-football-sample.json \
+  --out data/football/snapshots
+```
+
+The provider may save raw public responses under a `raw/` subdirectory. Raw files and normalized snapshots are generated artifacts and should not be committed unless intentionally promoted to fixtures.
+
+For market consistency checks, use the normalized snapshot rather than raw HTML. A market with `availability.status = available` and at least one priced selection may be used in a China lottery purchase plan. `unknown`, `unavailable`, and `parse_failed` markets must not be used in purchase plans unless the user supplies verified China lottery odds for that market.
+
+Snapshot-backed report generation:
+
+```bash
+python3 football-betting-assistant/scripts/build_snapshot_report.py \
+  data/football/snapshots/sporttery-football-YYYYMMDDTHHMMSS+0800.json \
+  --date tomorrow \
+  --competition 世界杯 \
+  --topic "明天世界杯竞彩分析" \
+  --report-out-dir reports/football-betting \
+  --data-out-dir data/football
+```
+
+This command is a developer/debug entry point. In normal skill use, the assistant should run the collection, selection, report generation, and prediction-snapshot persistence automatically when local execution is available.
+
+The generated prediction snapshot is saved under `data/football/predictions/` with the same `report_id` as the HTML report. It preserves source snapshot metadata, pre-match data gaps, model outputs, and ticket plans for future post-match review.
+
+The provider must not:
+
+- Log into accounts.
+- Bypass WAF, captchas, paywalls, regional restrictions, or rate limits.
+- Scan hidden endpoints aggressively.
+- Treat blocked or parser-failed data as a confirmed unavailable market.
 
 ## Data Source Credentials
 
@@ -28,7 +101,7 @@ Do not assume these providers exist. If no callable provider is available, use p
 
 ## Recommended Odds Provider
 
-For odds and lines, the default recommended provider is **The Odds API** because it is designed for multi-bookmaker odds aggregation. The public official site shows a Starter free tier with 500 credits per month and support for soccer, head-to-head odds, spreads/handicap, and totals/over-under markets. Use `THE_ODDS_API_KEY` only when the user or environment has configured it.
+For international odds and lines, the default recommended provider is **The Odds API** because it is designed for multi-bookmaker odds aggregation. The public official site shows a Starter free tier with limited credits and support for soccer, head-to-head odds, spreads/handicap, and totals/over-under markets. Use `THE_ODDS_API_KEY` only when the user or environment has configured it.
 
 When The Odds API is available, request these markets first:
 
@@ -40,7 +113,13 @@ Normalize provider output into the skill's Odds Data fields, including source, b
 
 ## Optional Context Providers
 
-API-Football can be useful for fixtures, lineups, injuries, team stats, and some odds. Treat it as a complementary context provider unless the user specifically configures it as the primary odds source.
+API-Football can be useful for fixtures, lineups, injuries, team stats, standings, and some odds. Treat it as the preferred optional provider for team recent-form context when `API_FOOTBALL_KEY` is configured, not as the default China lottery buyable-market source.
+
+football-data.org can provide fixtures, standings, and results for supported competitions when `FOOTBALL_DATA_API_KEY` is configured. It is useful for club competition context but does not replace China lottery odds.
+
+TheSportsDB and OpenLigaDB can be used as low-friction public fallback sources for limited fixtures/results context when their coverage fits the competition. They should be treated as lower-depth context sources, not complete odds or lineup providers.
+
+For recent-form-to-model conversion, use `references/model-parameters.md` and `scripts/recent_form_to_xg.py`. API-Football is the preferred enhanced team-context source; football-data.org and public fallback sources can supply fixtures, results, standings, and goals for/against proxies when xG/xGA are unavailable. Missing provider keys should downgrade precision, not block the whole analysis.
 
 Discovering an API through web search does not make it a configured provider. Do not auto-register accounts, request keys on the user's behalf, guess keys, call unknown free APIs, or treat unauthenticated endpoints as authorized data sources.
 
@@ -66,10 +145,29 @@ This mode should feel as helpful as a web ChatGPT search, but it must be more ex
 
 If no provider credential exists:
 
-1. Try public or user-authorized sources.
-2. Apply the Retrieval Stop Rule.
-3. Ask the user for missing critical data if public collection fails.
-4. Downgrade rather than inventing current data.
+1. In `china-lottery` mode, try the local snapshot and built-in `sporttery` provider.
+2. Try public or user-authorized sources.
+3. Apply the Retrieval Stop Rule.
+4. Ask the user for missing critical data if public collection fails.
+5. Downgrade rather than inventing current data.
+
+## China Lottery Odds Stop Rule
+
+When the user requests a China Sports Lottery purchase plan and the assistant cannot verify China lottery odds/handicap data:
+
+1. Do not produce Value Judgment.
+2. Do not produce Reference Purchase Plans.
+3. If fixtures and football context exist, continue only with Probability Analysis.
+4. Ask for the minimum missing fields:
+
+```markdown
+请补充这场/这几场的竞彩可买玩法和赔率/盘口：
+比赛：
+玩法：胜平负 / 让球胜平负 / 比分 / 总进球 / 大小球
+盘口：
+赔率：
+截图或文字都可以。
+```
 
 ## Required Current Data
 

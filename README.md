@@ -27,12 +27,33 @@ skill-name/
   SKILL.md
   README.md
   references/
-  examples/
   schemas/
   scripts/
 ```
 
-其中 `SKILL.md` 是 agent 触发和执行 skill 的主入口；`README.md` 面向人类使用者；`references/`、`examples/`、`schemas/`、`scripts/` 按需提供。运行时 skill 目录不放测试代码。
+其中 `SKILL.md` 是 agent 触发和执行 skill 的主入口；`README.md` 面向人类使用者；`references/`、`schemas/`、`scripts/` 按需提供。运行时 skill 目录不放测试代码或样例数据。
+
+仓库级测试统一放在：
+
+```text
+tests/
+  skill_name/
+    test_*.py
+```
+
+仓库级样例和 fixture 统一放在：
+
+```text
+examples/
+  skill_name/
+    *.json
+tests/
+  fixtures/
+    skill_name/
+      *.json
+```
+
+`tests/`、`examples/` 下的目录名使用 Python 友好的下划线形式，例如 `football_betting_assistant/` 对应 `football-betting-assistant`。测试入口、测试 fixture 和样例数据不要放进运行时 skill 目录。
 
 ## 开发检查
 
@@ -40,6 +61,9 @@ skill-name/
 
 ```bash
 python3 scripts/check_all_skills.py
+python3 -m unittest discover -s tests -p 'test_*.py'
+python3 football-betting-assistant/scripts/validate_inputs.py examples/football_betting_assistant/single-match-input.json
+python3 football-betting-assistant/scripts/fetch_match_data.py --football --raw-input tests/fixtures/football_betting_assistant/raw/sporttery-football-sample.json --out /private/tmp/football-snapshots
 ```
 
 ## 贡献

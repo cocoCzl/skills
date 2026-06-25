@@ -29,6 +29,89 @@ Use team xG/xGA when available. If only goals for/against are available, the
 agent may use them as a lower-precision proxy and must downgrade model
 precision in the report.
 
+## Team Type And Competition Parameters
+
+Before selecting recent-form windows or scoring parameters, classify the match
+with `scripts/team_context_rules.py`.
+
+Supported formal-analysis team types:
+
+- `club`: senior men's club matches.
+- `national`: senior men's national-team matches.
+- `unknown`: team type cannot be verified; analysis may continue, but precision
+  is capped until a suitable context is confirmed.
+
+Unsupported for formal purchase plans:
+
+- Youth or age-group teams, such as U17, U19, U21, U23, 青年队, or 预备队.
+- Women's football, such as 女足, 女子, or women competitions.
+
+Do not mix competition-parameter pools:
+
+- Club matches must use club-league or club-tournament scoring context.
+- National-team matches must use national-team competition context.
+- World Cup, continental cups, international friendlies, and qualifiers should
+  not borrow club-league scoring averages as if they were equivalent.
+- Unknown matches may use same-type defaults only after the type is identified;
+  otherwise cap Reference Grade at `C`.
+
+Confidence caps:
+
+| Team type | Parameter pool | Default cap |
+|---|---|---:|
+| `club` | club | `B` until exact competition context is verified |
+| `national` | national | `B` until exact competition context is verified |
+| `unknown` | same-type default required | `C` |
+| `unsupported` | unsupported | `Pass` for purchase plans |
+
+An A-grade needs a verified team type, suitable competition scoring context,
+current team data, and no unresolved major source conflict. Global defaults
+alone cannot produce A-grade precision.
+
+## Recent Form To xG Prior Inputs
+
+Use `scripts/recent_form_to_xg.py` when recent-form aggregates need to become
+inputs for `scripts/xg_prior_calculator.py`.
+
+Provider priority for recent form:
+
+1. API-Football when `API_FOOTBALL_KEY` is configured, because it can provide
+   fixtures, team form, standings, injuries, lineups, and some richer match
+   statistics.
+2. football-data.org when `FOOTBALL_DATA_API_KEY` is configured, mainly for
+   fixtures, results, and standings in supported club competitions.
+3. TheSportsDB, OpenLigaDB, or public pages as lower-depth fallback for
+   fixtures/results context only.
+4. User-provided recent form or structured match data.
+
+Club recent-form rules:
+
+- Prefer last 10 senior men's club matches in the same or comparable
+  competition context.
+- Track home/away splits when available.
+- Consider schedule density, travel, rotation risk, table pressure, and
+  competition type before applying Bayesian adjustments.
+- Do not mix club-league scoring parameters with national-team tournament
+  parameters.
+
+National-team recent-form rules:
+
+- Prefer last 8 senior men's national-team matches, with higher weight on
+  official matches than friendlies.
+- Tournament context, group incentives, neutral venue, travel, and squad
+  selection matter more than club home/away splits.
+- World Cup and continental tournament data should use national-team scoring
+  context, not domestic league averages.
+
+Precision rules:
+
+- If xG/xGA aggregates are available, use them as preferred recent-form inputs.
+- If only goals for/against are available, convert them to per-match proxy
+  values and cap precision at `C` unless other strong data compensates.
+- Small samples below the minimum window cap precision at `C`.
+- Missing provider keys do not block the skill; they downgrade model confidence
+  and push the assistant toward public/user-authorized fallback data.
+
 ## Bounded Adjustments
 
 Contextual adjustments must be explicit and bounded. The agent chooses the
@@ -68,6 +151,17 @@ negative value: edge < 0
 Treat small edges cautiously. Single-source odds, stale data, unresolved market
 conflicts, low data confidence, or late lineup uncertainty should cap or reduce
 the grade even when the numerical edge is positive.
+
+Market-level grading should stay separate by market family. A match can have a
+usable handicap grade while correct-score coverage remains weak, or a strong
+result lean while total-goals value is unavailable. Do not collapse every market
+into one match-level grade unless the report also shows the underlying market
+grades.
+
+Market-strength corrections are bounded to small deltas and must not replace
+the independent model probability. Use them only when the market shape is
+supported by verifiable context; otherwise treat unexplained model-market
+conflict as a downgrade or Pass.
 
 ## Grade Caps
 

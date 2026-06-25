@@ -1,0 +1,32 @@
+{
+  "matches": [
+    {
+      "id": "m001",
+      "matchNo": "周四001",
+      "competition": "世界杯",
+      "kickoffTime": "2026-06-26T03:00:00+08:00",
+      "homeTeam": "西班牙",
+      "awayTeam": "沙特",
+      "teamType": "national",
+      "markets": [
+        {
+          "name": "胜平负",
+          "selections": [
+            { "name": "胜", "odds": 1.52 },
+            { "name": "平", "odds": 4.10 },
+            { "name": "负", "odds": 7.20 }
+          ]
+        },
+        {
+          "name": "让球胜平负",
+          "line": "-1",
+          "selections": [
+            { "name": "让胜", "odds": 2.28 },
+            { "name": "让平", "odds": 3.35 },
+            { "name": "让负", "odds": 2.55 }
+          ]
+        }
+      ]
+    }
+  ]
+}

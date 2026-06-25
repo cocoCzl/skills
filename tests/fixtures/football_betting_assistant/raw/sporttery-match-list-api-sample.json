@@ -1,0 +1,71 @@
+{
+  "errorCode": "0",
+  "success": true,
+  "value": {
+    "lastUpdateTime": "2026-06-25 13:46:51",
+    "matchInfoList": [
+      {
+        "businessDate": "2026-06-25",
+        "weekday": "周四",
+        "matchCount": 1,
+        "matchNumDate": "260625",
+        "subMatchList": [
+          {
+            "awayTeamAllName": "德国",
+            "awayTeamAbbName": "德国",
+            "businessDate": "2026-06-25",
+            "homeTeamAllName": "厄瓜多尔",
+            "homeTeamAbbName": "厄瓜多尔",
+            "leagueAllName": "世界杯",
+            "leagueAbbName": "世界杯",
+            "matchDate": "2026-06-26",
+            "matchId": 2040291,
+            "matchNum": 4055,
+            "matchNumDate": "260625",
+            "matchNumStr": "周四055",
+            "matchStatus": "Selling",
+            "matchTime": "04:00",
+            "oddsList": [
+              {
+                "a": "2.070",
+                "d": "3.720",
+                "goalLine": "+1",
+                "goalLineValue": "+1.00",
+                "h": "2.650",
+                "poolCode": "HHAD",
+                "updateDate": "2026-06-25",
+                "updateTime": "13:17:40"
+              },
+              {
+                "a": "1.360",
+                "d": "4.950",
+                "goalLine": "",
+                "goalLineValue": "",
+                "h": "5.200",
+                "poolCode": "HAD",
+                "updateDate": "2026-06-25",
+                "updateTime": "13:17:36"
+              }
+            ],
+            "poolList": [
+              { "poolCode": "HHAD", "poolStatus": "Selling", "single": 0 },
+              { "poolCode": "HAD", "poolStatus": "Selling", "single": 1 },
+              { "poolCode": "CRS", "poolStatus": "Selling", "single": 1 },
+              { "poolCode": "TTG", "poolStatus": "Selling", "single": 1 }
+            ],
+            "remark": "比赛将在美国-新泽西州东拉瑟福德举行",
+            "sellStatus": "1",
+            "weekday": "周四"
+          }
+        ]
+      }
+    ],
+    "matchDateList": [
+      { "businessDate": "2026-06-25", "businessDateCn": "周四" }
+    ],
+    "leagueList": [
+      { "leagueId": "72", "leagueName": "世界杯", "leagueNameAbbr": "世界杯" }
+    ],
+    "totalCount": 1
+  }
+}

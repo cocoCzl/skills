@@ -1,0 +1,30 @@
+{
+  "kind": "football_snapshot",
+  "data": {
+    "snapshot_id": "sporttery-football-2026-06-25T120500+0800",
+    "mode": "china-lottery",
+    "provider": "sporttery",
+    "sport": "football",
+    "observed_at": "2026-06-25T12:05:00+08:00",
+    "timezone": "Asia/Shanghai",
+    "confidence": "low",
+    "sources": [
+      {
+        "name": "sporttery",
+        "url": "https://webapi.sporttery.cn/gateway/jc/football/example.qry",
+        "observed_at": "2026-06-25T12:05:00+08:00",
+        "status": "blocked",
+        "raw_file": "raw/sporttery-football-2026-06-25T120500+0800-example.html",
+        "notes": "WAF block page returned"
+      }
+    ],
+    "matches": [],
+    "errors": [
+      {
+        "code": "waf_blocked",
+        "message": "Sporttery public source blocked the request.",
+        "source": "https://webapi.sporttery.cn/gateway/jc/football/example.qry"
+      }
+    ]
+  }
+}

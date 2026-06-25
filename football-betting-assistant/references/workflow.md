@@ -34,7 +34,8 @@ If the user asks to improve hit rate, accuracy, calibration, or model quality, r
 7. Use the Poisson model to derive result, goals, and score probabilities. Use `scripts/poisson_calculator.py` when available; otherwise label the probabilities approximate.
 8. Compare model probabilities with implied probabilities when odds exist.
 9. Apply edge thresholds and downgrade rules. Prefer `scripts/grade_calculator.py` when model probability and no-vig market probability exist.
-10. Produce the Single-Match Report template.
+10. Before final purchase-plan output, apply `scripts/late_update_rules.py` when kickoff timing, lineup status, sales availability, or odds movement data are available.
+11. Produce the Single-Match Report template.
 
 Single-match reports must include a visible evidence chain:
 
@@ -83,8 +84,10 @@ For score portfolios, the default answer should be detailed enough that a user c
 Construct the ticket structures from the full match slate:
 
 - Start with the model's most defensible main plan, often using 胜平负, 让球胜平负, 大小球, or 总进球 rather than exact score for every match. The main plan may be 2串1, 3串1, 4串1, 5串1, 6串1, 7串1, or 8串1 depending on confidence; do not force a leg count.
+- In conservative mode, exclude Pass, C-grade, unavailable, low-data, and weak score-coverage legs from main plans. Use `scripts/portfolio_builder.py` when structured graded legs are available.
 - For score portfolios, identify each match's core score cluster first, then decide whether it deserves one, two, three, or four score candidates.
 - For exact-score tickets, select only the four matches with the strongest score concentration and acceptable data confidence.
+- Use `scripts/score_coverage_analyzer.py` or the same thresholds before including exact-score legs. Diffuse score matrices should stay out of the core portfolio.
 - For 胜平负 / 让球胜平负 tickets, select up to eight matches with the strongest direction confidence and confirmed buyable markets.
 - For 大小球 / 总进球 tickets, select up to eight matches with the clearest total-goals or over-under edge.
 - Use wider coverage on the most volatile match, not mechanically on the first match.
@@ -126,11 +129,14 @@ Completed pre-match Single-Match Analysis and Betting Portfolio analysis should 
 ## Post-Match Review Flow
 
 1. Confirm actual results from user-provided or current sources.
-2. Reconstruct the pre-match assumptions if available.
-3. Compare expected goals, score candidates, odds value, and risk points with actual outcome.
-4. Identify model bias and data bias.
-5. Suggest future weighting adjustments.
-6. Do not produce chase-loss, recovery-bet, or "下一场翻本" advice.
+2. Locate the saved prediction snapshot by report ID or path when available.
+3. Use `scripts/post_match_review.py` to attach final scores and compute basic hit/miss fields.
+4. Compare expected goals, score candidates, odds value, and risk points with actual outcome.
+5. Identify model bias and data bias.
+6. Suggest future weighting adjustments.
+7. Do not produce chase-loss, recovery-bet, or "下一场翻本" advice.
+
+Do not backfill post-match information into the original pre-match prediction. Save review output separately under `data/football/reviews/` or an equivalent generated-output directory.
 
 ## Historical Backtest / Calibration Flow
 
@@ -152,6 +158,7 @@ Before answering:
 
 - Separate Probability Analysis from Value Judgment.
 - Check Market Consistency.
+- Check kickoff/sales availability and late-update rules; do not create a new pre-match purchase plan after kickoff or when sales availability cannot be confirmed.
 - Check source timestamps and data gaps.
 - Apply Reference Grade and confidence rules.
 - For backtests, check that every sample used only pre-match data and that sample size is shown.
