@@ -15,6 +15,7 @@
 
 仓库级目录用于开发和测试，不是用户使用 skill 的前置条件：
 
+- `evals/football_betting_assistant/`：行为验收样例，用自然语言 prompt 和期望行为描述检查 skill 是否守住关键规则；不是运行时数据，也不是硬编码答案。
 - `examples/football_betting_assistant/`：开发者可手动运行的标准输入样例，例如单场、组合、模型输入和回测样本。
 - `tests/football_betting_assistant/`：自动化测试入口。
 - `tests/fixtures/football_betting_assistant/`：测试固定数据，包括标准快照、失败快照、竞彩 raw 样本和小组赛上下文输入。它们用于离线、可重复地测试采集、校验和报告链路，不是用户模板。
@@ -117,7 +118,49 @@ export API_FOOTBALL_KEY="your_api_football_key"
 export FOOTBALL_DATA_API_KEY="your_football_data_key"
 ```
 
-不要把真实 key 写进 `README.md`、`SKILL.md`、`references/`、仓库级 `examples/`、报告正文、issue、PR 或聊天记录。没有这些 key 时，skill 仍可尝试用 `sporttery` 快照和公开网页做中国竞彩分析；球队近期数据、阵容和积分榜可能降级。
+### API key 从哪里获取
+
+- The Odds API：到 https://the-odds-api.com/ 注册账号，在 dashboard 里创建 API key。官方 v4 文档在 https://the-odds-api.com/liveapi/guides/v4/ 。这个 key 主要用于海外赔率、h2h/spreads/totals，以及部分 sport key 的 scores 赛果查询。
+- API-Football：到 https://www.api-football.com/ 注册并订阅可用套餐，文档在 https://www.api-football.com/documentation-v3 。这个 key 适合补赛程、赛果、积分榜、阵容、伤停和球队近期数据。
+- football-data.org：到 https://www.football-data.org/client/register 注册，拿到 token 后按官方 quickstart 使用 `X-Auth-Token`，文档在 https://www.football-data.org/documentation/quickstart 。这个 key 适合补部分欧洲/国际赛事的赛程、赛果和积分榜。
+
+这些 provider 的覆盖范围、免费额度和限频会变化，README 不写死当前价格或额度。以各自官方 dashboard 和文档为准。
+
+使用方式：
+
+1. 在运行 Codex/agent 的 shell 里 export 这些变量，或在你自己的安全配置系统里注入同名环境变量。
+2. 重新启动 agent 会话或确认运行环境能读取这些变量。
+3. 用户正常提问即可；普通用户不需要手动调用 provider 脚本。
+
+不要把真实 key 写进 `README.md`、`SKILL.md`、`references/`、仓库级 `examples/`、报告正文、issue、PR 或聊天记录。没有这些 key 时，skill 仍可尝试用 `sporttery` 快照和公开网页做中国竞彩分析；球队近期数据、阵容、积分榜和自动赛果覆盖可能降级。
+
+### 这些 key 会被怎么用
+
+- 赛前竞彩：`sporttery` 仍是中国竞彩可买市场的默认来源。第三方 provider 不能替代中国竞彩赔率。
+- 海外赔率：`THE_ODDS_API_KEY` 可用于 `international-odds` 模式的 h2h、spreads、totals 赔率。
+- 球队上下文：`API_FOOTBALL_KEY` 和 `FOOTBALL_DATA_API_KEY` 可补赛程、赛果、积分榜、近期战绩、阵容/伤停等上下文。
+- 赛后复盘：自动复盘会优先用 `FOOTBALL_DATA_API_KEY`、`API_FOOTBALL_KEY`、`THE_ODDS_API_KEY` 查最终比分；都不可用时，再用用户提供数据或公开网页核验。
+
+如果 provider 不可用、限频、无覆盖或返回冲突数据，报告会标记来源缺口并降级，而不是编造赛果、赔率或盘口。
+
+## 数学模型说明
+
+这个 skill 使用透明、可复核的简化模型，不声称能保证赛果。完整参数在 `references/math-model.md` 和 `references/model-parameters.md`，README 只解释主流程：
+
+1. **基础预期进球 prior xG**：优先使用双方 xG/xGA、联赛均值、主客/中立场、球队类型和近期攻防数据。没有 xG 时，可用进失球作为低精度代理，并降低置信度。
+2. **贝叶斯式有界修正**：把伤停、首发、赛程密度、战意、小组出线压力、天气、盘口变化等证据作为方向性修正。修正幅度必须有上限，不能凭感觉大幅改模型。
+3. **最终 xG 与泊松比分矩阵**：用 final xG 生成 0:0、1:0、1:1、2:1 等比分概率，再汇总成胜平负、大小球/总进球和比分集中区。
+4. **赔率隐含概率和去水概率**：有真实赔率时，把十进制赔率转成 raw implied probability，再去除市场水位，得到更可比的市场概率。
+5. **edge 和参考等级**：比较模型概率和市场概率，结合数据置信度、模型置信度、单源赔率、市场可买性、停售/开赛风险，输出 A/B/C/Pass 或降级结论。
+6. **比分覆盖与组合构建**：比分不是单点确定预测，而是候选集合。高总 xG、双方都有进球路径、低数据置信度时，应扩大覆盖或降低比分票权重。
+
+常用脚本对应关系：
+
+- `scripts/xg_prior_calculator.py`：基础 xG prior 和有界修正。
+- `scripts/poisson_calculator.py`：泊松比分矩阵、胜平负和大小球概率。
+- `scripts/implied_probability.py`：赔率隐含概率和去水概率。
+- `scripts/grade_calculator.py`、`scripts/market_grade_calculator.py`：edge、参考等级和降级封顶。
+- `scripts/score_coverage_analyzer.py`：比分集中度与覆盖宽度。
 
 ## 开发者常用命令
 
@@ -189,6 +232,7 @@ python3 football-betting-assistant/scripts/render_html_report.py \
 - `data/football/snapshots/*.json`
 - `data/football/report-inputs/*.html-report.json`
 - `data/football/predictions/*.prediction.json`
+- `data/football/reviews/*.review.json`
 - `data/football/competition-context/*.json`
 
 ### 小组赛上下文
@@ -256,7 +300,45 @@ python3 football-betting-assistant/scripts/zero_operation_smoke.py \
   --data-out-dir data/football
 ```
 
-赛后复盘使用 `scripts/post_match_review.py` 给已有 prediction snapshot 附加赛果。不要把赛后事实回填进原始赛前预测。
+自动赛后复盘会扫描最近 30 天的 prediction snapshot，查找已完赛比赛，抓取或读取赛果，生成结构化 review JSON 和一份中文 HTML 总复盘：
+
+```bash
+python3 football-betting-assistant/scripts/auto_post_match_review.py \
+  --predictions-dir data/football/predictions \
+  --review-out-dir data/football/reviews \
+  --report-out-dir reports/football-betting
+```
+
+如果用户已经有赛果 JSON，可作为本地输入，适合离线复现或测试：
+
+```bash
+python3 football-betting-assistant/scripts/auto_post_match_review.py \
+  --results-input path/to/match-results.json
+```
+
+赛果 JSON 最小形状：
+
+```json
+{
+  "kind": "match_results",
+  "data": {
+    "results": [
+      {
+        "match": "西班牙 vs 沙特",
+        "home_team": "西班牙",
+        "away_team": "沙特",
+        "competition": "世界杯",
+        "kickoff_time": "2026-06-26T03:00:00+08:00",
+        "home_goals": 2,
+        "away_goals": 0,
+        "source": "user-provided"
+      }
+    ]
+  }
+}
+```
+
+低层单场复盘仍可直接使用 `scripts/post_match_review.py` 给已有 prediction snapshot 附加赛果。普通“赛后复盘”请求应优先走自动复盘入口。不要把赛后事实回填进原始赛前预测。
 
 ## 输出要求
 

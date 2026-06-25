@@ -129,13 +129,14 @@ Completed pre-match Single-Match Analysis and Betting Portfolio analysis should 
 
 ## Post-Match Review Flow
 
-1. Confirm actual results from user-provided or current sources.
-2. Locate the saved prediction snapshot by report ID or path when available.
-3. Use `scripts/post_match_review.py` to attach final scores and compute basic hit/miss fields.
-4. Compare expected goals, score candidates, odds value, and risk points with actual outcome.
-5. Identify model bias and data bias.
-6. Suggest future weighting adjustments.
-7. Do not produce chase-loss, recovery-bet, or "下一场翻本" advice.
+1. If the user does not provide a report ID, prediction path, or match name, run zero-operation review with `scripts/auto_post_match_review.py`.
+2. Scan saved prediction snapshots under `data/football/predictions/`. Default to the last 30 days; use all history only when the user explicitly asks.
+3. Confirm actual results from user-provided results, configured result providers, or public/authorized web verification. Preferred configured providers are `FOOTBALL_DATA_API_KEY`, `API_FOOTBALL_KEY`, and `THE_ODDS_API_KEY`; public web lookup is a fallback when tools are available.
+4. Match results to predictions by stable fixture IDs when available; otherwise use match name, kickoff time, competition, and team names. Low-confidence matches must be skipped and listed as `final_result_not_verified` or low-confidence identity, not forced into the review.
+5. Use `scripts/auto_post_match_review.py` to write a review bundle under `data/football/reviews/` and a Chinese HTML Review under `reports/football-betting/`. Use `scripts/post_match_review.py` only for an exact single-snapshot/single-score helper flow.
+6. Compare expected goals, score candidates, odds value, ticket legs, and risk points with the actual outcome.
+7. Identify model bias and data bias, then suggest future weighting or downgrade-rule adjustments.
+8. Do not produce chase-loss, recovery-bet, or "下一场翻本" advice.
 
 Do not backfill post-match information into the original pre-match prediction. Save review output separately under `data/football/reviews/` or an equivalent generated-output directory.
 

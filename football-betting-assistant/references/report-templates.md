@@ -241,6 +241,8 @@ HTML Report rules:
 
 ## Post-Match Review
 
+Default post-match reviews should be generated as one Chinese HTML Review through `scripts/auto_post_match_review.py` when local execution is available. Save the HTML under `reports/football-betting/` and the structured review bundle under `data/football/reviews/`. Use this structure for each reviewed match:
+
 ```markdown
 ## 赛后复盘：[比赛或组合]
 

@@ -1,6 +1,6 @@
 # Skills
 
-这是一个面向 Codex / agent 工作流的开源 skill 合集仓库。每个顶层子目录都是一个可独立安装和阅读的 skill。
+这是一个面向 Codex / agent 工作流的开源 skill 合集仓库。带有 `SKILL.md` 的顶层目录是可独立安装和阅读的 skill；`tests/`、`examples/`、`evals/`、`scripts/` 等是仓库级开发资料。
 
 当前包含：
 
@@ -53,7 +53,15 @@ tests/
       *.json
 ```
 
-`tests/`、`examples/` 下的目录名使用 Python 友好的下划线形式，例如 `football_betting_assistant/` 对应 `football-betting-assistant`。测试入口、测试 fixture 和样例数据不要放进运行时 skill 目录。
+仓库级行为验收样例统一放在：
+
+```text
+evals/
+  skill_name/
+    evals.json
+```
+
+`tests/`、`examples/`、`evals/` 下的目录名使用 Python 友好的下划线形式，例如 `football_betting_assistant/` 对应 `football-betting-assistant`。测试入口、测试 fixture、样例数据和 eval 描述不要放进运行时 skill 目录。
 
 ## 开发检查
 

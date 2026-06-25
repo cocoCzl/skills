@@ -123,6 +123,18 @@ TheSportsDB and OpenLigaDB can be used as low-friction public fallback sources f
 
 For recent-form-to-model conversion, use `references/model-parameters.md` and `scripts/recent_form_to_xg.py`. API-Football is the preferred enhanced team-context source; football-data.org and public fallback sources can supply fixtures, results, standings, and goals for/against proxies when xG/xGA are unavailable. Missing provider keys should downgrade precision, not block the whole analysis.
 
+## Post-Match Result Providers
+
+For post-match review, final scores are a separate data category from China lottery odds. Prefer configured providers in this order when available:
+
+1. `FOOTBALL_DATA_API_KEY` for supported competition fixtures and finished scores.
+2. `API_FOOTBALL_KEY` for broader fixture/result coverage.
+3. `THE_ODDS_API_KEY` scores endpoints for sports/competitions covered by the configured sport keys.
+4. User-provided result JSON, screenshot, table, or link.
+5. Public web verification when search or browser tools are available.
+
+Final-score records must include source name, accessed or observed time when known, and match-identity confidence. If a saved prediction snapshot lacks provider fixture IDs, match by team names, kickoff time, and competition. Low-confidence matches must be skipped and listed in the review summary rather than forced into hit/miss metrics.
+
 When public pages provide only played scores rather than a table, use the local standings calculator instead of trusting prose summaries. The calculated context should be labelled `calculated_from_results` and still cite the score source and observation time.
 
 Discovering an API through web search does not make it a configured provider. Do not auto-register accounts, request keys on the user's behalf, guess keys, call unknown free APIs, or treat unauthenticated endpoints as authorized data sources.

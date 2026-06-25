@@ -26,6 +26,7 @@ SCORE_COVERAGE = SKILL / "scripts" / "score_coverage_analyzer.py"
 PORTFOLIO_BUILDER = SKILL / "scripts" / "portfolio_builder.py"
 LATE_RULES = SKILL / "scripts" / "late_update_rules.py"
 POST_MATCH_REVIEW = SKILL / "scripts" / "post_match_review.py"
+AUTO_POST_MATCH_REVIEW = SKILL / "scripts" / "auto_post_match_review.py"
 ZERO_OPERATION_SMOKE = SKILL / "scripts" / "zero_operation_smoke.py"
 COMPETITION_CONTEXT = SKILL / "scripts" / "competition_context_calculator.py"
 
@@ -921,6 +922,89 @@ class SnapshotContractTests(unittest.TestCase):
             self.assertEqual(review["data"]["final_score"]["score"], "2:0")
             self.assertTrue(review["data"]["leg_reviews"])
             self.assertIn("score_review", review["data"])
+
+    def test_auto_post_match_review_discovers_predictions_and_renders_html(self) -> None:
+        snapshot = FIXTURES / "football-snapshot-sporttery.json"
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            report_result = subprocess.run(
+                [
+                    "python3",
+                    str(REPORT_BUILDER),
+                    str(snapshot),
+                    "--match-no",
+                    "周四001",
+                    "--topic",
+                    "auto review test",
+                    "--report-out-dir",
+                    str(tmp_path / "reports"),
+                    "--data-out-dir",
+                    str(tmp_path / "data"),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(report_result.returncode, 0, report_result.stdout + report_result.stderr)
+            results_path = tmp_path / "results.json"
+            results_path.write_text(
+                json.dumps(
+                    {
+                        "kind": "match_results",
+                        "data": {
+                            "results": [
+                                {
+                                    "match": "西班牙 vs 沙特",
+                                    "home_team": "西班牙",
+                                    "away_team": "沙特",
+                                    "competition": "世界杯",
+                                    "kickoff_time": "2026-06-26T03:00:00+08:00",
+                                    "home_goals": 2,
+                                    "away_goals": 0,
+                                    "source": "test fixture",
+                                    "source_url": "file://results.json",
+                                }
+                            ]
+                        },
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            review_result = subprocess.run(
+                [
+                    "python3",
+                    str(AUTO_POST_MATCH_REVIEW),
+                    "--predictions-dir",
+                    str(tmp_path / "data" / "predictions"),
+                    "--results-input",
+                    str(results_path),
+                    "--review-out-dir",
+                    str(tmp_path / "data" / "reviews"),
+                    "--report-out-dir",
+                    str(tmp_path / "reports"),
+                    "--now",
+                    "2026-06-27T12:00:00+08:00",
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(review_result.returncode, 0, review_result.stdout + review_result.stderr)
+            payload = json.loads(review_result.stdout)
+            self.assertEqual(payload["reviewed_count"], 1)
+            review_path = Path(payload["review_path"])
+            html_path = Path(payload["html_report_path"])
+            self.assertTrue(review_path.exists())
+            self.assertTrue(html_path.exists())
+            review = json.loads(review_path.read_text(encoding="utf-8"))
+            self.assertEqual(review["kind"], "post_match_review_bundle")
+            self.assertEqual(review["data"]["reviews"][0]["final_score"]["score"], "2:0")
+            html = html_path.read_text(encoding="utf-8")
+            self.assertIn("足球竞彩赛后复盘", html)
+            self.assertIn("模型偏差", html)
 
     def test_zero_operation_smoke_generates_report_and_concise_chat_summary(self) -> None:
         snapshot = FIXTURES / "football-snapshot-sporttery.json"

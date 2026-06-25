@@ -50,6 +50,7 @@ Use scripts only when deterministic calculation or validation helps:
 - `scripts/portfolio_builder.py`: build conservative portfolio candidates from buyable, graded legs without forcing fixed leg counts.
 - `scripts/late_update_rules.py`: evaluate early-analysis grade caps, late lineup requirements, odds movement, sales availability, and kickoff stop rules.
 - `scripts/post_match_review.py`: attach final scores to saved prediction snapshots and compute basic hit/miss review fields.
+- `scripts/auto_post_match_review.py`: scan saved prediction snapshots, fetch or accept final scores, write review JSON, and render a Chinese post-match HTML Review.
 - `scripts/zero_operation_smoke.py`: offline smoke check for natural-language request -> snapshot selection -> HTML report -> prediction snapshot.
 
 ## Default Workflow
@@ -67,6 +68,8 @@ Use scripts only when deterministic calculation or validation helps:
 11. Produce an HTML Report for completed pre-match Single-Match Analysis or Betting Portfolio analysis. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the exact Beijing-time match slate, then Competition Context Analysis, then analyze each selected match with Bayesian adjustment and Poisson concentration, then provide Ticket Plans.
 12. When analysis starts from a normalized football snapshot, run `scripts/build_snapshot_report.py` to create both the HTML Report and the linked `prediction_snapshot`. For richer manually assembled reports, run `scripts/render_html_report.py` with structured report JSON.
 13. Save HTML under the current working directory's `reports/football-betting/` and generated data under `data/football/`. Keep the chat response to 2-4 concise summary lines plus the HTML path and prediction snapshot path. Do not paste the full report into chat after successful HTML generation.
+
+For Post-Match Review requests, default to zero-operation review when local execution is available: run `scripts/auto_post_match_review.py` to scan `data/football/predictions/`, default to the last 30 days unless the user asks for all history, verify final scores through configured providers or user/public sources, write review JSON under `data/football/reviews/`, and render one Chinese HTML Review under `reports/football-betting/`. If the user supplies a specific prediction snapshot or match, review only that target. Skip unfinished matches, unverified results, and low-confidence match identity; list the skip reason instead of inventing a result.
 
 For backtesting or "提高命中率" requests, do not change recommendations by intuition alone. Use historical pre-match snapshots and actual results, run `scripts/backtest_predictions.py` when data is available, then adjust downgrade/calibration guidance based on measured error patterns.
 
@@ -87,7 +90,7 @@ For backtesting or "提高命中率" requests, do not change recommendations by 
 - Use `scripts/score_coverage_analyzer.py` before making correct-score tickets. Weak or diffuse score matrices must not become core portfolio picks.
 - Use `scripts/portfolio_builder.py` when structured graded legs exist. Conservative main plans exclude C-grade, Pass, unavailable, low-data, and weak score-coverage legs.
 - Use `scripts/late_update_rules.py` before final purchase-plan output when kickoff timing and market movement data are available. Do not create new pre-match purchase plans after kickoff or when sales availability cannot be confirmed.
-- Use `scripts/post_match_review.py` for赛后复盘 when a prediction snapshot exists. Do not backfill post-match facts into the original pre-match prediction.
+- Use `scripts/auto_post_match_review.py` for normal 赛后复盘. Use `scripts/post_match_review.py` only as a low-level single-snapshot helper when the exact prediction path and final score are already known. Do not backfill post-match facts into the original pre-match prediction.
 - Keep unit count and amount separate. With the default 2 元/unit, `2 x 2 x 2 x 2 = 16` units means 32 元.
 - Reports should be analysis-first and source-aware. Name the sources used and their observation times in Chinese prose or tables; raw URLs are optional unless the user asks for them.
 - For tournament group-stage slates, always include a visible group-table section before match analysis. Show each team involved with current ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context when available. If standings are not directly available but played results are available, calculate the table with `scripts/competition_context_calculator.py`. If these cannot be verified or calculated, keep the table with "未确认" cells and downgrade data confidence instead of omitting the section.
@@ -104,7 +107,7 @@ For backtesting or "提高命中率" requests, do not change recommendations by 
 - HTML Reports are generated from structured JSON via `scripts/render_html_report.py`. They are saved under the current working directory's `reports/football-betting/`, not inside the skill package. The report directory is generated output and should not be committed.
 - Snapshot-backed HTML Reports can be generated with `scripts/build_snapshot_report.py`; it also writes a linked prediction snapshot under `data/football/predictions/` for future review and calibration.
 - Football snapshots generated by `scripts/fetch_match_data.py` are saved under the current working directory's `data/football/snapshots/` by default. They are generated output and should not be committed unless intentionally used as fixtures.
-- Report inputs and prediction snapshots under `data/football/report-inputs/` and `data/football/predictions/` are generated output and should not be committed unless intentionally promoted to tests.
+- Report inputs, prediction snapshots, and review JSON under `data/football/report-inputs/`, `data/football/predictions/`, and `data/football/reviews/` are generated output and should not be committed unless intentionally promoted to tests.
 
 ## China Lottery Snapshot Stop Rules
 
