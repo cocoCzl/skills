@@ -22,7 +22,8 @@ SCHEMA_REQUIRED: dict[str, list[str]] = {
     "portfolio": ["matches", "correlation_notes", "ticket_tiers", "more_combination_candidates", "excluded_matches", "portfolio_risk_tier"],
     "backtest_sample": ["sample_id", "fixture", "prediction", "actual_result"],
     "football_snapshot": ["snapshot_id", "mode", "provider", "sport", "observed_at", "timezone", "sources", "matches"],
-    "prediction_snapshot": ["report_id", "generated_at", "source_snapshot_id", "source_provider", "html_report_path", "html_report_input_path", "pre_match_data", "model_outputs"]
+    "prediction_snapshot": ["report_id", "generated_at", "source_snapshot_id", "source_provider", "html_report_path", "html_report_input_path", "pre_match_data", "model_outputs"],
+    "competition_context": ["competition", "observed_at", "qualification_rules", "groups"]
 }
 
 CONFIDENCE = {"high", "medium", "low"}
@@ -37,6 +38,15 @@ SNAPSHOT_AVAILABILITY = {"available", "unavailable", "unknown", "parse_failed"}
 SNAPSHOT_AVAILABILITY_REASONS = {"available", "not_offered", "source_missing", "waf_blocked", "parser_error", "stale_source", "unknown"}
 SNAPSHOT_SOURCE_STATUSES = {"ok", "blocked", "missing", "parse_failed", "stale"}
 TEAM_TYPES = {"club", "national", "unknown", "unsupported"}
+MOTIVATION_FLAGS = {
+    "completed",
+    "already_in_advance_zone",
+    "route_selection_risk",
+    "draw_may_be_sufficient",
+    "third_place_race",
+    "must_avoid_loss",
+    "must_win_pressure",
+}
 
 
 def _missing(record: dict[str, Any], fields: list[str]) -> list[str]:
@@ -337,6 +347,55 @@ def validate_football_snapshot(record: dict[str, Any], path: str) -> tuple[list[
         warnings.extend(w)
     if not matches and not record.get("errors"):
         warnings.append(f"{path}: no matches found and no error details supplied")
+    if record.get("competition_context"):
+        e, w = validate_competition_context(record["competition_context"], f"{path}.competition_context")
+        errors.extend(e)
+        warnings.extend(w)
+    return errors, warnings
+
+
+def validate_competition_context(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    for field in _missing(record, SCHEMA_REQUIRED["competition_context"]):
+        errors.append(f"{path}: missing required field '{field}'")
+    rules = record.get("qualification_rules") or {}
+    if rules.get("advance_top_n") is not None and not isinstance(rules.get("advance_top_n"), int):
+        errors.append(f"{path}.qualification_rules.advance_top_n: must be an integer")
+    if rules.get("best_third_places") is not None and not isinstance(rules.get("best_third_places"), int):
+        errors.append(f"{path}.qualification_rules.best_third_places: must be an integer")
+    groups = record.get("groups", [])
+    if not isinstance(groups, list) or not groups:
+        errors.append(f"{path}.groups: must be a non-empty list")
+        groups = []
+    for group_index, group in enumerate(groups):
+        label = f"{path}.groups[{group_index}]"
+        if not group.get("group"):
+            errors.append(f"{label}: missing group")
+        standings = group.get("standings", [])
+        if not isinstance(standings, list) or not standings:
+            errors.append(f"{label}.standings: must be a non-empty list")
+            standings = []
+        ranks: set[int] = set()
+        for team_index, team in enumerate(standings):
+            team_path = f"{label}.standings[{team_index}]"
+            for field in ("team", "rank", "played", "wins", "draws", "losses", "points", "goal_difference", "qualification_pressure", "rotation_risk"):
+                if field not in team:
+                    errors.append(f"{team_path}: missing required field '{field}'")
+            if isinstance(team.get("rank"), int):
+                ranks.add(team["rank"])
+            for field in ("played", "wins", "draws", "losses", "points", "goal_difference"):
+                if field in team and not isinstance(team[field], int):
+                    errors.append(f"{team_path}.{field}: must be an integer")
+            flags = team.get("motivation_flags", [])
+            if not isinstance(flags, list):
+                errors.append(f"{team_path}.motivation_flags: must be a list")
+            else:
+                for flag in flags:
+                    if flag not in MOTIVATION_FLAGS:
+                        warnings.append(f"{team_path}.motivation_flags: unknown flag '{flag}'")
+        if ranks and ranks != set(range(1, len(ranks) + 1)):
+            warnings.append(f"{label}: ranks are not contiguous")
     return errors, warnings
 
 
@@ -389,6 +448,8 @@ VALIDATORS = {
     "backtest_sample": validate_backtest_sample,
     "football_snapshot": validate_football_snapshot,
     "prediction_snapshot": validate_prediction_snapshot
+    ,
+    "competition_context": validate_competition_context
 }
 
 BUNDLE_KEYS = {
@@ -405,7 +466,9 @@ BUNDLE_KEYS = {
     "football_snapshot": "football_snapshot",
     "football_snapshots": "football_snapshot",
     "prediction_snapshot": "prediction_snapshot",
-    "prediction_snapshots": "prediction_snapshot"
+    "prediction_snapshots": "prediction_snapshot",
+    "competition_context": "competition_context",
+    "competition_contexts": "competition_context"
 }
 
 
@@ -439,7 +502,7 @@ def validate_document(document: dict[str, Any]) -> dict[str, Any]:
                 errors.extend(e)
                 warnings.extend(w)
     else:
-        errors.append("top-level 'kind' must be one of fixture, odds, team_context, match_analysis, portfolio, football_snapshot, prediction_snapshot, backtest_samples, bundle")
+        errors.append("top-level 'kind' must be one of fixture, odds, team_context, match_analysis, portfolio, football_snapshot, competition_context, prediction_snapshot, backtest_samples, bundle")
 
     return {"valid": not errors, "errors": errors, "warnings": warnings}
 

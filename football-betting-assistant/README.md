@@ -182,11 +182,32 @@ python3 football-betting-assistant/scripts/build_snapshot_report.py \
   --data-out-dir data/football
 ```
 
+从已赛比分计算小组积分和出线动机：
+
+```bash
+python3 football-betting-assistant/scripts/competition_context_calculator.py \
+  tests/fixtures/football_betting_assistant/competition-context-input.json
+```
+
+把小组形势接入快照报告：
+
+```bash
+python3 football-betting-assistant/scripts/build_snapshot_report.py \
+  data/football/snapshots/sporttery-football-YYYYMMDDTHHMMSS+0800.json \
+  --date tomorrow \
+  --competition 世界杯 \
+  --competition-context data/football/competition-context/worldcup-context.json \
+  --topic "明天世界杯竞彩分析" \
+  --report-out-dir reports/football-betting \
+  --data-out-dir data/football
+```
+
 输出包括：
 
 - `reports/football-betting/*.html`：用户可直接打开的自包含 HTML 报告。
 - `data/football/report-inputs/*.html-report.json`：HTML renderer 的结构化输入。
 - `data/football/predictions/*.prediction.json`：带相同 `report_id` 的预测快照。
+- `data/football/competition-context/*.json`：本地积分榜/出线形势计算结果。
 
 这些命令是开发者调试入口。正常使用 skill 时，agent 应自动完成快照采集、比赛选择、报告生成和预测快照保存，不要求用户手动运行命令。
 
@@ -235,6 +256,7 @@ python3 football-betting-assistant/scripts/zero_operation_smoke.py \
 - `scripts/fetch_match_data.py`：采集当前/未来足球快照；中国竞彩模式默认使用内置 `sporttery` provider。
 - `scripts/select_snapshot_matches.py`：按日期、竞彩编号、球队或赛事从快照中选择比赛。
 - `scripts/inspect_snapshot_markets.py`：检查快照中哪些竞彩玩法可买、哪些缺失或不可用。
+- `scripts/competition_context_calculator.py`：从已赛比分和剩余赛程计算小组积分、胜平负、净胜球、出线压力、轮换风险和路线选择标记。
 - `scripts/team_context_rules.py`：识别 `club`、`national`、`unknown`、`unsupported` 队伍类型，并给出参数池和置信度上限。
 - `scripts/recent_form_to_xg.py`：把近期 xG/xGA 或进失球汇总转换成 xG prior 输入；只有进失球时自动降精度。
 - `scripts/build_snapshot_report.py`：从标准足球快照生成 HTML 报告和同 `report_id` 的预测快照。

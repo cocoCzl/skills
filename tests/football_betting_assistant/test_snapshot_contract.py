@@ -27,6 +27,7 @@ PORTFOLIO_BUILDER = SKILL / "scripts" / "portfolio_builder.py"
 LATE_RULES = SKILL / "scripts" / "late_update_rules.py"
 POST_MATCH_REVIEW = SKILL / "scripts" / "post_match_review.py"
 ZERO_OPERATION_SMOKE = SKILL / "scripts" / "zero_operation_smoke.py"
+COMPETITION_CONTEXT = SKILL / "scripts" / "competition_context_calculator.py"
 
 
 class SnapshotContractTests(unittest.TestCase):
@@ -220,6 +221,121 @@ class SnapshotContractTests(unittest.TestCase):
             self.assertEqual(payload["report_id"], json.loads(prediction_path.read_text(encoding="utf-8"))["data"]["report_id"])
             validated = self.validate(prediction_path)
             self.assertTrue(validated["valid"])
+
+    def test_competition_context_calculator_outputs_standings_and_motivation(self) -> None:
+        result = subprocess.run(
+            ["python3", str(COMPETITION_CONTEXT), str(FIXTURES / "competition-context-input.json")],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        context = payload["data"]
+        validated_path = None
+        with tempfile.TemporaryDirectory() as tmp:
+            validated_path = Path(tmp) / "competition-context.json"
+            validated_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+            validated = self.validate(validated_path)
+        self.assertTrue(validated["valid"])
+        standings = context["groups"][0]["standings"]
+        self.assertEqual(standings[0]["team"], "韩国")
+        self.assertEqual(standings[0]["points"], 4)
+        self.assertEqual(standings[0]["goal_difference"], 2)
+        self.assertIn("already_in_advance_zone", standings[0]["motivation_flags"])
+        south_africa = next(item for item in standings if item["team"] == "南非")
+        self.assertIn("must_win_pressure", south_africa["motivation_flags"])
+
+    def test_snapshot_report_builder_uses_competition_context(self) -> None:
+        raw = {
+            "matches": [
+                {
+                    "id": "group-ctx-001",
+                    "matchNo": "周四888",
+                    "competition": "世界杯",
+                    "kickoffTime": "2026-06-26T22:00:00+08:00",
+                    "homeTeam": "韩国",
+                    "awayTeam": "南非",
+                    "markets": [
+                        {
+                            "source_market_name": "胜平负",
+                            "availability": {"status": "available", "reason": "available"},
+                            "selections": [
+                                {"name": "胜", "odds": 2.10},
+                                {"name": "平", "odds": 3.00},
+                                {"name": "负", "odds": 3.20},
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            raw_path = tmp_path / "raw.json"
+            raw_path.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
+            fetch_result = subprocess.run(
+                [
+                    "python3",
+                    str(FETCHER),
+                    "--mode",
+                    "china-lottery",
+                    "--provider",
+                    "sporttery",
+                    "--football",
+                    "--raw-input",
+                    str(raw_path),
+                    "--out",
+                    str(tmp_path / "snapshots"),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(fetch_result.returncode, 0, fetch_result.stdout + fetch_result.stderr)
+            snapshot_path = Path(json.loads(fetch_result.stdout)["snapshot_path"])
+            context_result = subprocess.run(
+                ["python3", str(COMPETITION_CONTEXT), str(FIXTURES / "competition-context-input.json")],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(context_result.returncode, 0, context_result.stdout + context_result.stderr)
+            context_path = tmp_path / "competition-context.json"
+            context_path.write_text(context_result.stdout, encoding="utf-8")
+            report_result = subprocess.run(
+                [
+                    "python3",
+                    str(REPORT_BUILDER),
+                    str(snapshot_path),
+                    "--match-no",
+                    "周四888",
+                    "--topic",
+                    "group context report",
+                    "--competition-context",
+                    str(context_path),
+                    "--report-out-dir",
+                    str(tmp_path / "reports"),
+                    "--data-out-dir",
+                    str(tmp_path / "data"),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(report_result.returncode, 0, report_result.stdout + report_result.stderr)
+            payload = json.loads(report_result.stdout)
+            report_input = json.loads(Path(payload["report_input_path"]).read_text(encoding="utf-8"))
+            fixture = report_input["fixtures"][0]
+            self.assertEqual(fixture["group"], "A组")
+            self.assertIn("韩国 第1", fixture["records"])
+            self.assertIn("南非", fixture["records"])
+            adjustments = report_input["match_analyses"][0]["bayesian_adjustments"]
+            self.assertTrue(any("轮换" in item or "出线压力" in item for item in adjustments))
 
     def test_snapshot_report_builder_excludes_unavailable_market_from_ticket_plan(self) -> None:
         snapshot = FIXTURES / "football-snapshot-sporttery.json"

@@ -1,0 +1,33 @@
+{
+  "kind": "competition_context_input",
+  "data": {
+    "competition": "世界杯",
+    "observed_at": "2026-06-25T12:00:00+08:00",
+    "source": {
+      "name": "test-fixture",
+      "url": "local",
+      "observed_at": "2026-06-25T12:00:00+08:00"
+    },
+    "qualification_rules": {
+      "advance_top_n": 2,
+      "best_third_places": 8,
+      "tiebreak_summary": "积分、净胜球、进球数"
+    },
+    "groups": [
+      {
+        "group": "A组",
+        "teams": ["韩国", "南非", "德国", "厄瓜多尔"],
+        "results": [
+          {"home_team": "韩国", "away_team": "德国", "home_goals": 1, "away_goals": 1},
+          {"home_team": "南非", "away_team": "厄瓜多尔", "home_goals": 0, "away_goals": 0},
+          {"home_team": "韩国", "away_team": "厄瓜多尔", "home_goals": 2, "away_goals": 0},
+          {"home_team": "南非", "away_team": "德国", "home_goals": 1, "away_goals": 2}
+        ],
+        "fixtures": [
+          {"home_team": "韩国", "away_team": "南非", "kickoff_time": "2026-06-26T22:00:00+08:00"},
+          {"home_team": "德国", "away_team": "厄瓜多尔", "kickoff_time": "2026-06-26T22:00:00+08:00"}
+        ]
+      }
+    ]
+  }
+}

@@ -41,6 +41,7 @@ Use scripts only when deterministic calculation or validation helps:
 - `scripts/backtest_predictions.py`: historical hit-rate, score coverage, Brier score, log loss, calibration buckets, and grade breakdown.
 - `scripts/render_html_report.py`: render completed pre-match analysis into a single self-contained HTML Report from structured JSON.
 - `scripts/fetch_match_data.py`: best-effort current/future football snapshot collection. In `china-lottery` mode, default to the built-in `sporttery` provider and write normalized JSON snapshots.
+- `scripts/competition_context_calculator.py`: calculate group standings, win-draw-loss, points, goal difference, qualification pressure, rotation risk, and route-selection flags from played results and remaining fixtures.
 - `scripts/build_snapshot_report.py`: build a first-pass snapshot-backed HTML Report and linked prediction snapshot after a football snapshot has confirmed fixtures and buyable markets.
 - `scripts/team_context_rules.py`: classify club/national/unknown/unsupported team context and parameter-pool caps.
 - `scripts/recent_form_to_xg.py`: convert recent-form xG or goals aggregates into lower-precision xG prior inputs.
@@ -57,14 +58,15 @@ Use scripts only when deterministic calculation or validation helps:
 2. Choose runtime mode. For Chinese 竞彩 / 中国体育彩票 requests, default to `china-lottery`. For explicit overseas bookmaker requests, use `international-odds`. If no odds or buyable market data is available, use `analysis-only`.
 3. In `china-lottery` mode for current or future football requests, first try existing local football snapshots, then automatically run `scripts/fetch_match_data.py --mode china-lottery --provider sporttery --football --out data/football/snapshots` when local execution is available. The user should not need to run this command manually.
 4. If concrete fixtures are still missing, perform Fixture Discovery. If verification is unavailable, ask the user for the missing match list.
-5. Collect or request Odds Data and team context according to `references/data-sources.md`.
-6. Build a Data Summary Table before analysis.
-7. Estimate expected goals, apply bounded Bayesian-style adjustments, and use the Poisson model for every analyzable match. Use `xg_prior_calculator.py`, `poisson_calculator.py`, and `grade_calculator.py` when the needed inputs exist; otherwise label approximations and downgrade confidence.
-8. Compare model probabilities with implied probabilities only when verifiable Odds Data exists.
-9. Apply downgrade and stop rules.
-10. Produce an HTML Report for completed pre-match Single-Match Analysis or Betting Portfolio analysis. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the exact Beijing-time match slate, then Competition Context Analysis, then analyze each selected match with Bayesian adjustment and Poisson concentration, then provide Ticket Plans.
-11. When analysis starts from a normalized football snapshot, run `scripts/build_snapshot_report.py` to create both the HTML Report and the linked `prediction_snapshot`. For richer manually assembled reports, run `scripts/render_html_report.py` with structured report JSON.
-12. Save HTML under the current working directory's `reports/football-betting/` and generated data under `data/football/`. Keep the chat response to 2-4 concise summary lines plus the HTML path and prediction snapshot path. Do not paste the full report into chat after successful HTML generation.
+5. Collect or request Odds Data, team context, and group/competition context according to `references/data-sources.md`.
+6. For group-stage slates, verify standings or calculate them from played results with `scripts/competition_context_calculator.py` before applying motivation adjustments.
+7. Build a Data Summary Table before analysis.
+8. Estimate expected goals, apply bounded Bayesian-style adjustments, and use the Poisson model for every analyzable match. Use `xg_prior_calculator.py`, `poisson_calculator.py`, and `grade_calculator.py` when the needed inputs exist; otherwise label approximations and downgrade confidence.
+9. Compare model probabilities with implied probabilities only when verifiable Odds Data exists.
+10. Apply downgrade and stop rules.
+11. Produce an HTML Report for completed pre-match Single-Match Analysis or Betting Portfolio analysis. Separate Probability Analysis from Value Judgment. For portfolio requests, first show the exact Beijing-time match slate, then Competition Context Analysis, then analyze each selected match with Bayesian adjustment and Poisson concentration, then provide Ticket Plans.
+12. When analysis starts from a normalized football snapshot, run `scripts/build_snapshot_report.py` to create both the HTML Report and the linked `prediction_snapshot`. For richer manually assembled reports, run `scripts/render_html_report.py` with structured report JSON.
+13. Save HTML under the current working directory's `reports/football-betting/` and generated data under `data/football/`. Keep the chat response to 2-4 concise summary lines plus the HTML path and prediction snapshot path. Do not paste the full report into chat after successful HTML generation.
 
 For backtesting or "提高命中率" requests, do not change recommendations by intuition alone. Use historical pre-match snapshots and actual results, run `scripts/backtest_predictions.py` when data is available, then adjust downgrade/calibration guidance based on measured error patterns.
 
@@ -88,7 +90,8 @@ For backtesting or "提高命中率" requests, do not change recommendations by 
 - Use `scripts/post_match_review.py` for赛后复盘 when a prediction snapshot exists. Do not backfill post-match facts into the original pre-match prediction.
 - Keep unit count and amount separate. With the default 2 元/unit, `2 x 2 x 2 x 2 = 16` units means 32 元.
 - Reports should be analysis-first and source-aware. Name the sources used and their observation times in Chinese prose or tables; raw URLs are optional unless the user asks for them.
-- For tournament group-stage slates, always include a visible group-table section before match analysis. Show each team involved with current ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context when available. If these cannot be verified, keep the table with "未确认" cells and downgrade data confidence instead of omitting the section.
+- For tournament group-stage slates, always include a visible group-table section before match analysis. Show each team involved with current ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context when available. If standings are not directly available but played results are available, calculate the table with `scripts/competition_context_calculator.py`. If these cannot be verified or calculated, keep the table with "未确认" cells and downgrade data confidence instead of omitting the section.
+- For final-round group matches, explicitly evaluate `already_in_advance_zone`, `draw_may_be_sufficient`, `third_place_race`, `must_win_pressure`, and `route_selection_risk` flags before picking scores or totals. Route-selection risk is a motivation/risk modifier, not a certain team behavior.
 - For China Sports Lottery / 竞彩口径, distinguish **probability leans** from **buyable markets**. If a match does not offer ordinary 胜平负 in the user's screenshot or source, do not put ordinary 胜平负 into a purchase plan; use the visible market instead, such as 让球胜平负, 比分, 总进球, or 大小球. You may still explain the non-buyable win/draw/loss probability as analysis.
 - In `china-lottery` mode, do not use third-party bookmaker odds as replacement China Sports Lottery odds in purchase plans. They may be shown only as international market reference unless the user explicitly switches to `international-odds`.
 - Do not hard-code 2/16/32/48 元档 as mandatory plans. Choose the combination structures from the match probabilities, data confidence, market availability, and score concentration, then calculate units and amount from the selected counts.

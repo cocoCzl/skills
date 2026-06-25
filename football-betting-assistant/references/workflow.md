@@ -28,14 +28,15 @@ If the user asks to improve hit rate, accuracy, calibration, or model quality, r
 1. Confirm teams, competition, kickoff time, timezone, and home/away or neutral venue.
 2. Collect Odds Data when Value Judgment is requested or implied.
 3. Collect Team Form Window and current team context.
-4. Build a Data Summary Table.
-5. Estimate expected goals from attack/defense strength, venue, competition scoring environment, and recent form. Prefer `scripts/xg_prior_calculator.py` when xG/xGA and league-average inputs exist.
-6. Apply bounded Bayesian-style updates for injuries, lineups, motivation, schedule, weather, and market movement. Show the code/range when using `references/model-parameters.md`; otherwise label the adjustment qualitative.
-7. Use the Poisson model to derive result, goals, and score probabilities. Use `scripts/poisson_calculator.py` when available; otherwise label the probabilities approximate.
-8. Compare model probabilities with implied probabilities when odds exist.
-9. Apply edge thresholds and downgrade rules. Prefer `scripts/grade_calculator.py` when model probability and no-vig market probability exist.
-10. Before final purchase-plan output, apply `scripts/late_update_rules.py` when kickoff timing, lineup status, sales availability, or odds movement data are available.
-11. Produce the Single-Match Report template.
+4. For group-stage matches, collect current standings or played results. If played results are available, calculate standings and motivation flags with `scripts/competition_context_calculator.py`.
+5. Build a Data Summary Table.
+6. Estimate expected goals from attack/defense strength, venue, competition scoring environment, and recent form. Prefer `scripts/xg_prior_calculator.py` when xG/xGA and league-average inputs exist.
+7. Apply bounded Bayesian-style updates for injuries, lineups, motivation, schedule, weather, and market movement. Show the code/range when using `references/model-parameters.md`; otherwise label the adjustment qualitative.
+8. Use the Poisson model to derive result, goals, and score probabilities. Use `scripts/poisson_calculator.py` when available; otherwise label the probabilities approximate.
+9. Compare model probabilities with implied probabilities when odds exist.
+10. Apply edge thresholds and downgrade rules. Prefer `scripts/grade_calculator.py` when model probability and no-vig market probability exist.
+11. Before final purchase-plan output, apply `scripts/late_update_rules.py` when kickoff timing, lineup status, sales availability, or odds movement data are available.
+12. Produce the Single-Match Report template.
 
 Single-match reports must include a visible evidence chain:
 
@@ -45,14 +46,14 @@ Single-match reports must include a visible evidence chain:
 - 玩法判断：separate probability lean from odds value.
 - 风险：why the grade is not higher, and what late information could change it.
 
-For group-stage final-round matches, calculate qualification context before treating motivation as a model adjustment. Include current points, goal difference, ranking routes under plausible results, rotation probability, and potential knockout-stage opponents. Treat "避强队" or "选路线" only as a motivation/risk modifier, not as certain team behavior.
+For group-stage final-round matches, calculate qualification context before treating motivation as a model adjustment. Include current points, goal difference, ranking routes under plausible results, rotation probability, and potential knockout-stage opponents. Use motivation flags such as `already_in_advance_zone`, `draw_may_be_sufficient`, `third_place_race`, `must_win_pressure`, and `route_selection_risk`. Treat "避强队" or "选路线" only as a motivation/risk modifier, not as certain team behavior.
 
 ## Betting Portfolio Flow
 
 1. Confirm the full concrete fixture slate. For 6, 8, 10, or more matches, keep the full slate in the report and analyze every match.
 2. Default to the 经理人详版 for 四串一, 串关, "明天第三轮", "明天早上", and multi-group final-round requests unless the user asks for a short answer. Use this order: 先给全场次结论 -> 北京时间比赛清单 -> 小组当前战绩/积分/出线形势 -> 玩法可买性 -> 赔率与市场中心 -> 模型怎么来的 -> 全场逐场分析 -> 模型最稳主单 -> 比分4串1 -> 方向类组合 -> 备选/替换 -> 可选小组合 -> 组合风险.
 3. Start with a 北京时间比赛清单 / 今日赛程确认 section that lists every match, exact kickoff time in the user's timezone, group/competition, venue context, and current data confidence. If the user says "明天", convert it to an exact date using the current date and timezone.
-4. For tournament group-stage slates, verify or request current group ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context before using motivation as a model adjustment. If unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section.
+4. For tournament group-stage slates, verify or calculate current group ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context before using motivation as a model adjustment. If played results are available, run `scripts/competition_context_calculator.py`; if unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section.
 5. Build a compact 赔率与市场中心 section before the match notes. When correct-score odds are available, list the lowest-price score cluster for each match and explain what the market center implies.
 6. Explain the math model in user-readable language before or during the match notes: expected-goals prior, bounded Bayesian adjustment direction, final xG, Poisson score concentration, odds implied/no-vig probability when odds exist, edge/grade caps, and whether the calculator/script or an approximation was used.
 7. Run the Single-Match Analysis flow in compact but substantive prose for each match before giving any portfolio plan. Each match should read like a decision note, not only a row in a table.

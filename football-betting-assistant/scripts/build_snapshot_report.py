@@ -53,6 +53,51 @@ def confidence_zh(value: str | None) -> str:
     return {"high": "高", "medium": "中", "low": "低"}.get(str(value), "低")
 
 
+def _find_team_context(competition_context: dict[str, Any], team: str) -> dict[str, Any] | None:
+    for group in competition_context.get("groups", []) or []:
+        for standing in group.get("standings", []) or []:
+            if standing.get("team") == team:
+                item = dict(standing)
+                item["group"] = group.get("group")
+                return item
+    return None
+
+
+def group_context_for_match(match: dict[str, Any], competition_context: dict[str, Any]) -> dict[str, Any]:
+    home = _find_team_context(competition_context, str(match.get("home_team") or ""))
+    away = _find_team_context(competition_context, str(match.get("away_team") or ""))
+    return {"home": home, "away": away}
+
+
+def standings_line(item: dict[str, Any] | None) -> str:
+    if not item:
+        return "未确认"
+    return (
+        f"{item.get('team')} 第{item.get('rank')}，{item.get('points')}分，"
+        f"{item.get('wins')}-{item.get('draws')}-{item.get('losses')}，"
+        f"净胜球{item.get('goal_difference')}；{item.get('qualification_pressure')}"
+    )
+
+
+def motivation_notes(context: dict[str, Any]) -> list[str]:
+    notes: list[str] = []
+    for side in ("home", "away"):
+        item = context.get(side)
+        if not item:
+            continue
+        flags = set(item.get("motivation_flags") or [])
+        team = item.get("team")
+        if "draw_may_be_sufficient" in flags:
+            notes.append(f"{team} 处于直接晋级区边缘，平局可能够用，需提高平局/小比分权重。")
+        if "already_in_advance_zone" in flags:
+            notes.append(f"{team} 处于直接晋级区，需关注轮换、控节奏和路线选择风险。")
+        if "must_win_pressure" in flags:
+            notes.append(f"{team} 当前出线压力高，落后或久攻不下时开放性会上升。")
+        if "third_place_race" in flags:
+            notes.append(f"{team} 处于第三名竞争区，净胜球和避免输球重要。")
+    return notes or ["小组积分/出线形势未确认，不能做动机修正。"]
+
+
 def available_markets(match: dict[str, Any]) -> list[dict[str, Any]]:
     markets = []
     for market in match.get("markets", []):
@@ -105,8 +150,9 @@ def main_market_pick(match: dict[str, Any]) -> tuple[str, str, str, dict[str, An
     return "analysis_only", "无可买赔率", "当前快照未取得可用于购买方案的竞彩赔率。", None
 
 
-def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic: str, report_id: str) -> dict[str, Any]:
+def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic: str, report_id: str, competition_context: dict[str, Any] | None = None) -> dict[str, Any]:
     generated_at = now_text()
+    competition_context = competition_context or snapshot.get("competition_context") or {}
     fixtures = []
     direction_summary = []
     analyses = []
@@ -119,6 +165,11 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
 
     for match in matches:
         name = match_name(match)
+        group_context = group_context_for_match(match, competition_context)
+        home_context = group_context.get("home")
+        away_context = group_context.get("away")
+        context_text = f"{standings_line(home_context)}；{standings_line(away_context)}"
+        motivation = motivation_notes(group_context)
         pick_market, pick_selection, reason, source_market = main_market_pick(match)
         available = available_markets(match)
         blocked = blocked_markets(match)
@@ -136,8 +187,8 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "match": f"{match.get('match_no') or ''} {name}".strip(),
                 "kickoff_time": match.get("kickoff_time"),
                 "competition": match.get("competition"),
-                "group": "未确认",
-                "records": "未接入球队近期状态",
+                "group": (home_context or away_context or {}).get("group") or "未确认",
+                "records": context_text,
                 "venue": match.get("notes") or match.get("venue_type") or "未确认",
                 "data_confidence": confidence_zh(match.get("data_confidence")),
             }
@@ -151,7 +202,7 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "totals_pick": selection_text(next((m for m in available if m.get("market") == "total_goals"), {})) or "未取得",
                 "score_lean": "比分赔率未取得或未做泊松覆盖",
                 "stability": "降级",
-                "risk": "仅完成市场快照核验",
+                "risk": " / ".join(motivation[:2]),
             }
         )
         analyses.append(
@@ -165,13 +216,13 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "handicap_pick": selection_text(next((m for m in available if m.get("market") == "handicap_match_result"), {})) or "让球赔率未取得",
                 "totals_pick": selection_text(next((m for m in available if m.get("market") == "total_goals"), {})) or "总进球赔率未取得",
                 "score_candidates": ["未计算", "等待 xG/泊松模型", "不可作为比分购买方案"],
-                "bayesian_adjustments": ["无球队近况/伤停/首发输入，未做贝叶斯修正"],
+                "bayesian_adjustments": motivation,
                 "poisson_summary": "本快照报告尚未运行 xG/泊松模型；只能确认竞彩市场和赔率可买性。",
                 "risk_notes": [
                     reason,
                     "缺少球队近期状态、赛事积分/战意、伤停首发时，Reference Grade 不能上调。",
                 ],
-                "analysis": f"已从 {snapshot.get('provider')} 快照确认 {name} 的赛程与部分竞彩可买市场。{reason}",
+                "analysis": f"已从 {snapshot.get('provider')} 快照确认 {name} 的赛程与部分竞彩可买市场。小组形势：{context_text}。{reason}",
                 "model_confidence": "低",
                 "odds_status": "竞彩快照可用" if available else "缺少可买赔率",
             }
@@ -225,11 +276,7 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
             ],
         },
         "fixtures": fixtures,
-        "competition_context": {
-            "title": "赛事背景",
-            "summary": "本切片尚未接入积分榜/出线形势自动采集。",
-            "items": ["后续需要接入国家队/俱乐部不同赛事背景模型。"],
-        },
+        "competition_context": build_competition_context_section(competition_context),
         "direction_summary": direction_summary,
         "model_rankings": {
             "result": [row["main_direction"] for row in direction_summary],
@@ -246,6 +293,36 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
         "optional_small_combinations": [],
         "risks": risks,
         "data_gaps": data_gaps or ["未发现关键市场缺口。"],
+    }
+
+
+def build_competition_context_section(competition_context: dict[str, Any]) -> dict[str, Any]:
+    groups = competition_context.get("groups") or []
+    if not groups:
+        return {
+            "title": "赛事背景",
+            "summary": "未接入积分榜/出线形势数据；报告必须按数据不足降级。",
+            "items": ["小组排名、积分、净胜球、轮换风险和淘汰赛路线均未确认。"],
+        }
+    items: list[str] = []
+    for group in groups:
+        standings = []
+        for team in group.get("standings", []) or []:
+            standings.append(
+                f"{team.get('team')} 第{team.get('rank')}，{team.get('points')}分，"
+                f"{team.get('wins')}-{team.get('draws')}-{team.get('losses')}，"
+                f"净胜球{team.get('goal_difference')}，{team.get('qualification_pressure')}，"
+                f"轮换风险：{team.get('rotation_risk')}"
+            )
+        items.append(f"{group.get('group') or '未确认'}：{'；'.join(standings)}")
+    rules = competition_context.get("qualification_rules") or {}
+    return {
+        "title": "小组积分 / 出线形势",
+        "summary": (
+            f"积分数据已接入；晋级规则：小组前 {rules.get('advance_top_n', 2)} "
+            f"直接晋级，最好第三名名额 {rules.get('best_third_places', 0)}。"
+        ),
+        "items": items,
     }
 
 
@@ -310,19 +387,24 @@ def main() -> int:
     parser.add_argument("--match-no")
     parser.add_argument("--team")
     parser.add_argument("--competition")
+    parser.add_argument("--competition-context", type=Path, help="Optional calculated competition_context JSON.")
     parser.add_argument("--topic", default="football-betting")
     parser.add_argument("--report-out-dir", type=Path, default=Path("reports/football-betting"))
     parser.add_argument("--data-out-dir", type=Path, default=Path("data/football"))
     args = parser.parse_args()
 
     snapshot = load_snapshot(args.snapshot)
+    competition_context = None
+    if args.competition_context:
+        context_document = json.loads(args.competition_context.read_text(encoding="utf-8"))
+        competition_context = context_document.get("data", context_document)
     matches = select_matches(snapshot, date=args.date, match_no=args.match_no, team=args.team, competition=args.competition)
     if not matches:
         print(json.dumps({"error": "no matching fixtures in snapshot", "snapshot_id": snapshot.get("snapshot_id")}, ensure_ascii=False, indent=2))
         return 2
 
     report_id = f"{snapshot.get('snapshot_id')}-{len(matches)}matches"
-    report = build_report(snapshot, matches, args.topic, report_id)
+    report = build_report(snapshot, matches, args.topic, report_id, competition_context=competition_context)
     report_input_path = write_json_unique(args.data_out_dir / "report-inputs" / f"{report_id}.html-report.json", report)
     html_path = render_html(report_input_path, args.report_out_dir)
     prediction = build_prediction_snapshot(report, snapshot, html_path, report_input_path)

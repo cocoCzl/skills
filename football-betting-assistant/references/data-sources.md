@@ -11,6 +11,8 @@ The assistant should actively verify current information when tools are availabl
 5. Public web search or browser verification.
 6. User clarification for missing data.
 
+For tournament group-stage matches, standings and played results are a separate current-data category from odds. Prefer official or structured standings; if only played scores are available, normalize them and run `scripts/competition_context_calculator.py` to recompute points, win-draw-loss, goals for/against, goal difference, qualification pressure, rotation risk, and route-selection flags.
+
 ## Runtime Data Modes
 
 **china-lottery** is the default for 中国体育彩票 / 竞彩 requests. Purchase plans may use only China Sports Lottery buyable markets from `sporttery` snapshots or user-provided China lottery data. Third-party bookmaker odds may be shown as international market reference, but they must not replace China lottery odds in a China lottery purchase plan.
@@ -120,6 +122,8 @@ football-data.org can provide fixtures, standings, and results for supported com
 TheSportsDB and OpenLigaDB can be used as low-friction public fallback sources for limited fixtures/results context when their coverage fits the competition. They should be treated as lower-depth context sources, not complete odds or lineup providers.
 
 For recent-form-to-model conversion, use `references/model-parameters.md` and `scripts/recent_form_to_xg.py`. API-Football is the preferred enhanced team-context source; football-data.org and public fallback sources can supply fixtures, results, standings, and goals for/against proxies when xG/xGA are unavailable. Missing provider keys should downgrade precision, not block the whole analysis.
+
+When public pages provide only played scores rather than a table, use the local standings calculator instead of trusting prose summaries. The calculated context should be labelled `calculated_from_results` and still cite the score source and observation time.
 
 Discovering an API through web search does not make it a configured provider. Do not auto-register accounts, request keys on the user's behalf, guess keys, call unknown free APIs, or treat unauthenticated endpoints as authorized data sources.
 

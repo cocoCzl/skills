@@ -22,6 +22,7 @@
       "type": "array",
       "items": { "$ref": "#/$defs/match" }
     },
+    "competition_context": { "$ref": "#/$defs/competitionContext" },
     "errors": {
       "type": "array",
       "items": { "$ref": "#/$defs/error" }
@@ -57,12 +58,14 @@
         "venue_type": { "type": "string", "enum": ["home_away", "neutral", "unknown"] },
         "team_type": { "type": "string", "enum": ["club", "national", "unknown", "unsupported"] },
         "unsupported_reason": { "type": ["string", "null"] },
+        "team_context": { "type": "object", "additionalProperties": true },
         "markets": {
           "type": "array",
           "items": { "$ref": "#/$defs/market" }
         },
         "source": { "$ref": "#/$defs/sourceRef" },
         "data_confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+        "competition_context": { "type": "object", "additionalProperties": true },
         "notes": { "type": "string" }
       }
     },
@@ -115,6 +118,30 @@
         "name": { "type": "string", "minLength": 1 },
         "url": { "type": "string", "minLength": 1 },
         "observed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "competitionContext": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["competition", "observed_at", "qualification_rules", "groups"],
+      "properties": {
+        "competition": { "type": "string", "minLength": 1 },
+        "observed_at": { "type": ["string", "null"] },
+        "source": { "type": "object", "additionalProperties": true },
+        "qualification_rules": { "type": "object", "additionalProperties": true },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["group", "standings"],
+            "properties": {
+              "group": { "type": "string", "minLength": 1 },
+              "standings": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+              "fixtures": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+            }
+          }
+        }
       }
     },
     "error": {
