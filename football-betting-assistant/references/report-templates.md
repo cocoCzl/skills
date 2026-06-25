@@ -20,6 +20,7 @@ Default report language is Chinese Betting Vocabulary. Keep math visible but con
 | 数据缺口 | [缺失或冲突项] | [来源] | 高/中/低 |
 
 > 数据来源说明：[用中文说明引用了哪些来源，例如官方赛程、赔率聚合源/单一公司、球队新闻、数据站、天气源、用户提供截图；可以不贴 URL，但必须写来源名和观察时间。]
+> 若没有核验到实际赔率/盘口，必须在本节顶部写：`竞彩赔率/盘口状态：未获取或未验证。本报告只包含概率分析，不包含赔率价值判断，不提供正式参考购买方案。`
 
 ### 2. 基础面分析
 - 近期状态：
@@ -233,7 +234,9 @@ HTML Report rules:
 - Generate HTML only for completed pre-match analysis; do not create Markdown reports.
 - Save under the current working directory's `reports/football-betting/`.
 - Chat output after generation is only a concise summary plus the HTML path.
-- If actual odds/lines are unavailable, use Data Status `no-actual-odds-lines` and label Ticket Plans as reference structures rather than full value judgments.
+- If actual odds/lines are unavailable, use Data Status `no-actual-odds-lines`, show a top-of-report warning `竞彩赔率/盘口状态：未获取或未验证`, and label Ticket Plans as probability/reference structures rather than full value judgments.
+- Never invent odds, handicap lines, over-under lines, total-goals prices, or correct-score prices. Missing market data must stay blank, `未获取`, `未验证`, or `不可用`.
+- When China lottery odds/lines are missing, do not present official-looking Reference Purchase Plans. Use only Probability Analysis and a clearly marked `待赔率确认` reference structure if the fixture and team context are sufficient.
 - The renderer validates Score 4-Fold and Direction Ticket limits before writing the file.
 
 ## Post-Match Review

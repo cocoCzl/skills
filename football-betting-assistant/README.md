@@ -77,6 +77,27 @@ Skill 运行时主要读取：
 - `football-data.org`：适合补部分赛事的赛程、赛果、积分榜和基础比赛数据。
 - `TheSportsDB` / `OpenLigaDB`：可作为低门槛公开 fallback，覆盖面和深度有限，不能当成完整赔率或阵容源。
 
+### Provider 职责边界
+
+| 配置 / Provider | 主要用途 | 是否可替代中国竞彩赔率 |
+| --- | --- | --- |
+| `sporttery` | `china-lottery` 模式下默认尝试获取中国竞彩公开赛程、可买玩法、盘口和赔率。 | 是默认竞彩公开数据来源，但不是官方稳定 API。 |
+| `THE_ODDS_API_KEY` | 主要用于 `international-odds` 模式；在竞彩报告里只能作为国际市场参考。 | 不能替代中国竞彩可买赔率。 |
+| `API_FOOTBALL_KEY` | 补球队近期战绩、阵容、伤停、积分榜、技术统计和部分赛程/赔率背景。 | 不能替代中国竞彩可买赔率，也不是默认竞彩赔率源。 |
+| `FOOTBALL_DATA_API_KEY` | 补部分赛事的赛程、赛果和积分榜。 | 不能替代中国竞彩可买赔率。 |
+
+配置第三方 API key 不会自动把中文竞彩请求切换成 `international-odds`。只要用户目标是“竞彩 / 中国体育彩票 / 四串一参考购买方案”，默认仍走 `china-lottery`，购买方案只能使用已确认的中国竞彩可买市场；第三方赔率最多作为国际市场参考或球队背景补充。
+
+### 如何获取 API Key
+
+下面这些第三方服务都需要用户自己注册并遵守对应服务条款。README 里只写获取入口和配置方式，不应写入真实 key。
+
+- `API_FOOTBALL_KEY`：访问 <https://www.api-football.com/pricing> 或 <https://dashboard.api-football.com/>，注册账号后选择 Free/Pro/Ultra/Mega 等计划。API-Football 官方 pricing 页面说明 Free 计划可用且包含 fixtures、standings、lineups、injuries、pre-match odds 等端点，但有每日请求量限制；注册/订阅后在 dashboard 中查看或创建项目 API key。
+- `FOOTBALL_DATA_API_KEY`：访问 <https://www.football-data.org/client/register> 注册账号。football-data.org 注册页说明注册成功后会获得 API Key；免费层包含部分赛事的 fixtures、results 和 league tables，并有调用频率限制。已有账号可从 <https://www.football-data.org/client/login> 登录，忘记 token 可在登录页使用 resend token。
+- `THE_ODDS_API_KEY`：访问 <https://the-odds-api.com/> 或文档页 <https://the-odds-api.com/liveapi/guides/v4/>，选择 plans/get API key。The Odds API 文档说明入门流程是先通过邮箱获取 API key，然后用 `/v4/sports?apiKey=YOUR_API_KEY` 检查可用运动，再用 sport key 查询 odds。
+
+拿到 key 后，只在本机 shell、部署平台 Secret、`.env`、1Password/Keychain 等安全位置配置。不要把真实 key 提交到 git，也不要贴进报告、issue、PR、README 或聊天记录。
+
 临时环境变量示例：
 
 ```bash
@@ -246,6 +267,25 @@ python3 football-betting-assistant/scripts/match_model_calculator.py examples/fo
 
 当没有赔率时，skill 只能做概率分析，不能做赔率价值判断；当赛程、主客/中立场、首发、伤停或盘口存在关键缺口时，应降低数据置信度、参考等级，必要时给出 Pass。
 
+### 严禁编造赔率和盘口
+
+如果没有从中国竞彩、用户截图/文本、授权 API、公开网页或本地快照中核验到赔率和盘口，必须在聊天摘要和 HTML 报告顶部给出醒目提示：
+
+```text
+竞彩赔率/盘口状态：未获取或未验证
+本报告只包含概率分析，不包含赔率价值判断，不提供正式参考购买方案。
+```
+
+这种情况下严禁：
+
+- 编造胜平负、让球胜平负、比分、总进球或大小球赔率。
+- 编造让球数、大小球盘口、总进球赔率或比分赔率。
+- 用第三方国际赔率替代中国竞彩可买赔率。
+- 把模型概率、历史均值、预测文章或盘口印象写成“当前竞彩赔率”。
+- 输出“值得买”“赔率有价值”“可买方案已确认”等完整价值判断。
+
+允许输出的内容仅限于：赛程确认、球队背景、数据缺口、概率倾向、比分候选、大小球倾向、风险点，以及需要用户补充的最少字段。若生成 HTML 报告，Data Status 应写为 `no-actual-odds-lines`，购买方案区只能写“概率参考结构 / 待赔率确认”，不能写成正式购买单。
+
 如果用户目标是中国体育彩票竞彩购买方案，而 `sporttery` 快照、公开页面、配置 provider 和用户输入都没有提供可买玩法、赔率或盘口，skill 必须立刻停止完整价值判断，询问：
 
 ```markdown
@@ -260,6 +300,34 @@ python3 football-betting-assistant/scripts/match_model_calculator.py examples/fo
 当没有联网、浏览器、API 或本地数据时，skill 应说明缺少哪些当前数据，要求用户补充最少信息，并避免从模型记忆中编造当前赛程、赔率、伤停或天气。
 
 ## 示例提问
+
+### 运行模式怎么选择
+
+`china-lottery` 是中文竞彩购买语境的默认模式；`international-odds` 只在用户明确要求海外/国际赔率时使用；`analysis-only` 用于没有可验证赔率、盘口或可买玩法时的纯概率分析。
+
+`china-lottery` 示例：
+
+```text
+明天早上四场世界杯比赛，帮我做一个竞彩四串一参考购买方案，重点看比分和大小球。
+```
+
+这类请求会默认尝试读取本地快照，再运行 `sporttery` provider 获取中国竞彩公开赛程、可买玩法、盘口和赔率。购买方案只使用确认可买的竞彩市场。
+
+`international-odds` 示例：
+
+```text
+用 The Odds API 或海外公司赔率分析今晚西班牙 vs 沙特，重点看 h2h、spreads 和 totals 的赔率价值。
+```
+
+这类请求才会把 `THE_ODDS_API_KEY` 对应的数据作为主要赔率源。输出应按国际赔率/盘口口径分析，不把结果伪装成中国竞彩可买方案。
+
+`analysis-only` 示例：
+
+```text
+我不需要购买方案，也没有赔率。只看法国 vs 日本的比赛走势、比分概率和大小球倾向。
+```
+
+这类请求可以做概率分析和风险判断，但不做赔率价值判断，也不输出完整参考购买方案。
 
 ```text
 帮我分析今晚西班牙 vs 沙特，给胜平负、让球、大小球和三个比分候选。

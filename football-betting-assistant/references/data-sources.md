@@ -158,7 +158,9 @@ When the user requests a China Sports Lottery purchase plan and the assistant ca
 1. Do not produce Value Judgment.
 2. Do not produce Reference Purchase Plans.
 3. If fixtures and football context exist, continue only with Probability Analysis.
-4. Ask for the minimum missing fields:
+4. Clearly display this status in chat and in any generated report: `竞彩赔率/盘口状态：未获取或未验证`.
+5. Do not invent odds, handicap lines, over-under lines, total-goals prices, correct-score prices, market availability, or sales availability. Do not convert model probabilities or third-party international odds into China lottery odds.
+6. Ask for the minimum missing fields:
 
 ```markdown
 请补充这场/这几场的竞彩可买玩法和赔率/盘口：
