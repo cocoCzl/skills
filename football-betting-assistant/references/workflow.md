@@ -46,14 +46,14 @@ Single-match reports must include a visible evidence chain:
 - 玩法判断：separate probability lean from odds value.
 - 风险：why the grade is not higher, and what late information could change it.
 
-For group-stage final-round matches, calculate qualification context before treating motivation as a model adjustment. Include current points, goal difference, ranking routes under plausible results, rotation probability, and potential knockout-stage opponents. Use motivation flags such as `already_in_advance_zone`, `draw_may_be_sufficient`, `third_place_race`, `must_win_pressure`, and `route_selection_risk`. Treat "避强队" or "选路线" only as a motivation/risk modifier, not as certain team behavior.
+For group-stage final-round matches, calculate qualification context before treating motivation as a model adjustment. Include current points, goal difference, ranking routes under plausible results, rotation probability, and potential knockout-stage opponents. Use motivation flags such as `already_in_advance_zone`, `draw_may_be_sufficient`, `third_place_race`, `must_win_pressure`, and `route_selection_risk`. Treat "避强队" or "选路线" only as a motivation/risk modifier, not as certain team behavior. For World Cup, Euro, Copa America, Asian Cup, AFCON, and similar tournament final-round group matches, complete structured group context is required for any formal "模型最稳" or "稳健方向" plan; if it is missing, mark the match `group_context_missing`, explain the missing standings/routing fields, and exclude that leg from the main plan.
 
 ## Betting Portfolio Flow
 
 1. Confirm the full concrete fixture slate. For 6, 8, 10, or more matches, keep the full slate in the report and analyze every match.
 2. Default to the 经理人详版 for 四串一, 串关, "明天第三轮", "明天早上", and multi-group final-round requests unless the user asks for a short answer. Use this order: 先给全场次结论 -> 北京时间比赛清单 -> 小组当前战绩/积分/出线形势 -> 玩法可买性 -> 赔率与市场中心 -> 模型怎么来的 -> 全场逐场分析 -> 模型最稳主单 -> 比分4串1 -> 方向类组合 -> 备选/替换 -> 可选小组合 -> 组合风险.
 3. Start with a 北京时间比赛清单 / 今日赛程确认 section that lists every match, exact kickoff time in the user's timezone, group/competition, venue context, and current data confidence. If the user says "明天", convert it to an exact date using the current date and timezone.
-4. For tournament group-stage slates, verify or calculate current group ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context before using motivation as a model adjustment. If played results are available, run `scripts/competition_context_calculator.py`; if unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section.
+4. For tournament group-stage slates, verify or calculate current group ranking, points, win-draw-loss record, goal difference, qualification pressure, rotation risk, and potential knockout-route context before using motivation as a model adjustment. If played results are available, run `scripts/competition_context_calculator.py`; if unavailable, show an "未确认" cell and downgrade data confidence instead of omitting the section. For final-round group slates, do not upgrade a match into the "模型最稳" or "稳健方向" main plan unless both teams have matched structured group context.
 5. Build a compact 赔率与市场中心 section before the match notes. When correct-score odds are available, list the lowest-price score cluster for each match and explain what the market center implies.
 6. Explain the math model in user-readable language before or during the match notes: expected-goals prior, bounded Bayesian adjustment direction, final xG, Poisson score concentration, odds implied/no-vig probability when odds exist, edge/grade caps, and whether the calculator/script or an approximation was used.
 7. Run the Single-Match Analysis flow in compact but substantive prose for each match before giving any portfolio plan. Each match should read like a decision note, not only a row in a table.
@@ -62,10 +62,11 @@ For group-stage final-round matches, calculate qualification context before trea
 10. Exclude Pass matches or matches with severe Information Sufficiency gaps from tickets, but still show their single-match analysis and explain why they are not in the main plan.
 11. Build portfolio variants from the actual model confidence, score concentration, market availability, and user intent. Do not force fixed 2/16/32/48 元 tiers or force a 4/6/8-leg ticket. Calculate units as the product of selected outcomes per match and show amount only as `units x 2 元/unit`.
 12. Apply ticket limits by market family: exact-score tickets may use up to four matches; 胜平负 / 让球胜平负 direction tickets may use up to eight matches; 大小球 / 总进球 direction tickets may use up to eight matches. Mixed tickets may use up to eight matches, but if exact-score legs dominate, keep them to four matches.
-13. Add named portfolio variants when supported by the data: 模型最稳主单, 让球/胜平负方向单, 大小球/总进球单, 单比分主推小单, 比分4串1, 基础比分覆盖, 增强比分覆盖, 混合过关单, 备选/替换, 可选小组合, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
-14. Provide More Combination Candidates only when there are extra plausible directions, and keep them separate from the main plans.
-15. Provide Score Coverage for every analyzed match. Use up to four scores per match only when a match has a meaningful secondary path, such as late-goal expansion, red-card tail risk, draw protection, favorite-underperformance risk, or underdog transition threat.
-16. Produce the Portfolio Report template.
+13. If the strongest fourfold contains any obvious risk leg (missing group context, low data confidence, high rotation risk, route-selection risk, or market/result conflict), also provide a "更稳三串一" that removes the riskiest leg. If fewer than three low-risk eligible legs remain, provide a "更稳二串一" and explain why the model did not force three legs.
+14. Add named portfolio variants when supported by the data: 模型最稳主单, 更稳三串一/二串一, 让球/胜平负方向单, 大小球/总进球单, 单比分主推小单, 比分4串1, 基础比分覆盖, 增强比分覆盖, 混合过关单, 备选/替换, 可选小组合, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
+15. Provide More Combination Candidates only when there are extra plausible directions, and keep them separate from the main plans.
+16. Provide Score Coverage for every analyzed match. Use up to four scores per match only when a match has a meaningful secondary path, such as late-goal expansion, red-card tail risk, draw protection, favorite-underperformance risk, or underdog transition threat.
+17. Produce the Portfolio Report template.
 
 Do not output a single "only correct" portfolio. If enough data exists, always offer separate market-family plans plus optional alternative combinations.
 
@@ -86,6 +87,7 @@ Construct the ticket structures from the full match slate:
 
 - Start with the model's most defensible main plan, often using 胜平负, 让球胜平负, 大小球, or 总进球 rather than exact score for every match. The main plan may be 2串1, 3串1, 4串1, 5串1, 6串1, 7串1, or 8串1 depending on confidence; do not force a leg count.
 - In conservative mode, exclude Pass, C-grade, unavailable, low-data, and weak score-coverage legs from main plans. Use `scripts/portfolio_builder.py` when structured graded legs are available.
+- In tournament final-round group slates, exclude `group_context_missing` legs from the main plan. If a fourfold remains but includes high rotation or route-selection risk, create a reduced threefold from the lowest-risk legs.
 - For score portfolios, identify each match's core score cluster first, then decide whether it deserves one, two, three, or four score candidates.
 - For exact-score tickets, select only the four matches with the strongest score concentration and acceptable data confidence.
 - Use `scripts/score_coverage_analyzer.py` or the same thresholds before including exact-score legs. Diffuse score matrices should stay out of the core portfolio.
@@ -110,6 +112,7 @@ Default named portfolio variants:
 - 搏冷/高赔率小单: uses lower-probability but explainable outcomes; label it optional, high variance, and not the core plan.
 - 备选/替换: lists which matches can replace a risky leg, why the replacement is more conservative or more aggressive, and which ticket it affects.
 - 可选小组合: groups 2串1, 3串1, or 4串1 alternatives by stability, value, or score concentration.
+- 更稳三串一 / 更稳二串一: removes the riskiest leg from a fourfold or avoids forcing a threefold when only two legs remain defensible.
 
 Write full selections in every score coverage cell. Do not write "加 2:1"; write the complete set, such as `2:0 / 3:0 / 2:1`.
 

@@ -25,7 +25,7 @@ def _date_from_request(request: str) -> str | None:
 
 def run_flow(snapshot: Path, request: str, report_out_dir: Path, data_out_dir: Path) -> dict:
     builder = Path(__file__).with_name("build_snapshot_report.py")
-    command = [
+    base_command = [
         "python3",
         str(builder),
         str(snapshot),
@@ -36,6 +36,7 @@ def run_flow(snapshot: Path, request: str, report_out_dir: Path, data_out_dir: P
         "--data-out-dir",
         str(data_out_dir),
     ]
+    command = [*base_command]
     date = _date_from_request(request)
     competition = _competition_from_request(request)
     if date:
@@ -44,6 +45,11 @@ def run_flow(snapshot: Path, request: str, report_out_dir: Path, data_out_dir: P
         command.extend(["--competition", competition])
 
     result = subprocess.run(command, text=True, capture_output=True, check=False)
+    if result.returncode != 0 and date:
+        fallback_command = [*base_command]
+        if competition:
+            fallback_command.extend(["--competition", competition])
+        result = subprocess.run(fallback_command, text=True, capture_output=True, check=False)
     if result.returncode != 0:
         return {
             "ok": False,

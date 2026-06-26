@@ -338,6 +338,172 @@ class SnapshotContractTests(unittest.TestCase):
             adjustments = report_input["match_analyses"][0]["bayesian_adjustments"]
             self.assertTrue(any("轮换" in item or "出线压力" in item for item in adjustments))
 
+    def test_group_final_round_missing_context_excludes_main_plan(self) -> None:
+        raw = {
+            "matches": [
+                {
+                    "id": "missing-group-ctx-001",
+                    "matchNo": "周四777",
+                    "competition": "世界杯小组赛第3轮",
+                    "kickoffTime": "2026-06-26T22:00:00+08:00",
+                    "homeTeam": "韩国",
+                    "awayTeam": "南非",
+                    "markets": [
+                        {
+                            "source_market_name": "胜平负",
+                            "availability": {"status": "available", "reason": "available"},
+                            "selections": [
+                                {"name": "胜", "odds": 2.10},
+                                {"name": "平", "odds": 3.00},
+                                {"name": "负", "odds": 3.20},
+                            ],
+                        }
+                    ],
+                }
+            ]
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            raw_path = tmp_path / "raw.json"
+            raw_path.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
+            fetch_result = subprocess.run(
+                [
+                    "python3",
+                    str(FETCHER),
+                    "--mode",
+                    "china-lottery",
+                    "--provider",
+                    "sporttery",
+                    "--football",
+                    "--raw-input",
+                    str(raw_path),
+                    "--out",
+                    str(tmp_path / "snapshots"),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(fetch_result.returncode, 0, fetch_result.stdout + fetch_result.stderr)
+            snapshot_path = Path(json.loads(fetch_result.stdout)["snapshot_path"])
+            report_result = subprocess.run(
+                [
+                    "python3",
+                    str(REPORT_BUILDER),
+                    str(snapshot_path),
+                    "--match-no",
+                    "周四777",
+                    "--topic",
+                    "世界杯小组赛第3轮",
+                    "--report-out-dir",
+                    str(tmp_path / "reports"),
+                    "--data-out-dir",
+                    str(tmp_path / "data"),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(report_result.returncode, 0, report_result.stdout + report_result.stderr)
+            payload = json.loads(report_result.stdout)
+            report_input = json.loads(Path(payload["report_input_path"]).read_text(encoding="utf-8"))
+            self.assertEqual(report_input["ticket_plans"], [])
+            self.assertTrue(any("group_context_missing" in item for item in report_input["data_gaps"]))
+            self.assertTrue(any("稳健主单" in item for item in report_input["match_analyses"][0]["risk_notes"]))
+
+    def test_group_final_round_fourfold_adds_stable_threefold(self) -> None:
+        teams = [("韩国", "南非"), ("德国", "厄瓜多尔"), ("韩国", "厄瓜多尔"), ("德国", "南非")]
+        raw = {
+            "matches": [
+                {
+                    "id": f"group-ctx-fourfold-{index}",
+                    "matchNo": f"周四88{index}",
+                    "competition": "世界杯小组赛第3轮",
+                    "kickoffTime": "2026-06-26T22:00:00+08:00",
+                    "homeTeam": home,
+                    "awayTeam": away,
+                    "markets": [
+                        {
+                            "source_market_name": "胜平负",
+                            "availability": {"status": "available", "reason": "available"},
+                            "selections": [
+                                {"name": "胜", "odds": 2.10},
+                                {"name": "平", "odds": 3.00},
+                                {"name": "负", "odds": 3.20},
+                            ],
+                        }
+                    ],
+                }
+                for index, (home, away) in enumerate(teams, start=1)
+            ]
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            raw_path = tmp_path / "raw.json"
+            raw_path.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
+            fetch_result = subprocess.run(
+                [
+                    "python3",
+                    str(FETCHER),
+                    "--mode",
+                    "china-lottery",
+                    "--provider",
+                    "sporttery",
+                    "--football",
+                    "--raw-input",
+                    str(raw_path),
+                    "--out",
+                    str(tmp_path / "snapshots"),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(fetch_result.returncode, 0, fetch_result.stdout + fetch_result.stderr)
+            snapshot_path = Path(json.loads(fetch_result.stdout)["snapshot_path"])
+            context_result = subprocess.run(
+                ["python3", str(COMPETITION_CONTEXT), str(FIXTURES / "competition-context-input.json")],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(context_result.returncode, 0, context_result.stdout + context_result.stderr)
+            context_path = tmp_path / "competition-context.json"
+            context_path.write_text(context_result.stdout, encoding="utf-8")
+            report_result = subprocess.run(
+                [
+                    "python3",
+                    str(REPORT_BUILDER),
+                    str(snapshot_path),
+                    "--competition",
+                    "世界杯小组赛第3轮",
+                    "--topic",
+                    "世界杯小组赛第3轮",
+                    "--competition-context",
+                    str(context_path),
+                    "--report-out-dir",
+                    str(tmp_path / "reports"),
+                    "--data-out-dir",
+                    str(tmp_path / "data"),
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(report_result.returncode, 0, report_result.stdout + report_result.stderr)
+            payload = json.loads(report_result.stdout)
+            report_input = json.loads(Path(payload["report_input_path"]).read_text(encoding="utf-8"))
+            plan_names = [plan["name"] for plan in report_input["ticket_plans"]]
+            self.assertIn("更稳三串一", plan_names)
+            stable_plan = next(plan for plan in report_input["ticket_plans"] if plan["name"] == "更稳三串一")
+            self.assertEqual(len(stable_plan["legs"]), 3)
+            self.assertEqual(stable_plan["type"], "stable_small_combo")
+
     def test_snapshot_report_builder_excludes_unavailable_market_from_ticket_plan(self) -> None:
         snapshot = FIXTURES / "football-snapshot-sporttery.json"
         with tempfile.TemporaryDirectory() as tmp:

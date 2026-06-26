@@ -32,6 +32,12 @@ MARKET_LABELS = {
     "over_under": "大小球",
     "total_goals": "总进球",
 }
+GROUP_STAGE_KEYWORDS = ("小组", "第3轮", "第三轮", "收官", "出线")
+HIGH_RISK_FLAGS = {
+    "already_in_advance_zone",
+    "draw_may_be_sufficient",
+    "route_selection_risk",
+}
 
 
 def load_snapshot(path: Path) -> dict[str, Any]:
@@ -61,6 +67,29 @@ def _find_team_context(competition_context: dict[str, Any], team: str) -> dict[s
                 item["group"] = group.get("group")
                 return item
     return None
+
+
+def requires_group_context(match: dict[str, Any], topic: str) -> bool:
+    haystack = " ".join(
+        str(value or "")
+        for value in (
+            match.get("competition"),
+            match.get("round"),
+            match.get("stage"),
+            match.get("notes"),
+            topic,
+        )
+    )
+    return any(keyword in haystack for keyword in GROUP_STAGE_KEYWORDS)
+
+
+def has_complete_group_context(context: dict[str, Any]) -> bool:
+    required = ("rank", "points", "wins", "draws", "losses", "goal_difference", "qualification_pressure", "rotation_risk")
+    home = context.get("home")
+    away = context.get("away")
+    if not home or not away:
+        return False
+    return all(field in home and field in away for field in required)
 
 
 def group_context_for_match(match: dict[str, Any], competition_context: dict[str, Any]) -> dict[str, Any]:
@@ -96,6 +125,27 @@ def motivation_notes(context: dict[str, Any]) -> list[str]:
         if "third_place_race" in flags:
             notes.append(f"{team} 处于第三名竞争区，净胜球和避免输球重要。")
     return notes or ["小组积分/出线形势未确认，不能做动机修正。"]
+
+
+def group_context_gap(name: str, context: dict[str, Any]) -> str:
+    missing = []
+    if not context.get("home"):
+        missing.append("主队")
+    if not context.get("away"):
+        missing.append("客队")
+    detail = "、".join(missing) if missing else "字段不完整"
+    return f"{name}：group_context_missing（{detail}缺少完整排名/积分/净胜球/出线压力/轮换风险），不能进入稳健主单。"
+
+
+def leg_has_group_risk(context: dict[str, Any]) -> bool:
+    for side in ("home", "away"):
+        item = context.get(side) or {}
+        flags = set(item.get("motivation_flags") or [])
+        if flags & HIGH_RISK_FLAGS:
+            return True
+        if "高" in str(item.get("rotation_risk") or ""):
+            return True
+    return False
 
 
 def available_markets(match: dict[str, Any]) -> list[dict[str, Any]]:
@@ -150,6 +200,34 @@ def main_market_pick(match: dict[str, Any]) -> tuple[str, str, str, dict[str, An
     return "analysis_only", "无可买赔率", "当前快照未取得可用于购买方案的竞彩赔率。", None
 
 
+def build_stable_reduced_plan(ticket_legs: list[dict[str, Any]]) -> dict[str, Any] | None:
+    eligible = [leg for leg in ticket_legs if not leg.get("high_risk")]
+    used_fallback = False
+    if len(eligible) < 2:
+        eligible = ticket_legs
+        used_fallback = True
+    if len(eligible) < 2:
+        return None
+    selected_count = 3 if len(eligible) >= 3 else 2
+    selected = eligible[:selected_count]
+    name = "更稳三串一" if selected_count == 3 else "更稳二串一"
+    reason = "从主单中去掉高风险或低上下文确定性的腿，只保留更适合保守参考的方向。"
+    if used_fallback:
+        reason = "低风险腿不足以单独成单，先减少串关腿数来降低组合波动；仍需关注小组赛轮换和路线选择风险。"
+    if selected_count == 2:
+        reason = "合格低风险腿不足三场，降为二串一，不硬凑三串一。"
+    return {
+        "name": name,
+        "type": "stable_small_combo",
+        "legs": selected,
+        "unit_math": "1 x " * (selected_count - 1) + "1 = 1 注",
+        "amount_text": f"1 注 x {UNIT_PRICE} 元/注 = {UNIT_PRICE} 元",
+        "odds_status": "使用快照中确认可买的竞彩市场",
+        "risk_level": "中",
+        "reason": reason,
+    }
+
+
 def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic: str, report_id: str, competition_context: dict[str, Any] | None = None) -> dict[str, Any]:
     generated_at = now_text()
     competition_context = competition_context or snapshot.get("competition_context") or {}
@@ -170,9 +248,13 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
         away_context = group_context.get("away")
         context_text = f"{standings_line(home_context)}；{standings_line(away_context)}"
         motivation = motivation_notes(group_context)
+        group_context_required = requires_group_context(match, topic)
+        group_context_complete = has_complete_group_context(group_context)
         pick_market, pick_selection, reason, source_market = main_market_pick(match)
         available = available_markets(match)
         blocked = blocked_markets(match)
+        if group_context_required and not group_context_complete:
+            data_gaps.append(group_context_gap(name, group_context))
         if not available:
             data_gaps.append(f"{name}：未取得可买竞彩赔率/盘口，不能生成购买方案。")
         if match.get("team_type") == "unsupported":
@@ -202,7 +284,7 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "totals_pick": selection_text(next((m for m in available if m.get("market") == "total_goals"), {})) or "未取得",
                 "score_lean": "比分赔率未取得或未做泊松覆盖",
                 "stability": "降级",
-                "risk": " / ".join(motivation[:2]),
+                "risk": " / ".join(motivation[:2]) if group_context_complete or not group_context_required else "group_context_missing：小组上下文不完整，稳健主单禁用",
             }
         )
         analyses.append(
@@ -220,6 +302,7 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "poisson_summary": "本快照报告尚未运行 xG/泊松模型；只能确认竞彩市场和赔率可买性。",
                 "risk_notes": [
                     reason,
+                    "小组赛末轮缺少完整结构化小组上下文时，不得进入稳健主单。" if group_context_required and not group_context_complete else "小组上下文已匹配到双方球队。" if group_context_complete else "非强制小组上下文场景或上下文未提供。",
                     "缺少球队近期状态、赛事积分/战意、伤停首发时，Reference Grade 不能上调。",
                 ],
                 "analysis": f"已从 {snapshot.get('provider')} 快照确认 {name} 的赛程与部分竞彩可买市场。小组形势：{context_text}。{reason}",
@@ -227,13 +310,14 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "odds_status": "竞彩快照可用" if available else "缺少可买赔率",
             }
         )
-        if pick_market != "analysis_only":
+        if pick_market != "analysis_only" and not (group_context_required and not group_context_complete):
             ticket_legs.append(
                 {
                     "match": name,
                     "market": pick_market,
                     "selection": pick_selection,
                     "reason": reason,
+                    "high_risk": leg_has_group_risk(group_context),
                     "market_available": True,
                     "source_snapshot_market": source_market.get("market") if source_market else None,
                     "source_market_name": source_market.get("source_market_name") if source_market else None,
@@ -245,11 +329,13 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
     ticket_plans = []
     if ticket_legs:
         unit_count = 1
+        main_legs = ticket_legs[:8]
+        high_risk_in_main = any(leg.get("high_risk") for leg in main_legs) or len(main_legs) >= 4
         ticket_plans.append(
             {
                 "name": "竞彩快照可买市场主单",
                 "type": "result_handicap",
-                "legs": ticket_legs[:8],
+                "legs": main_legs,
                 "unit_math": f"{unit_count} 注",
                 "amount_text": f"{unit_count} 注 x {UNIT_PRICE} 元/注 = {unit_count * UNIT_PRICE} 元",
                 "odds_status": "使用快照中确认可买的竞彩市场",
@@ -257,6 +343,9 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "reason": "这是市场可买性主单，不是完整模型强推；需等球队数据、xG 和赔率价值判断后再升级。",
             }
         )
+        stable_plan = build_stable_reduced_plan(main_legs) if high_risk_in_main else None
+        if stable_plan:
+            ticket_plans.append(stable_plan)
 
     data_status = "usable-but-downgraded" if ticket_legs else "no-actual-odds-lines"
     return {
