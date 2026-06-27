@@ -34,7 +34,14 @@ def _normalize_scores(document: dict[str, Any]) -> list[dict[str, Any]]:
     return sorted(scores, key=_score_sort_key, reverse=True)
 
 
-def analyze_scores(scores: list[dict[str, Any]], total_xg: float | None = None, both_teams_score_path: bool = False) -> dict[str, Any]:
+def analyze_scores(
+    scores: list[dict[str, Any]],
+    total_xg: float | None = None,
+    both_teams_score_path: bool = False,
+    five_plus_goal_probability: float | None = None,
+    deep_handicap: bool = False,
+    final_round_goal_difference_pressure: bool = False,
+) -> dict[str, Any]:
     top1 = sum(item["probability"] for item in scores[:1])
     top3 = sum(item["probability"] for item in scores[:3])
     top5 = sum(item["probability"] for item in scores[:5])
@@ -63,6 +70,20 @@ def analyze_scores(scores: list[dict[str, Any]], total_xg: float | None = None, 
             coverage_quality = "moderate"
         elif coverage_quality == "moderate":
             coverage_quality = "weak"
+    if five_plus_goal_probability is not None and five_plus_goal_probability >= 0.12:
+        warnings.append("5+ goal tail is material; do not narrow total-goals or correct-score coverage to low totals only.")
+        if coverage_quality == "strong":
+            coverage_quality = "moderate"
+        elif coverage_quality == "moderate":
+            coverage_quality = "weak"
+    if deep_handicap:
+        warnings.append("Deep handicap creates favorite blowout and card/pacing tail risk; downgrade exact-score confidence.")
+        if coverage_quality == "strong":
+            coverage_quality = "moderate"
+    if final_round_goal_difference_pressure:
+        warnings.append("Final-round goal-difference incentives can expand late scoring tails.")
+        if coverage_quality == "strong":
+            coverage_quality = "moderate"
     if both_teams_score_path:
         warnings.append("Both teams have a credible scoring path; include conceded-goal protection or downgrade coverage.")
         if single_score_strength == "strong":
@@ -78,6 +99,16 @@ def analyze_scores(scores: list[dict[str, Any]], total_xg: float | None = None, 
         "coverage_quality": coverage_quality,
         "core_portfolio_allowed": coverage_quality == "strong",
         "exact_score_ticket_allowed": coverage_quality in {"strong", "moderate"},
+        "tail_risk_flags": [
+            flag
+            for flag, active in (
+                ("high_total_xg_tail", total_xg is not None and total_xg >= 3.2),
+                ("five_plus_goal_tail", five_plus_goal_probability is not None and five_plus_goal_probability >= 0.12),
+                ("deep_handicap_tail", deep_handicap),
+                ("goal_difference_pressure_tail", final_round_goal_difference_pressure),
+            )
+            if active
+        ],
         "primary_path": core_scores[0] if core_scores else None,
         "secondary_path": " / ".join(core_scores[1:]) if len(core_scores) > 1 else "无明显次路径",
         "missed_path_protection": " / ".join(enhanced_scores[3:]) if len(enhanced_scores) > 3 else "无明显补洞路径",
@@ -93,6 +124,9 @@ def calculate(document: dict[str, Any]) -> dict[str, Any]:
         scores,
         total_xg=document.get("total_xg"),
         both_teams_score_path=bool(document.get("both_teams_score_path", False)),
+        five_plus_goal_probability=document.get("five_plus_goal_probability"),
+        deep_handicap=bool(document.get("deep_handicap", False)),
+        final_round_goal_difference_pressure=bool(document.get("final_round_goal_difference_pressure", False)),
     )
     return {
         "kind": "score_coverage_record",

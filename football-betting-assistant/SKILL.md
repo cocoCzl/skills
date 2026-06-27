@@ -51,6 +51,7 @@ Use scripts only when deterministic calculation or validation helps:
 - `scripts/late_update_rules.py`: evaluate early-analysis grade caps, late lineup requirements, odds movement, sales availability, and kickoff stop rules.
 - `scripts/post_match_review.py`: attach final scores to saved prediction snapshots and compute basic hit/miss review fields.
 - `scripts/auto_post_match_review.py`: scan saved prediction snapshots, fetch or accept final scores, write review JSON, and render a Chinese post-match HTML Review.
+- `scripts/convert_legacy_prediction_snapshot.py`: convert older manually assembled prediction JSON into standard `kind=prediction_snapshot` for review/backtesting; missing structured fields remain unavailable.
 - `scripts/zero_operation_smoke.py`: offline smoke check for natural-language request -> snapshot selection -> HTML report -> prediction snapshot.
 
 ## Default Workflow
@@ -71,7 +72,7 @@ Use scripts only when deterministic calculation or validation helps:
 
 For Post-Match Review requests, default to zero-operation review when local execution is available: run `scripts/auto_post_match_review.py` to scan `data/football/predictions/`, default to the last 30 days unless the user asks for all history, verify final scores through configured providers or user/public sources, write review JSON under `data/football/reviews/`, and render one Chinese HTML Review under `reports/football-betting/`. If the user supplies a specific prediction snapshot or match, review only that target. Skip unfinished matches, unverified results, and low-confidence match identity; list the skip reason instead of inventing a result.
 
-For backtesting or "提高命中率" requests, do not change recommendations by intuition alone. Use historical pre-match snapshots and actual results, run `scripts/backtest_predictions.py` when data is available, then adjust downgrade/calibration guidance based on measured error patterns.
+For backtesting or "提高命中率" requests, do not change recommendations by intuition alone. Use historical pre-match snapshots and actual results, run `scripts/backtest_predictions.py` when data is available, then adjust downgrade/calibration guidance based on measured error patterns. If the available prediction is a legacy manually assembled JSON, first normalize it with `scripts/convert_legacy_prediction_snapshot.py` or the auto-review compatibility path; do not backfill unavailable probabilities, lines, grades, or lineup facts.
 
 ## Default Scope
 
@@ -89,6 +90,7 @@ For backtesting or "提高命中率" requests, do not change recommendations by 
 - Use `scripts/market_grade_calculator.py` for market-level value judgment when structured odds and model probabilities are available. Keep result, handicap, totals, score, and overall grades distinct.
 - Use `scripts/score_coverage_analyzer.py` before making correct-score tickets. Weak or diffuse score matrices must not become core portfolio picks.
 - Use `scripts/portfolio_builder.py` when structured graded legs exist. Conservative main plans exclude C-grade, Pass, unavailable, low-data, and weak score-coverage legs.
+- For high-total or deep-handicap matches, explicitly check 5+ goal tail risk before narrowing totals to 2/3/4 or exact-score clusters. If total xG is high, 5+ tail is material, or final-round goal-difference pressure exists, totals and比分票 must be widened, downgraded, or kept out of the core plan.
 - Use `scripts/late_update_rules.py` before final purchase-plan output when kickoff timing and market movement data are available. Do not create new pre-match purchase plans after kickoff or when sales availability cannot be confirmed.
 - Use `scripts/auto_post_match_review.py` for normal 赛后复盘. Use `scripts/post_match_review.py` only as a low-level single-snapshot helper when the exact prediction path and final score are already known. Do not backfill post-match facts into the original pre-match prediction.
 - Keep unit count and amount separate. With the default 2 元/unit, `2 x 2 x 2 x 2 = 16` units means 32 元.
@@ -107,6 +109,7 @@ For backtesting or "提高命中率" requests, do not change recommendations by 
 - Completed pre-match Single-Match Analysis and Betting Portfolio analysis should generate an HTML Report by default when local writes are available. Do not generate Markdown reports for completed pre-match analysis. If critical fixture or team context is missing, ask for the missing inputs before generating a formal report. If actual odds/lines are unavailable but fixture and team context are sufficient, still generate the HTML Report with `no-actual-odds-lines` Data Status and downgrade value judgment.
 - HTML Reports are generated from structured JSON via `scripts/render_html_report.py`. They are saved under the current working directory's `reports/football-betting/`, not inside the skill package. The report directory is generated output and should not be committed.
 - Snapshot-backed HTML Reports can be generated with `scripts/build_snapshot_report.py`; it also writes a linked prediction snapshot under `data/football/predictions/` for future review and calibration.
+- Prediction snapshots should include structured `model_outputs.match_records` with fixture identity, observed probabilities, xG, score candidates, grade/confidence, market lines, and risk flags whenever those fields are available. Missing pre-match fields must remain unavailable rather than being inferred from final results.
 - Football snapshots generated by `scripts/fetch_match_data.py` are saved under the current working directory's `data/football/snapshots/` by default. They are generated output and should not be committed unless intentionally used as fixtures.
 - Report inputs, prediction snapshots, and review JSON under `data/football/report-inputs/`, `data/football/predictions/`, and `data/football/reviews/` are generated output and should not be committed unless intentionally promoted to tests.
 

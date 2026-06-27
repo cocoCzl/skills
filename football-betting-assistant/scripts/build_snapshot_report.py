@@ -19,8 +19,10 @@ from typing import Any
 
 try:
     from select_snapshot_matches import select_matches
+    from prediction_snapshot_tools import structured_match_record
 except ImportError:  # pragma: no cover - direct package execution fallback
     from scripts.select_snapshot_matches import select_matches  # type: ignore
+    from scripts.prediction_snapshot_tools import structured_match_record  # type: ignore
 
 
 BEIJING_TZ = "Asia/Shanghai"
@@ -445,6 +447,16 @@ def render_html(report_input: Path, out_dir: Path) -> Path:
 
 
 def build_prediction_snapshot(report: dict[str, Any], snapshot: dict[str, Any], html_path: Path, report_input_path: Path) -> dict[str, Any]:
+    fixtures_by_match = {
+        fixture.get("match"): fixture
+        for fixture in report.get("fixtures", [])
+        if isinstance(fixture, dict) and fixture.get("match")
+    }
+    match_records = [
+        structured_match_record(analysis, fixtures_by_match.get(analysis.get("match")), report.get("report", {}))
+        for analysis in report.get("match_analyses", [])
+        if isinstance(analysis, dict)
+    ]
     return {
         "kind": "prediction_snapshot",
         "data": {
@@ -461,6 +473,7 @@ def build_prediction_snapshot(report: dict[str, Any], snapshot: dict[str, Any], 
             },
             "model_outputs": {
                 "match_analyses": report.get("match_analyses", []),
+                "match_records": match_records,
                 "ticket_plans": report.get("ticket_plans", []),
                 "risks": report.get("risks", []),
             },

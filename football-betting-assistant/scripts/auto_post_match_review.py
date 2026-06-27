@@ -16,6 +16,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from post_match_review import build_review
+from prediction_snapshot_tools import normalize_prediction_snapshot
 
 
 DEFAULT_LOOKBACK_DAYS = 30
@@ -89,8 +90,34 @@ def extract_candidates(prediction_path: Path, prediction: dict[str, Any]) -> lis
         for item in pre_match.get("fixtures", []) or []
         if isinstance(item, dict) and item.get("match")
     }
-    analyses = ((data.get("model_outputs") or {}).get("match_analyses") or [])
+    model_outputs = data.get("model_outputs") or {}
+    records = model_outputs.get("match_records") or []
+    analyses = model_outputs.get("match_analyses") or []
     candidates: list[dict[str, Any]] = []
+    if isinstance(records, list) and records:
+        for record in records:
+            if not isinstance(record, dict):
+                continue
+            match_name = str(record.get("match") or "").strip()
+            if not match_name:
+                continue
+            fixture = fixtures.get(match_name, {})
+            kickoff = parse_time(record.get("kickoff_time") or fixture.get("kickoff_time"))
+            split = split_match_name(match_name)
+            candidates.append(
+                {
+                    "prediction_path": prediction_path,
+                    "prediction": prediction,
+                    "report_id": data.get("report_id") or prediction_path.stem.replace(".prediction", ""),
+                    "match": match_name,
+                    "home_team": record.get("home_team") or (split[0] if split else fixture.get("home_team")),
+                    "away_team": record.get("away_team") or (split[1] if split else fixture.get("away_team")),
+                    "competition": record.get("competition") or fixture.get("competition"),
+                    "kickoff_time": kickoff,
+                    "analysis": record,
+                }
+            )
+        return candidates
     for analysis in analyses:
         if not isinstance(analysis, dict):
             continue
@@ -122,11 +149,12 @@ def load_prediction_candidates(predictions_dir: Path, current_time: datetime, al
     skipped: list[dict[str, str]] = []
     for path in sorted(predictions_dir.glob("*.prediction.json")):
         try:
-            prediction = load_json(path)
+            raw_prediction = load_json(path)
         except (OSError, json.JSONDecodeError) as exc:
             skipped.append({"path": str(path), "reason": f"prediction_json_invalid: {exc}"})
             continue
-        if prediction.get("kind") != "prediction_snapshot":
+        prediction = normalize_prediction_snapshot(raw_prediction, str(path))
+        if not prediction or prediction.get("kind") != "prediction_snapshot":
             skipped.append({"path": str(path), "reason": "not_prediction_snapshot"})
             continue
         generated_at = parse_time((prediction.get("data") or {}).get("generated_at"))
@@ -346,6 +374,29 @@ def summarize_leg_reviews(leg_reviews: list[dict[str, Any]]) -> dict[str, int]:
     return {"known": len(known), "hits": len(hits), "misses": len(misses)}
 
 
+def summarize_legs_by_metric(reviewed: list[dict[str, Any]]) -> dict[str, dict[str, int | float | None]]:
+    stats: dict[str, dict[str, int]] = {}
+    for item in reviewed:
+        for leg in item.get("leg_reviews") or []:
+            metric = str(leg.get("metric") or "unknown")
+            hit = leg.get("hit")
+            if hit is None:
+                continue
+            bucket = stats.setdefault(metric, {"known": 0, "hits": 0, "misses": 0})
+            bucket["known"] += 1
+            if hit:
+                bucket["hits"] += 1
+            else:
+                bucket["misses"] += 1
+    return {
+        metric: {
+            **bucket,
+            "hit_rate": round(bucket["hits"] / bucket["known"], 4) if bucket["known"] else None,
+        }
+        for metric, bucket in sorted(stats.items())
+    }
+
+
 def build_aggregate_review(candidates: list[dict[str, Any]], static_results: list[dict[str, Any]], sports: list[str], current_time: datetime) -> dict[str, Any]:
     reviewed: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
@@ -375,6 +426,10 @@ def build_aggregate_review(candidates: list[dict[str, Any]], static_results: lis
         reviewed.append(review)
     leg_known = sum(item["leg_summary"]["known"] for item in reviewed)
     leg_hits = sum(item["leg_summary"]["hits"] for item in reviewed)
+    result_known = sum(1 for item in reviewed if (item.get("result_review") or {}).get("hit") is not None)
+    result_hits = sum(1 for item in reviewed if (item.get("result_review") or {}).get("hit") is True)
+    ou_known = sum(1 for item in reviewed if (item.get("over_under_review") or {}).get("hit") is not None)
+    ou_hits = sum(1 for item in reviewed if (item.get("over_under_review") or {}).get("hit") is True)
     score_top1 = sum(1 for item in reviewed if (item.get("score_review") or {}).get("top1_hit"))
     score_top3 = sum(1 for item in reviewed if (item.get("score_review") or {}).get("top3_hit"))
     score_coverage = sum(1 for item in reviewed if (item.get("score_review") or {}).get("coverage_hit"))
@@ -388,10 +443,17 @@ def build_aggregate_review(candidates: list[dict[str, Any]], static_results: lis
                 "leg_known": leg_known,
                 "leg_hits": leg_hits,
                 "leg_hit_rate": round(leg_hits / leg_known, 4) if leg_known else None,
+                "result_known": result_known,
+                "result_hits": result_hits,
+                "result_hit_rate": round(result_hits / result_known, 4) if result_known else None,
+                "over_under_known": ou_known,
+                "over_under_hits": ou_hits,
+                "over_under_hit_rate": round(ou_hits / ou_known, 4) if ou_known else None,
                 "score_top1_hits": score_top1,
                 "score_top3_hits": score_top3,
                 "score_coverage_hits": score_coverage,
             },
+            "metric_breakdown": summarize_legs_by_metric(reviewed),
             "reviews": reviewed,
             "skipped": skipped,
         },
@@ -409,18 +471,23 @@ def text(value: Any, fallback: str = "未确认") -> str:
 def render_review_html(bundle: dict[str, Any]) -> str:
     data = bundle["data"]
     summary = data.get("summary") or {}
+    metric_breakdown = data.get("metric_breakdown") or {}
     review_rows = []
     detail_cards = []
     for item in data.get("reviews") or []:
         score_review = item.get("score_review") or {}
         final_score = item.get("final_score") or {}
         leg_summary = item.get("leg_summary") or {}
+        result_review = item.get("result_review") or {}
+        over_under_review = item.get("over_under_review") or {}
         leg_hit_text = f"{leg_summary.get('hits', 0)}/{leg_summary.get('known', 0)}"
         review_rows.append(
             "<tr>"
             f"<td>{text(item.get('match'))}</td>"
             f"<td>{text(final_score.get('score'))}</td>"
             f"<td>{text(final_score.get('match_result'))}</td>"
+            f"<td>{'是' if result_review.get('hit') else '否' if result_review.get('hit') is False else '未判定'}</td>"
+            f"<td>{'是' if over_under_review.get('hit') else '否' if over_under_review.get('hit') is False else '未判定'}</td>"
             f"<td>{'是' if score_review.get('top1_hit') else '否'}</td>"
             f"<td>{'是' if score_review.get('top3_hit') else '否'}</td>"
             f"<td>{'是' if score_review.get('coverage_hit') else '否'}</td>"
@@ -438,7 +505,7 @@ def render_review_html(bundle: dict[str, Any]) -> str:
             f"<span>匹配置信度：{text(item.get('match_confidence'))}</span>"
             "</div>"
             "<h4>1. 赛前判断回顾</h4>"
-            f"<p>比分候选：{text(score_review.get('candidates'))}。票单可判定项：{text(leg_summary.get('known'))}，命中 {text(leg_summary.get('hits'))}，未中 {text(leg_summary.get('misses'))}。</p>"
+            f"<p>赛果预测：{text(result_review.get('predicted'))}，实际：{text(result_review.get('actual'))}；大小球预测：{text(over_under_review.get('predicted'))}，实际：{text(over_under_review.get('actual'))}。比分候选：{text(score_review.get('candidates'))}。票单可判定项：{text(leg_summary.get('known'))}，命中 {text(leg_summary.get('hits'))}，未中 {text(leg_summary.get('misses'))}。</p>"
             "<h4>2. 实际结果与关键转折</h4>"
             f"<p>最终比分 {text(final_score.get('score'))}，赛果为{text(final_score.get('match_result'))}，总进球 {text(final_score.get('total_goals'))}。</p>"
             "<h4>3. 模型偏差</h4>"
@@ -494,15 +561,18 @@ def render_review_html(bundle: dict[str, Any]) -> str:
         <span>已复盘：{text(data.get('reviewed_count'))}</span>
         <span>跳过：{text(data.get('skipped_count'))}</span>
         <span>票单命中：{text(summary.get('leg_hits'))}/{text(summary.get('leg_known'))}</span>
+        <span>赛果命中：{text(summary.get('result_hits'))}/{text(summary.get('result_known'))}</span>
+        <span>大小球命中：{text(summary.get('over_under_hits'))}/{text(summary.get('over_under_known'))}</span>
         <span>比分Top1：{text(summary.get('score_top1_hits'))}</span>
         <span>比分Top3：{text(summary.get('score_top3_hits'))}</span>
         <span>比分覆盖：{text(summary.get('score_coverage_hits'))}</span>
       </div>
+      <p>市场拆分：{text(metric_breakdown)}</p>
       <div class="warning">复盘结论只用于校准模型和数据流程；不得把单次命中或未命中解释为下一场确定性结果。</div>
     </section>
     <section>
       <h2>命中统计</h2>
-      <table><thead><tr><th>比赛</th><th>比分</th><th>赛果</th><th>Top1</th><th>Top3</th><th>覆盖</th><th>票单</th><th>来源</th><th>匹配</th></tr></thead><tbody>{''.join(review_rows)}</tbody></table>
+      <table><thead><tr><th>比赛</th><th>比分</th><th>赛果</th><th>赛果预测</th><th>大小球</th><th>Top1</th><th>Top3</th><th>覆盖</th><th>票单</th><th>来源</th><th>匹配</th></tr></thead><tbody>{''.join(review_rows)}</tbody></table>
     </section>
     <section>
       <h2>逐场复盘</h2>

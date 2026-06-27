@@ -418,6 +418,24 @@ def validate_prediction_snapshot(record: dict[str, Any], path: str) -> tuple[lis
         model_outputs = {}
     if not isinstance(model_outputs.get("match_analyses"), list) or not model_outputs.get("match_analyses"):
         errors.append(f"{path}.model_outputs.match_analyses: must be a non-empty list")
+    match_records = model_outputs.get("match_records", [])
+    if not isinstance(match_records, list):
+        errors.append(f"{path}.model_outputs.match_records: must be a list when present")
+        match_records = []
+    elif not match_records:
+        warnings.append(f"{path}.model_outputs.match_records: missing structured match records; post-match review/backtesting will be limited")
+    for index, match_record in enumerate(match_records):
+        record_path = f"{path}.model_outputs.match_records[{index}]"
+        for field in ("match", "score_candidates", "reference_grade", "model_confidence", "data_confidence"):
+            if field not in match_record:
+                warnings.append(f"{record_path}: missing '{field}'")
+        probabilities = match_record.get("result_probabilities")
+        if probabilities is not None:
+            probability_total = sum(float(probabilities.get(key) or 0.0) for key in ("home_win", "draw", "away_win"))
+            if abs(probability_total - 1.0) > 0.03:
+                warnings.append(f"{record_path}.result_probabilities: sum is {probability_total:.3f}; check calibration input")
+        if match_record.get("tail_risk_flags") and not match_record.get("risk_points"):
+            warnings.append(f"{record_path}: tail_risk_flags should also be explained in risk_points")
     ticket_plans = model_outputs.get("ticket_plans", [])
     if not isinstance(ticket_plans, list):
         errors.append(f"{path}.model_outputs.ticket_plans: must be a list")

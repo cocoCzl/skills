@@ -10,6 +10,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    from prediction_snapshot_tools import normalize_prediction_snapshot
+except ImportError:  # pragma: no cover - package execution fallback
+    from scripts.prediction_snapshot_tools import normalize_prediction_snapshot  # type: ignore
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
@@ -41,10 +46,34 @@ def _parse_line(value: Any) -> float | None:
 
 def _score_set(value: Any) -> list[str]:
     if isinstance(value, list):
-        return [str(item) for item in value]
+        scores = []
+        for item in value:
+            if isinstance(item, dict):
+                if item.get("score"):
+                    scores.append(str(item["score"]))
+            else:
+                scores.append(str(item))
+        return scores
     if value is None:
         return []
     return [item.strip() for item in re.split(r"/|,|，|\s+", str(value)) if item.strip()]
+
+
+def _total_goals_set(value: Any) -> set[int]:
+    if isinstance(value, list):
+        values: set[int] = set()
+        for item in value:
+            values.update(_total_goals_set(item))
+        return values
+    return {int(item) for item in re.findall(r"\d+", str(value or ""))}
+
+
+def _find_match_record(prediction: dict[str, Any], match_name: str) -> dict[str, Any] | None:
+    data = prediction.get("data") or {}
+    for record in ((data.get("model_outputs") or {}).get("match_records") or []):
+        if isinstance(record, dict) and record.get("match") == match_name:
+            return record
+    return None
 
 
 def _evaluate_leg(leg: dict[str, Any], home_goals: int, away_goals: int) -> dict[str, Any]:
@@ -65,7 +94,8 @@ def _evaluate_leg(leg: dict[str, Any], home_goals: int, away_goals: int) -> dict
             hit = _handicap_result(home_goals, away_goals, line) in selection
     elif market in {"total_goals", "总进球"} or leg.get("market") == "总进球":
         metric = "total_goals"
-        hit = f"{total}球" in selection or str(total) == selection
+        selected_totals = _total_goals_set(selection)
+        hit = total in selected_totals if selected_totals else f"{total}球" in selection or str(total) == selection
     elif market in {"correct_score", "比分"} or leg.get("market") == "比分":
         metric = "correct_score"
         hit = final_score in _score_set(selection)
@@ -81,14 +111,18 @@ def _evaluate_leg(leg: dict[str, Any], home_goals: int, away_goals: int) -> dict
 
 
 def build_review(prediction: dict[str, Any], match_name: str, home_goals: int, away_goals: int, result_source: str | None) -> dict[str, Any]:
+    prediction = normalize_prediction_snapshot(prediction) or prediction
     data = prediction.get("data") or {}
     model_outputs = data.get("model_outputs") or {}
     analyses = model_outputs.get("match_analyses") or []
     ticket_plans = model_outputs.get("ticket_plans") or []
     final_score = f"{home_goals}:{away_goals}"
     score_candidates: list[str] = []
+    match_record = _find_match_record(prediction, match_name)
+    if match_record:
+        score_candidates = _score_set(match_record.get("score_candidates"))
     for analysis in analyses:
-        if analysis.get("match") == match_name:
+        if not score_candidates and analysis.get("match") == match_name:
             score_candidates = _score_set(analysis.get("score_candidates"))
             break
 
@@ -101,6 +135,20 @@ def build_review(prediction: dict[str, Any], match_name: str, home_goals: int, a
     score_top1_hit = bool(score_candidates[:1] and final_score == score_candidates[0])
     score_top3_hit = final_score in score_candidates[:3]
     score_coverage_hit = final_score in score_candidates
+    result_probabilities = (match_record or {}).get("result_probabilities") or {}
+    predicted_result = None
+    actual_result = _match_result(home_goals, away_goals)
+    if result_probabilities:
+        top_key = max(("home_win", "draw", "away_win"), key=lambda key: float(result_probabilities.get(key) or 0.0))
+        predicted_result = {"home_win": "胜", "draw": "平", "away_win": "负"}[top_key]
+    over_under_review = None
+    ou_record = (match_record or {}).get("over_under_probabilities") or {}
+    if "line" in ou_record:
+        line = float(ou_record["line"])
+        total = home_goals + away_goals
+        actual_ou = "push" if total == line else ("over" if total > line else "under")
+        predicted_ou = "over" if float(ou_record.get("over") or 0.0) >= float(ou_record.get("under") or 0.0) else "under"
+        over_under_review = {"line": line, "predicted": predicted_ou, "actual": actual_ou, "hit": predicted_ou == actual_ou if actual_ou != "push" else None}
 
     return {
         "kind": "post_match_review",
@@ -123,13 +171,21 @@ def build_review(prediction: dict[str, Any], match_name: str, home_goals: int, a
                 "top3_hit": score_top3_hit,
                 "coverage_hit": score_coverage_hit,
             },
+            "result_review": {
+                "predicted": predicted_result,
+                "actual": actual_result,
+                "hit": predicted_result == actual_result if predicted_result else None,
+                "probabilities": result_probabilities or None,
+            },
+            "over_under_review": over_under_review,
             "leg_reviews": evaluated_legs,
             "grade_breakdown_fields": {
-                "reference_grade": None,
-                "model_confidence": None,
-                "data_confidence": None,
+                "reference_grade": (match_record or {}).get("reference_grade"),
+                "model_confidence": (match_record or {}).get("model_confidence"),
+                "data_confidence": (match_record or {}).get("data_confidence"),
                 "market_type": None,
             },
+            "tail_risk_flags": (match_record or {}).get("tail_risk_flags") or [],
         },
     }
 
@@ -158,8 +214,9 @@ def main() -> int:
     if args.home_goals < 0 or args.away_goals < 0:
         parser.error("goals must be non-negative")
         return 2
-    prediction = json.loads(args.prediction_snapshot.read_text(encoding="utf-8"))
-    if prediction.get("kind") != "prediction_snapshot":
+    raw_prediction = json.loads(args.prediction_snapshot.read_text(encoding="utf-8"))
+    prediction = normalize_prediction_snapshot(raw_prediction, str(args.prediction_snapshot))
+    if not prediction or prediction.get("kind") != "prediction_snapshot":
         parser.error("input kind must be prediction_snapshot")
         return 2
     review = build_review(prediction, args.match, args.home_goals, args.away_goals, args.result_source)

@@ -68,6 +68,18 @@ Withhold Reference Purchase Plans or Portfolio Variants when:
 - Portfolio Correlation risk is high and cannot be explained or reduced.
 - Team type is unsupported, including youth teams, age-group teams, or women's matches.
 - Team type is unknown and no suitable same-type competition parameter pool can be verified; in that case keep analysis-only or cap at `C`.
+- Conservative main plans depend on C-grade legs, hand-set xG without structured inputs, unconfirmed lineups near kickoff, weak score coverage, or material total-goals tail risk.
+
+## Total-Goals Tail Downgrades
+
+Downgrade or withhold narrow totals and exact-score core tickets when:
+
+- Final xG total is high enough to make the score matrix diffuse.
+- A favorite is on a deep handicap and both "controlled win" and "blowout" scripts are plausible.
+- Final-round group context creates goal-difference or best-third-place pressure.
+- 5+ goal tail probability is material but the ticket only covers 2/3/4 or low exact-score clusters.
+
+In these cases, either widen the total-goals set, move the leg to a high-variance optional plan, or mark it Pass for conservative portfolios.
 
 ## Language Guardrails
 

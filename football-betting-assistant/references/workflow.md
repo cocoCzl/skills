@@ -138,8 +138,9 @@ Completed pre-match Single-Match Analysis and Betting Portfolio analysis should 
 4. Match results to predictions by stable fixture IDs when available; otherwise use match name, kickoff time, competition, and team names. Low-confidence matches must be skipped and listed as `final_result_not_verified` or low-confidence identity, not forced into the review.
 5. Use `scripts/auto_post_match_review.py` to write a review bundle under `data/football/reviews/` and a Chinese HTML Review under `reports/football-betting/`. Use `scripts/post_match_review.py` only for an exact single-snapshot/single-score helper flow.
 6. Compare expected goals, score candidates, odds value, ticket legs, and risk points with the actual outcome.
-7. Identify model bias and data bias, then suggest future weighting or downgrade-rule adjustments.
-8. Do not produce chase-loss, recovery-bet, or "下一场翻本" advice.
+7. Separate result-direction, handicap, over-under/total-goals, and exact-score review. A direction hit must not hide a total-goals or score-coverage miss.
+8. Identify model bias and data bias, then suggest future weighting or downgrade-rule adjustments. For high-scoring misses, specifically check whether total xG, deep handicap, must-win/goal-difference pressure, or red-card/late-game tail risks were underweighted.
+9. Do not produce chase-loss, recovery-bet, or "下一场翻本" advice.
 
 Do not backfill post-match information into the original pre-match prediction. Save review output separately under `data/football/reviews/` or an equivalent generated-output directory.
 
@@ -148,13 +149,13 @@ Do not backfill post-match information into the original pre-match prediction. S
 Use this flow when the user wants to improve hit rate, audit predictions, or evaluate historical model quality.
 
 1. Require historical pre-match snapshots: fixture, kickoff time, odds/line observed before kickoff, team context observed before kickoff, model probabilities, score candidates, reference grade, and actual result.
-2. Reject or flag samples that mix in post-match information. If a field was not known before kickoff, mark it unavailable rather than backfilling it.
+2. Reject or flag samples that mix in post-match information. If a field was not known before kickoff, mark it unavailable rather than backfilling it. Legacy manually assembled predictions must be normalized before review/backtest, and missing probabilities/lines/grades remain unavailable.
 3. Validate samples with `scripts/validate_inputs.py` when they are supplied as JSON bundles.
 4. Run `scripts/backtest_predictions.py` on the historical sample file when local execution is available.
 5. Report hit rates for match result, over-under, and score coverage separately. Do not collapse them into one "命中率".
 6. Report probability calibration with Brier score, log loss, and probability buckets. Favor better-calibrated probabilities over louder single-pick language.
 7. Break results down by `reference_grade`, `model_confidence`, `data_confidence`, competition, and market type when sample size allows.
-8. Convert findings into specific rule changes, such as downgrading low-data A/B picks, widening score coverage for high-total matches, or passing single-source odds edges below the edge threshold.
+8. Convert findings into specific rule changes, such as downgrading low-data A/B picks, widening score coverage for high-total matches, checking 5+ goal tail before 2/3/4 total-goals tickets, or passing single-source odds edges below the edge threshold.
 9. State sample size and limitations before giving model-improvement conclusions.
 
 ## Final Checks
@@ -167,5 +168,6 @@ Before answering:
 - Check source timestamps and data gaps.
 - Apply Reference Grade and confidence rules.
 - For backtests, check that every sample used only pre-match data and that sample size is shown.
+- For high-total or deep-handicap matches, check whether 5+ goal tail probability or goal-difference pressure should block narrow total-goals tickets and exact-score core tickets.
 - For group-stage final-round matches, check that qualification context uses potential knockout-stage opponents instead of assuming the next opponent is always a round-of-16 opponent.
 - Remove certainty, pressure, bankroll-allocation, personalized stake-size, and chase-loss language.

@@ -35,8 +35,22 @@ def _leg_reason_to_exclude(leg: dict[str, Any], risk_preference: str) -> str | N
         return "C grade excluded from conservative main plans"
     if leg.get("data_confidence") == "low":
         return "low data confidence"
+    if leg.get("manual_xg") and risk_preference == "conservative":
+        return "manual xG excluded from conservative main plans"
+    if leg.get("lineup_status") in {"missing", "unconfirmed"} and risk_preference == "conservative":
+        return "lineup unconfirmed"
+    tail_flags = set(leg.get("tail_risk_flags") or [])
+    if tail_flags and risk_preference == "conservative":
+        return "material total-goals tail risk: " + "/".join(sorted(tail_flags))
     if market == "correct_score" and leg.get("score_coverage_quality") == "weak":
         return "weak score coverage"
+    if market == "correct_score" and leg.get("score_coverage_quality") != "strong" and risk_preference == "conservative":
+        return "exact-score coverage is not strong enough for conservative core plans"
+    if market in {"over_under", "total_goals"} and leg.get("selected_total_goals_max") is not None:
+        selected_max = int(leg.get("selected_total_goals_max") or 0)
+        five_plus = float(leg.get("five_plus_goal_probability") or 0.0)
+        if selected_max < 5 and five_plus >= 0.12:
+            return "total-goals selection omits material 5+ tail"
     return None
 
 

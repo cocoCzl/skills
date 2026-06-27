@@ -13,7 +13,7 @@ Every historical sample must be a pre-match snapshot plus the final result:
 - Reference grade, model confidence, data confidence, and risk points.
 - Actual full-time score and derived market outcomes.
 
-Do not use post-match xG, post-match reports, or final lineup knowledge unless it was actually available before kickoff.
+Do not use post-match xG, post-match reports, or final lineup knowledge unless it was actually available before kickoff. Legacy manually assembled prediction files may be converted into standard prediction snapshots for review, but every missing probability, line, grade, lineup, or market field must remain unavailable.
 
 ## Metrics To Report
 
@@ -21,6 +21,7 @@ Report each metric separately:
 
 - 胜平负命中率: whether the highest model result probability matched the actual result.
 - 大小球命中率: whether the model's over/under lean matched the final total against the observed line.
+- 总进球覆盖率: whether the discrete total-goals set covered the final total, and whether 5+ / 6+ / 7+ tails were omitted when pre-match tail risk was material.
 - 比分覆盖率: whether the final score was included in Top 1, Top 3, or the supplied coverage set.
 - Brier score: lower is better for probability calibration.
 - Log loss: lower is better; heavily penalizes confident wrong forecasts.
@@ -34,6 +35,7 @@ Only change model rules after a pattern repeats across enough samples. Good chan
 - Downgrade A/B picks when current data is single-source, stale, or conflicting.
 - Add Pass when model edge is small and the odds source is not consensus.
 - Widen score coverage for high total-xG matches or clear two-way scoring paths.
+- Widen total-goals coverage or downgrade totals tickets when total xG is high, the handicap is deep, final-round goal-difference pressure exists, or 5+ goal tail probability is material.
 - Avoid forcing exact-score portfolios when score probability mass is diffuse.
 - Track competitions separately when tempo or rotation patterns differ.
 
