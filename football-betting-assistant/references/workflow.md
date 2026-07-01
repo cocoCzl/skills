@@ -27,7 +27,7 @@ If the user asks to improve hit rate, accuracy, calibration, or model quality, r
 
 1. Confirm teams, competition, kickoff time, timezone, and home/away or neutral venue.
 2. Collect Odds Data when Value Judgment is requested or implied.
-3. Collect Team Form Window and current team context.
+3. Collect Team Form Window and current team context: recent form, injuries/lineups, schedule density, motivation/competition context, weather/venue context, and relevant market movement when tools or authorized providers are available.
 4. For group-stage matches, collect current standings or played results. If played results are available, calculate standings and motivation flags with `scripts/competition_context_calculator.py`.
 5. Build a Data Summary Table.
 6. Estimate expected goals from attack/defense strength, venue, competition scoring environment, and recent form. Prefer `scripts/xg_prior_calculator.py` when xG/xGA and league-average inputs exist.
@@ -75,7 +75,7 @@ When the user asks for 比分、胜平负、大小球 together, cover all reques
 - 让球/胜平负方向单: use only markets confirmed as buyable from the user's screenshot/source, up to eight legs. If ordinary 胜平负 is unavailable, state it is analysis-only and build the ticket from 让球胜平负 or another visible market.
 - 大小球/总进球单: provide at least one pure total-goals or over-under structure when the market exists in the supplied odds, up to eight legs.
 - 比分单: provide single-score, core coverage, enhanced coverage, and补洞 score sets with complete score lists for every match, but put only the four best score-concentration matches into a 比分4串1 ticket.
-- 半全场单: include only when verified HAFU odds exist; keep it as high variance and optional, with at most four legs.
+- 半全场单: include only when the user explicitly asks for 半全场 / 半场胜平负 / HAFU / 竞彩半全场 and verified HAFU odds exist; keep it as high variance and optional, with at most four legs.
 - 混合过关单: combine the strongest buyable direction legs with totals or selected scores to reduce dependence on exact-score hits. Describe it as higher tolerance than pure score strings, not as a guarantee.
 
 Do not compress portfolio analysis into only one summary table. The user should see why each match is included: source notes, model direction, top scores, risk, and grade.
@@ -122,7 +122,7 @@ Write full selections in every score coverage cell. Do not write "加 2:1"; writ
 Completed pre-match Single-Match Analysis and Betting Portfolio analysis should produce an HTML Report by default when local file writes are available.
 
 1. Use the data priority from `references/data-sources.md`: configured API first, then user-provided odds/lines/table/screenshot, then public/authorized web lookup, then no-odds downgraded analysis when enough fixture and team context exists.
-2. Do not generate a formal HTML Report when critical fixture or team context is missing. Ask for the missing inputs instead.
+2. Do not generate a full formal prediction report when critical fixture or team context is missing. Ask for the missing inputs when the missing context blocks the requested conclusion; otherwise generate only a downgraded snapshot/context report with explicit gaps.
 3. If actual odds/lines are unavailable but fixture and team context are sufficient, generate the report with Data Status `no-actual-odds-lines`. State that Ticket Plans are probability/reference structures, not complete value judgments.
 4. Build structured report JSON according to `schemas/html-report.schema.json`.
 5. Run `scripts/render_html_report.py <json-input> --out-dir reports/football-betting` from the current working directory. The renderer writes one self-contained HTML file and prevents overwriting by suffixing duplicate filenames.

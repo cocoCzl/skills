@@ -23,11 +23,27 @@
 
 真实报告输出格式以 `references/report-templates.md` 和 HTML renderer 为准，不以 `examples/` 或 `tests/fixtures/` 为准。
 
-## 🚀 默认使用方式
+## 🚀 安装和调用
 
-把 `football-betting-assistant/` 放到 Codex 或其他 agent 的 skills 目录中。用户提出足球投注分析、竞彩、胜平负、让球胜平负、比分推荐、大小球、总进球、串关、四串一或赛后复盘相关请求时，这个 skill 应自动触发。
+把仓库中的 `football-betting-assistant/` 目录安装到 Codex 或其他 agent 的 skills 目录中。不要安装 `.agent/`、`.agents/`、`.claude/`、`.pi/` 这类本地运行态目录。
 
-普通用户不需要先运行脚本，可以直接问：
+本地复制示例：
+
+```bash
+cp -R football-betting-assistant ~/.codex/skills/
+```
+
+如果这个仓库发布到你使用的 skill 安装器，也可以用对应安装命令安装；例如发布后可按安装器约定使用 `npx ...` 添加该 skill。不同 agent 的 skills 目录和安装命令可能不同，以你的 agent 文档为准。
+
+安装后，用户提出足球投注分析、竞彩、胜平负、让球胜平负、比分推荐、大小球、总进球、串关、四串一或赛后复盘相关请求时，这个 skill 应自动触发。普通用户不需要先运行脚本，可以直接问：
+
+```text
+帮我分析北京时间明天早上四场世界杯比赛，给我一个四串一参考购买方案，重点看比分和大小球。
+```
+
+更多可复制提问模板见 [`examples/football_betting_assistant/prompts.md`](../examples/football_betting_assistant/prompts.md)。
+
+安装后可以用这类问题确认触发：
 
 ```text
 帮我看下北京时间明天的几场世界杯比赛，重点看胜平负、让球、总进球和比分。
@@ -72,6 +88,8 @@ flowchart LR
 ## 🧮 数据和赔率规则
 
 这个 skill 不会声称自己天然拥有当前盘口。赔率、盘口、首发、伤停、天气等当前数据必须来自本地快照、用户提供内容、授权数据源或公开可核验来源，并记录来源和观察时间。
+
+只有 Sporttery 竞彩快照时，报告只能确认赛程、可买市场和已返回的赔率/盘口；它不是完整球队上下文分析。若球队近况、伤停/首发、赛程密度、战意、天气或赔率变化未核验，报告必须标明缺口并保持降级。
 
 数据优先级：
 
@@ -157,6 +175,14 @@ export FOOTBALL_DATA_API_KEY="your_football_data_key"
 - 赛后复盘：自动复盘会优先用 `FOOTBALL_DATA_API_KEY`、`API_FOOTBALL_KEY`、`THE_ODDS_API_KEY` 查最终比分；都不可用时，再用用户提供数据或公开网页核验。
 
 如果 provider 不可用、限频、无覆盖或返回冲突数据，报告会标记来源缺口并降级，而不是编造赛果、赔率或盘口。
+
+更完整的 provider 配置示例见 [`examples/football_betting_assistant/provider-setup.md`](../examples/football_betting_assistant/provider-setup.md)。
+
+当前实现状态：
+
+- 已有：Sporttery 竞彩快照采集、结构化校验、xG/泊松/赔率/评级脚本、HTML 报告、prediction snapshot、赛后复盘。
+- 已有：对 `API_FOOTBALL_KEY`、`FOOTBALL_DATA_API_KEY`、`THE_ODDS_API_KEY` 的用途和优先级约定。
+- 尚未完整实现：赛前 API-Football / football-data.org team-context 自动采集器。没有该采集器时，agent 应通过公开网页或用户数据补上下文；补不到就明确降级。
 
 ## 📐 数学模型说明
 

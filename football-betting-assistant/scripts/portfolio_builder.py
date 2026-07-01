@@ -25,9 +25,11 @@ def _grade_value(grade: str | None) -> int:
     return GRADE_ORDER.get(str(grade or "Pass"), 0)
 
 
-def _leg_reason_to_exclude(leg: dict[str, Any], risk_preference: str) -> str | None:
+def _leg_reason_to_exclude(leg: dict[str, Any], risk_preference: str, include_half_time_full_time: bool = False) -> str | None:
     market = str(leg.get("market") or "")
     grade = str(leg.get("grade") or "Pass")
+    if market == "half_time_full_time" and not include_half_time_full_time:
+        return "half-time/full-time requires explicit user request"
     if leg.get("market_available") is False:
         return "market unavailable"
     if grade == "Pass":
@@ -71,6 +73,7 @@ def _sort_legs(legs: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def build_portfolio(document: dict[str, Any]) -> dict[str, Any]:
     risk_preference = str(document.get("risk_preference") or "conservative")
+    include_half_time_full_time = bool(document.get("include_half_time_full_time") or document.get("explicit_half_time_full_time_request"))
     unit_price = int(document.get("unit_price") or 2)
     raw_legs = document.get("legs")
     if not isinstance(raw_legs, list) or not raw_legs:
@@ -79,7 +82,7 @@ def build_portfolio(document: dict[str, Any]) -> dict[str, Any]:
     eligible: list[dict[str, Any]] = []
     excluded: list[dict[str, Any]] = []
     for leg in raw_legs:
-        reason = _leg_reason_to_exclude(leg, risk_preference)
+        reason = _leg_reason_to_exclude(leg, risk_preference, include_half_time_full_time)
         if reason:
             excluded.append({"match": leg.get("match"), "market": leg.get("market"), "selection": leg.get("selection"), "reason": reason})
         else:
@@ -118,11 +121,13 @@ def build_portfolio(document: dict[str, Any]) -> dict[str, Any]:
     return {
         "kind": "portfolio_candidate_record",
         "risk_preference": risk_preference,
+        "include_half_time_full_time": include_half_time_full_time,
         "ticket_plans": ticket_plans,
         "excluded_legs": excluded,
         "correlation_notes": document.get("correlation_notes", []),
         "notes": [
             "Conservative mode excludes C-grade, Pass, unavailable, low-data, and weak score-coverage legs from main plans.",
+            "Half-time/full-time legs are excluded unless include_half_time_full_time or explicit_half_time_full_time_request is true.",
             "Ticket size is selected from eligible legs and is not forced to fourfold or eightfold.",
         ],
     }
