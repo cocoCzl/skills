@@ -23,6 +23,8 @@ Report each metric separately:
 - 大小球命中率: whether the model's over/under lean matched the final total against the observed line.
 - 总进球覆盖率: whether the discrete total-goals set covered the final total, and whether 5+ / 6+ / 7+ tails were omitted when pre-match tail risk was material.
 - 比分覆盖率: whether the final score was included in Top 1, Top 3, or the supplied coverage set.
+- 组合构造错误率: whether the final score or handicap outcome was present in score coverage / protection candidates but omitted from the actual ticket leg.
+- 票腿命中率: evaluate saved ticket legs separately from model probability leans; do not let a correct score coverage hide a failed purchase-plan leg.
 - Brier score: lower is better for probability calibration.
 - Log loss: lower is better; heavily penalizes confident wrong forecasts.
 - Calibration buckets: compare predicted probability buckets with actual hit rates.
@@ -37,6 +39,8 @@ Only change model rules after a pattern repeats across enough samples. Good chan
 - Widen score coverage for high total-xG matches or clear two-way scoring paths.
 - Widen total-goals coverage or downgrade totals tickets when total xG is high, the handicap is deep, final-round goal-difference pressure exists, or 5+ goal tail probability is material.
 - Avoid forcing exact-score portfolios when score probability mass is diffuse.
+- Do not collapse protected handicap paths into a single leg. If the model says `+1` needs one-goal-loss protection, add `让平` or downgrade; if `-1 让负` has a meaningful cover-score path, add protection or downgrade.
+- If a miss was already in score coverage or protection candidates, tune portfolio construction before changing xG priors.
 - Track competitions separately when tempo or rotation patterns differ.
 
 ## Report Wording

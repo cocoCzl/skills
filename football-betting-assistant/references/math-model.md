@@ -112,6 +112,11 @@ Every score coverage section should explain primary path, secondary path, and
 missed-path protection. If coverage is weak, keep score picks as analysis or
 optional high-variance ideas rather than a main ticket.
 
+Portfolio construction must consume the missed-path protection. A score or
+handicap outcome that is listed as protection cannot be silently dropped from a
+conservative main plan; either add the corresponding selection, downgrade the
+leg to backup, or exclude it.
+
 ## Implied Probability
 
 For decimal odds:

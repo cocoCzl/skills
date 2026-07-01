@@ -60,7 +60,7 @@ For group-stage final-round matches, calculate qualification context before trea
 8. For each match, include source notes, group/table context, basic football context, match script, model record, result lean, handicap lean, over-under/total-goals lean, score ranking, reference grade, and risk.
 9. Check Portfolio Correlation: competition stage, same group/table incentives, rotation, weather clusters, and shared market assumptions.
 10. Exclude Pass matches or matches with severe Information Sufficiency gaps from tickets, but still show their single-match analysis and explain why they are not in the main plan.
-11. Build portfolio variants from the actual model confidence, score concentration, market availability, and user intent. Do not force fixed 2/16/32/48 元 tiers or force a 4/6/8-leg ticket. Calculate units as the product of selected outcomes per match and show amount only as `units x 2 元/unit`.
+11. Build portfolio variants from the actual model confidence, score concentration, market availability, and user intent. Do not force fixed 2/16/32/48 元 tiers or force a 4/6/8-leg ticket. Conservative main plans must inherit the risk paths described in the analysis: use `risk_flags`, `protection_candidates`, `must_protect_selections`, score candidates, and handicap line to expand, downgrade, or exclude narrow legs before calculating units.
 12. Apply ticket limits by market family: exact-score tickets may use up to four matches; 胜平负 / 让球胜平负 direction tickets may use up to eight matches; 大小球 / 总进球 direction tickets may use up to eight matches. Mixed tickets may use up to eight matches, but if exact-score legs dominate, keep them to four matches.
 13. If the strongest fourfold contains any obvious risk leg (missing group context, low data confidence, high rotation risk, route-selection risk, or market/result conflict), also provide a "更稳三串一" that removes the riskiest leg. If fewer than three low-risk eligible legs remain, provide a "更稳二串一" and explain why the model did not force three legs.
 14. Add named portfolio variants when supported by the data: 模型最稳主单, 更稳三串一/二串一, 让球/胜平负方向单, 大小球/总进球单, 单比分主推小单, 比分4串1, 基础比分覆盖, 增强比分覆盖, 混合过关单, 备选/替换, 可选小组合, 补洞单, and 搏冷/高赔率小单. Keep speculative variants clearly optional and high variance.
@@ -95,6 +95,7 @@ Construct the ticket structures from the full match slate:
 - For 胜平负 / 让球胜平负 tickets, select up to eight matches with the strongest direction confidence and confirmed buyable markets.
 - For 大小球 / 总进球 tickets, select up to eight matches with the clearest total-goals or over-under edge.
 - Use wider coverage on the most volatile match, not mechanically on the first match.
+- Treat "covered in analysis but omitted from the ticket" as a portfolio construction error. A `+1` leg with an explicit opponent one-goal-win path needs `让平` protection or downgrade; a `-1 让负` leg with meaningful favorite-cover scores needs protection or downgrade.
 - If the user proposes their own score list, evaluate it directly: say what is合理, what is漏防, and how to补洞 if they have already bought it.
 - Show every ticket as `A x B x C... = N 注`; amount is `N x 2 元/unit = X 元` unless the user gives a different unit price.
 
@@ -140,7 +141,7 @@ Completed pre-match Single-Match Analysis and Betting Portfolio analysis should 
 5. Use `scripts/auto_post_match_review.py` to write a review bundle under `data/football/reviews/` and a Chinese HTML Review under `reports/football-betting/`. Use `scripts/post_match_review.py` only for an exact single-snapshot/single-score helper flow.
 6. Compare expected goals, score candidates, odds value, ticket legs, and risk points with the actual outcome.
 7. Separate result-direction, handicap, over-under/total-goals, and exact-score review. A direction hit must not hide a total-goals or score-coverage miss.
-8. Identify model bias and data bias, then suggest future weighting or downgrade-rule adjustments. For high-scoring misses, specifically check whether total xG, deep handicap, must-win/goal-difference pressure, or red-card/late-game tail risks were underweighted.
+8. Identify model bias, data bias, and portfolio-construction bias separately. If the actual score or handicap outcome was present in score coverage or protection candidates but not in the main ticket, label it a construction error and tighten protection/downgrade rules instead of pretending the model never saw the path. For high-scoring misses, specifically check whether total xG, deep handicap, must-win/goal-difference pressure, or red-card/late-game tail risks were underweighted.
 9. Do not produce chase-loss, recovery-bet, or "下一场翻本" advice.
 
 Do not backfill post-match information into the original pre-match prediction. Save review output separately under `data/football/reviews/` or an equivalent generated-output directory.

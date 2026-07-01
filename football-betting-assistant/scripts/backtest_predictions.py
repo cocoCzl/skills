@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -66,6 +67,119 @@ def _score_hit(candidates: list[dict[str, Any]], actual_score: str, top_n: int) 
     return any(item.get("score") == actual_score for item in candidates[:top_n])
 
 
+def _score_strings(value: Any) -> list[str]:
+    if isinstance(value, list):
+        raw_items = value
+    elif value is None:
+        raw_items = []
+    else:
+        raw_items = re.split(r"/|,|，|\s+", str(value))
+    scores: list[str] = []
+    for item in raw_items:
+        raw_score = item.get("score") if isinstance(item, dict) else item
+        match = re.search(r"(\d+)\s*:\s*(\d+)", str(raw_score or ""))
+        if match:
+            scores.append(f"{int(match.group(1))}:{int(match.group(2))}")
+    return scores
+
+
+def _parse_handicap_line(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    match = re.search(r"[-+]?\d+(?:\.\d+)?", str(value))
+    return float(match.group(0)) if match else None
+
+
+def _match_result_label(home_goals: int, away_goals: int) -> str:
+    if home_goals > away_goals:
+        return "胜"
+    if home_goals == away_goals:
+        return "平"
+    return "负"
+
+
+def _handicap_result_label(home_goals: int, away_goals: int, line: float) -> str:
+    adjusted = home_goals + line - away_goals
+    if adjusted > 0:
+        return "让胜"
+    if adjusted == 0:
+        return "让平"
+    return "让负"
+
+
+def _selected_total_goals(value: Any) -> set[int]:
+    if isinstance(value, list):
+        selected: set[int] = set()
+        for item in value:
+            selected.update(_selected_total_goals(item))
+        return selected
+    return {int(item) for item in re.findall(r"\d+", str(value or ""))}
+
+
+def _leg_hit(leg: dict[str, Any], home_goals: int, away_goals: int) -> bool | None:
+    market = str(leg.get("source_snapshot_market") or leg.get("market") or "")
+    selection = str(leg.get("selection") or "")
+    if market in {"match_result", "胜平负"}:
+        return _match_result_label(home_goals, away_goals) in selection
+    if market in {"handicap_match_result", "让球胜平负"}:
+        line = _parse_handicap_line(leg.get("source_line") or leg.get("line") or leg.get("handicap_line"))
+        if line is None:
+            return None
+        return _handicap_result_label(home_goals, away_goals, line) in selection
+    if market in {"total_goals", "总进球"}:
+        selected = _selected_total_goals(selection)
+        return (home_goals + away_goals) in selected if selected else None
+    if market in {"correct_score", "比分"}:
+        return f"{home_goals}:{away_goals}" in _score_strings(selection)
+    return None
+
+
+def _actual_in_protection(leg: dict[str, Any], home_goals: int, away_goals: int) -> bool:
+    actual_score = f"{home_goals}:{away_goals}"
+    protection_scores = _score_strings(leg.get("protection_candidates") or leg.get("missed_path_protection") or leg.get("score_candidates"))
+    if actual_score in protection_scores:
+        return True
+    if str(leg.get("source_snapshot_market") or leg.get("market") or "") in {"handicap_match_result", "让球胜平负"}:
+        line = _parse_handicap_line(leg.get("source_line") or leg.get("line") or leg.get("handicap_line"))
+        if line is not None:
+            actual_handicap = _handicap_result_label(home_goals, away_goals, line)
+            protection_text = " / ".join(str(item) for item in (leg.get("protection_candidates") or []))
+            return actual_handicap in protection_text
+    return False
+
+
+def _evaluate_ticket_legs(prediction: dict[str, Any], home_goals: int, away_goals: int, coverage_hit: bool) -> dict[str, Any]:
+    ticket_plans = prediction.get("ticket_plans") or []
+    leg_count = 0
+    known_count = 0
+    hit_count = 0
+    missed_but_in_coverage = 0
+    protection_available = 0
+    construction_errors = 0
+    for plan in ticket_plans:
+        for leg in plan.get("legs", []) or []:
+            leg_count += 1
+            hit = _leg_hit(leg, home_goals, away_goals)
+            if hit is not None:
+                known_count += 1
+                hit_count += int(hit)
+                if not hit and coverage_hit:
+                    missed_but_in_coverage += 1
+            if _actual_in_protection(leg, home_goals, away_goals):
+                protection_available += 1
+                if hit is False:
+                    construction_errors += 1
+    return {
+        "ticket_leg_count": leg_count,
+        "ticket_leg_evaluated_count": known_count,
+        "ticket_leg_hit_count": hit_count,
+        "ticket_leg_hit_rate": _rate(hit_count, known_count),
+        "missed_but_in_coverage_count": missed_but_in_coverage,
+        "protected_path_available_count": protection_available,
+        "portfolio_construction_error_count": construction_errors,
+    }
+
+
 def calculate(samples: list[dict[str, Any]]) -> dict[str, Any]:
     result_hits = 0
     ou_hits = 0
@@ -75,6 +189,11 @@ def calculate(samples: list[dict[str, Any]]) -> dict[str, Any]:
     coverage_hits = 0
     brier_scores: list[float] = []
     log_losses: list[float] = []
+    ticket_leg_hits = 0
+    ticket_leg_count = 0
+    missed_but_in_coverage_total = 0
+    protected_path_available_total = 0
+    portfolio_construction_error_total = 0
     grade_stats: dict[str, dict[str, int]] = defaultdict(lambda: {"count": 0, "result_hits": 0, "score_top3_hits": 0})
     confidence_stats: dict[str, dict[str, int]] = defaultdict(lambda: {"count": 0, "result_hits": 0})
     bucket_stats: dict[str, dict[str, int]] = defaultdict(lambda: {"count": 0, "hits": 0})
@@ -94,6 +213,7 @@ def calculate(samples: list[dict[str, Any]]) -> dict[str, Any]:
         top1_hit = _score_hit(score_candidates, actual_score, 1)
         top3_hit = _score_hit(score_candidates, actual_score, 3)
         coverage_hit = any(item.get("score") == actual_score for item in score_candidates)
+        ticket_review = _evaluate_ticket_legs(prediction, home_goals, away_goals, coverage_hit)
 
         result_hits += int(result_hit)
         top1_hits += int(top1_hit)
@@ -101,6 +221,11 @@ def calculate(samples: list[dict[str, Any]]) -> dict[str, Any]:
         coverage_hits += int(coverage_hit)
         brier_scores.append(_brier(probabilities, actual_key))
         log_losses.append(_log_loss(probabilities, actual_key))
+        ticket_leg_hits += ticket_review["ticket_leg_hit_count"]
+        ticket_leg_count += ticket_review["ticket_leg_evaluated_count"]
+        missed_but_in_coverage_total += ticket_review["missed_but_in_coverage_count"]
+        protected_path_available_total += ticket_review["protected_path_available_count"]
+        portfolio_construction_error_total += ticket_review["portfolio_construction_error_count"]
 
         grade = prediction.get("reference_grade", "unknown")
         grade_stats[grade]["count"] += 1
@@ -140,6 +265,7 @@ def calculate(samples: list[dict[str, Any]]) -> dict[str, Any]:
             "over_under_predicted": ou_predicted,
             "over_under_actual": ou_actual,
             "over_under_hit": ou_hit,
+            "ticket_review": ticket_review,
             "reference_grade": grade,
             "model_confidence": model_confidence,
             "data_confidence": prediction.get("data_confidence")
@@ -154,6 +280,11 @@ def calculate(samples: list[dict[str, Any]]) -> dict[str, Any]:
         "score_top1_hit_rate": _rate(top1_hits, sample_count),
         "score_top3_hit_rate": _rate(top3_hits, sample_count),
         "score_coverage_hit_rate": _rate(coverage_hits, sample_count),
+        "ticket_leg_hit_rate": _rate(ticket_leg_hits, ticket_leg_count),
+        "ticket_leg_sample_count": ticket_leg_count,
+        "missed_but_in_coverage_count": missed_but_in_coverage_total,
+        "protected_path_available_count": protected_path_available_total,
+        "portfolio_construction_error_count": portfolio_construction_error_total,
         "brier_score_mean": _mean(brier_scores),
         "log_loss_mean": _mean(log_losses),
         "grade_breakdown": {

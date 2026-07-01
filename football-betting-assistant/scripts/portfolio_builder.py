@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -59,6 +60,123 @@ def _leg_reason_to_exclude(leg: dict[str, Any], risk_preference: str, include_ha
     return None
 
 
+def _score_values(value: Any) -> list[tuple[int, int]]:
+    if isinstance(value, list):
+        raw_items = value
+    elif value is None:
+        raw_items = []
+    else:
+        raw_items = re.split(r"/|,|，|\s+", str(value))
+    scores: list[tuple[int, int]] = []
+    for item in raw_items:
+        raw_score = item.get("score") if isinstance(item, dict) else item
+        match = re.search(r"(\d+)\s*:\s*(\d+)", str(raw_score or ""))
+        if match:
+            scores.append((int(match.group(1)), int(match.group(2))))
+    return scores
+
+
+def _parse_handicap_line(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    match = re.search(r"[-+]?\d+(?:\.\d+)?", str(value))
+    return float(match.group(0)) if match else None
+
+
+def _handicap_outcome(home_goals: int, away_goals: int, line: float) -> str:
+    adjusted = home_goals + line - away_goals
+    if adjusted > 0:
+        return "让胜"
+    if adjusted == 0:
+        return "让平"
+    return "让负"
+
+
+def _ordered_unique(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        text = str(value).strip()
+        if text and text not in seen:
+            result.append(text)
+            seen.add(text)
+    return result
+
+
+def _explicit_protection_candidates(leg: dict[str, Any]) -> list[str]:
+    candidates: list[str] = []
+    for key in ("must_protect_selections", "protection_candidates", "missed_path_protection"):
+        value = leg.get(key)
+        if isinstance(value, list):
+            candidates.extend(str(item) for item in value)
+        elif value:
+            candidates.extend(item.strip() for item in re.split(r"/|,|，", str(value)) if item.strip())
+    return _ordered_unique(candidates)
+
+
+def _inferred_handicap_protection(leg: dict[str, Any]) -> list[str]:
+    if str(leg.get("market") or "") != "handicap_match_result":
+        return []
+    line = _parse_handicap_line(leg.get("source_line") or leg.get("line") or leg.get("handicap_line"))
+    if line is None:
+        return []
+    scores = _score_values(
+        leg.get("score_candidates")
+        or leg.get("enhanced_scores")
+        or leg.get("score_coverage")
+        or leg.get("coverage_scores")
+    )
+    if not scores:
+        return []
+    selection = str(leg.get("selection") or "")
+    outcomes = [_handicap_outcome(home_goals, away_goals, line) for home_goals, away_goals in scores]
+    return _ordered_unique([outcome for outcome in outcomes if outcome not in selection])
+
+
+def _needs_protection(leg: dict[str, Any]) -> bool:
+    flags = {str(flag) for flag in (leg.get("risk_flags") or leg.get("tail_risk_flags") or [])}
+    protection_flags = {
+        "must_protect",
+        "one_goal_margin_risk",
+        "draw_weight_high",
+        "score_distribution_diffuse",
+        "favorite_cover_risk",
+        "underdog_transition_threat",
+        "missed_path_protection",
+    }
+    return bool(flags & protection_flags) or bool(_explicit_protection_candidates(leg)) or bool(_inferred_handicap_protection(leg))
+
+
+def _apply_protection(leg: dict[str, Any], risk_preference: str) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    protected = dict(leg)
+    candidates = _ordered_unique(_explicit_protection_candidates(protected) + _inferred_handicap_protection(protected))
+    if risk_preference != "conservative" or not _needs_protection(protected):
+        protected["protection_action"] = "single_selection_retained"
+        protected["protection_candidates"] = candidates
+        return protected, None
+    if not candidates:
+        protected["protection_action"] = "single_selection_retained_no_candidate"
+        protected["protection_candidates"] = []
+        return protected, None
+    if protected.get("allow_protection_expansion") is False:
+        return None, {
+            "match": protected.get("match"),
+            "market": protected.get("market"),
+            "selection": protected.get("selection"),
+            "reason": "unprotected risk path requires backup selection or downgrade",
+            "protection_candidates": candidates,
+        }
+
+    selections = _ordered_unique([str(protected.get("selection") or "")] + candidates)
+    protected["selection"] = " / ".join(selections)
+    protected["selection_count"] = len(selections)
+    protected["protection_candidates"] = candidates
+    protected["protected_selection"] = protected["selection"]
+    protected["protection_action"] = "expanded_with_risk_protection"
+    protected["portfolio_action_reason"] = "Conservative main plan inherited risk-path protection from score coverage or explicit risk flags."
+    return protected, None
+
+
 def _sort_legs(legs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(
         legs,
@@ -86,7 +204,11 @@ def build_portfolio(document: dict[str, Any]) -> dict[str, Any]:
         if reason:
             excluded.append({"match": leg.get("match"), "market": leg.get("market"), "selection": leg.get("selection"), "reason": reason})
         else:
-            eligible.append(leg)
+            protected_leg, protection_exclusion = _apply_protection(leg, risk_preference)
+            if protection_exclusion:
+                excluded.append(protection_exclusion)
+            elif protected_leg:
+                eligible.append(protected_leg)
 
     by_market: dict[str, list[dict[str, Any]]] = {}
     for leg in eligible:
@@ -115,6 +237,15 @@ def build_portfolio(document: dict[str, Any]) -> dict[str, Any]:
                 "amount_text": f"{unit_count} 注 x {unit_price} 元/注 = {unit_count * unit_price} 元",
                 "risk_level": "中" if len(selected) <= 4 else "中高",
                 "reason": "Selected from buyable, non-Pass, sufficient-data legs without forcing maximum leg count.",
+                "protection_actions": [
+                    {
+                        "match": leg.get("match"),
+                        "selection": leg.get("selection"),
+                        "action": leg.get("protection_action", "single_selection_retained"),
+                        "reason": leg.get("portfolio_action_reason"),
+                    }
+                    for leg in selected
+                ],
             }
         )
 
@@ -129,6 +260,7 @@ def build_portfolio(document: dict[str, Any]) -> dict[str, Any]:
             "Conservative mode excludes C-grade, Pass, unavailable, low-data, and weak score-coverage legs from main plans.",
             "Half-time/full-time legs are excluded unless include_half_time_full_time or explicit_half_time_full_time_request is true.",
             "Ticket size is selected from eligible legs and is not forced to fourfold or eightfold.",
+            "Conservative main plans inherit explicit or inferred risk-path protection before selecting ticket legs.",
         ],
     }
 

@@ -47,6 +47,15 @@ MOTIVATION_FLAGS = {
     "must_avoid_loss",
     "must_win_pressure",
 }
+PROTECTION_RISK_FLAGS = {
+    "must_protect",
+    "one_goal_margin_risk",
+    "draw_weight_high",
+    "score_distribution_diffuse",
+    "favorite_cover_risk",
+    "underdog_transition_threat",
+    "missed_path_protection",
+}
 
 
 def _missing(record: dict[str, Any], fields: list[str]) -> list[str]:
@@ -56,6 +65,20 @@ def _missing(record: dict[str, Any], fields: list[str]) -> list[str]:
 def _warn_timestamp(record: dict[str, Any], label: str, warnings: list[str]) -> None:
     if not record.get("observed_at"):
         warnings.append(f"{label}: missing source timestamp")
+
+
+def _warn_unprotected_ticket_leg(leg: dict[str, Any], path: str, warnings: list[str]) -> None:
+    risk_flags = {str(flag) for flag in (leg.get("risk_flags") or leg.get("tail_risk_flags") or [])}
+    has_protection_signal = bool(risk_flags & PROTECTION_RISK_FLAGS)
+    has_backup = bool(
+        leg.get("protection_candidates")
+        or leg.get("must_protect_selections")
+        or leg.get("protected_selection")
+        or leg.get("protection_action") == "expanded_with_risk_protection"
+        or "/" in str(leg.get("selection") or "")
+    )
+    if has_protection_signal and not has_backup:
+        warnings.append(f"{path}: risk flags require backup selection, protection action, or downgrade reason")
 
 
 def validate_fixture(record: dict[str, Any], path: str) -> tuple[list[str], list[str]]:
@@ -170,6 +193,7 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
             selection_text = " ".join(str(leg.get(field, "")) for field in ("market", "selection", "selection_basis"))
             if any(marker in selection_text for marker in ("加 ", "加:", "加：")):
                 warnings.append(f"{path}.ticket_tiers[{i}].legs[{leg_index}]: write complete score sets instead of shorthand additions")
+            _warn_unprotected_ticket_leg(leg, f"{path}.ticket_tiers[{i}].legs[{leg_index}]", warnings)
     for variant_name in ("more_combination_candidates",):
         variants = record.get(variant_name) or []
         for variant_index, variant in enumerate(variants, start=1):
@@ -184,6 +208,7 @@ def validate_portfolio(record: dict[str, Any], path: str) -> tuple[list[str], li
                     errors.append(f"{path}.{variant_name}[{variant_index}].legs[{i}]: market_type is invalid")
                 if leg.get("market_available") is False and leg.get("market_type") != "analysis_only":
                     errors.append(f"{path}.{variant_name}[{variant_index}].legs[{i}]: unavailable markets cannot be used in purchase plans")
+                _warn_unprotected_ticket_leg(leg, f"{path}.{variant_name}[{variant_index}].legs[{i}]", warnings)
     if record.get("portfolio_risk_tier") == "high":
         warnings.append(f"{path}: high portfolio risk tier; ensure aggressive framing is explicit")
     return errors, warnings
@@ -453,6 +478,7 @@ def validate_prediction_snapshot(record: dict[str, Any], path: str) -> tuple[lis
                 errors.append(f"{path}.model_outputs.ticket_plans[{index}].legs[{leg_index}]: unavailable markets cannot be used in purchase plans")
             if not leg.get("source_snapshot_market"):
                 warnings.append(f"{path}.model_outputs.ticket_plans[{index}].legs[{leg_index}]: missing source_snapshot_market")
+            _warn_unprotected_ticket_leg(leg, f"{path}.model_outputs.ticket_plans[{index}].legs[{leg_index}]", warnings)
     if not record.get("html_report_path"):
         errors.append(f"{path}: html_report_path is required")
     if not record.get("html_report_input_path"):

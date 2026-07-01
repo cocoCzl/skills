@@ -215,6 +215,8 @@ Portfolio rules:
 - Score Coverage may include up to four scores per match only when the football case supports wider coverage.
 - When the user provides a proposed ticket, evaluate their ticket first before suggesting replacement plans.
 - Exclude matches that are Pass or have severe data gaps.
+- Main-ticket selections must remain consistent with the risk section. If the analysis says a draw, one-goal margin, favorite-cover, underdog-goal, or late-expansion path is important, the ticket table must either include the protection selection, downgrade the match to backup, or explicitly list it under Pass / 排除项.
+- Do not present a single narrow handicap leg as "模型最稳" when score coverage already shows its miss path. Examples: `+1 让胜` needs `让平` if opponent one-goal win is a main path; `-1 让负` needs protection or downgrade if 2:0 / 3:1 cover scores are meaningful.
 
 ## HTML Report Structure
 

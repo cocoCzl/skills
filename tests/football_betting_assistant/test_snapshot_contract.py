@@ -971,6 +971,149 @@ class SnapshotContractTests(unittest.TestCase):
         self.assertEqual(len(payload["ticket_plans"][0]["legs"]), 2)
         self.assertEqual(payload["ticket_plans"][0]["unit_math"], "1 注")
 
+    def test_portfolio_builder_expands_handicap_leg_for_one_goal_risk(self) -> None:
+        document = {
+            "risk_preference": "conservative",
+            "legs": [
+                {
+                    "match": "科特迪瓦 vs 挪威",
+                    "market": "handicap_match_result",
+                    "source_line": "+1",
+                    "selection": "让胜",
+                    "grade": "B",
+                    "market_available": True,
+                    "data_confidence": "medium",
+                    "risk_flags": ["one_goal_margin_risk", "score_distribution_diffuse"],
+                    "score_candidates": ["1:1", "0:1", "1:2"],
+                },
+                {
+                    "match": "法国 vs 瑞典",
+                    "market": "match_result",
+                    "selection": "胜",
+                    "grade": "B",
+                    "market_available": True,
+                    "data_confidence": "medium",
+                },
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "portfolio-protection.json"
+            path.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+            result = subprocess.run(
+                ["python3", str(PORTFOLIO_BUILDER), str(path)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        handicap_plan = next(plan for plan in payload["ticket_plans"] if plan["market_family"] == "handicap_match_result")
+        leg = handicap_plan["legs"][0]
+        self.assertEqual(leg["selection"], "让胜 / 让平")
+        self.assertEqual(leg["selection_count"], 2)
+        self.assertEqual(leg["protection_action"], "expanded_with_risk_protection")
+        self.assertTrue(any(action["action"] == "expanded_with_risk_protection" for action in handicap_plan["protection_actions"]))
+
+    def test_portfolio_builder_expands_minus_one_no_cover_when_cover_score_is_in_coverage(self) -> None:
+        document = {
+            "risk_preference": "conservative",
+            "legs": [
+                {
+                    "match": "墨西哥 vs 厄瓜多尔",
+                    "market": "handicap_match_result",
+                    "source_line": "-1",
+                    "selection": "让负",
+                    "grade": "B",
+                    "market_available": True,
+                    "data_confidence": "medium",
+                    "risk_flags": ["favorite_cover_risk"],
+                    "score_candidates": ["1:0", "1:1", "0:0", "2:0"],
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "portfolio-minus-one.json"
+            path.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+            result = subprocess.run(
+                ["python3", str(PORTFOLIO_BUILDER), str(path)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        leg = payload["ticket_plans"][0]["legs"][0]
+        self.assertEqual(leg["selection"], "让负 / 让平 / 让胜")
+        self.assertEqual(leg["selection_count"], 3)
+        self.assertEqual(payload["ticket_plans"][0]["unit_math"], "3 注")
+
+    def test_backtest_reports_portfolio_construction_error_when_coverage_had_the_result(self) -> None:
+        document = {
+            "kind": "backtest_samples",
+            "data": {
+                "samples": [
+                    {
+                        "sample_id": "construction-error-001",
+                        "fixture": {
+                            "home_team": "科特迪瓦",
+                            "away_team": "挪威",
+                            "competition": "世界杯",
+                            "kickoff_time": "2026-07-01T01:00:00+08:00",
+                            "timezone": "Asia/Shanghai",
+                            "venue_type": "neutral",
+                        },
+                        "prediction": {
+                            "observed_at": "2026-06-30T12:20:00+08:00",
+                            "result_probabilities": {"home_win": 0.257, "draw": 0.254, "away_win": 0.489},
+                            "score_candidates": [
+                                {"score": "1:1", "probability": 0.121},
+                                {"score": "0:1", "probability": 0.115},
+                                {"score": "1:2", "probability": 0.094},
+                            ],
+                            "ticket_plans": [
+                                {
+                                    "name": "模型最稳主单",
+                                    "legs": [
+                                        {
+                                            "match": "科特迪瓦 vs 挪威",
+                                            "market": "让球胜平负",
+                                            "source_snapshot_market": "handicap_match_result",
+                                            "source_line": "+1",
+                                            "selection": "让胜",
+                                            "protection_candidates": ["让平"],
+                                        }
+                                    ],
+                                }
+                            ],
+                            "reference_grade": "B",
+                            "model_confidence": "medium",
+                            "data_confidence": "medium",
+                        },
+                        "actual_result": {"home_goals": 1, "away_goals": 2},
+                    }
+                ]
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "backtest-construction-error.json"
+            path.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+            result = subprocess.run(
+                ["python3", str(SKILL / "scripts" / "backtest_predictions.py"), str(path)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["ticket_leg_sample_count"], 1)
+        self.assertEqual(payload["ticket_leg_hit_rate"], 0.0)
+        self.assertEqual(payload["missed_but_in_coverage_count"], 1)
+        self.assertEqual(payload["protected_path_available_count"], 1)
+        self.assertEqual(payload["portfolio_construction_error_count"], 1)
+
     def run_late_rules(self, document: dict) -> dict:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "late.json"
