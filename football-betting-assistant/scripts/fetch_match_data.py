@@ -38,13 +38,14 @@ MARKET_MAP = {
     "比分": "correct_score",
     "总进球": "total_goals",
     "大小球": "over_under",
+    "半全场胜平负": "half_time_full_time",
 }
 POOL_MARKET_MAP = {
     "HAD": ("match_result", "胜平负"),
     "HHAD": ("handicap_match_result", "让球胜平负"),
     "CRS": ("correct_score", "比分"),
     "TTG": ("total_goals", "总进球"),
-    "HAFU": ("unsupported_market", "半全场胜平负"),
+    "HAFU": ("half_time_full_time", "半全场胜平负"),
 }
 
 
@@ -242,6 +243,24 @@ def _odds_market(pool_code: str, odds: dict[str, Any] | None, pool: dict[str, An
             price = _price(odds.get(key))
             if price is not None:
                 selections.append({"name": label, "odds": price, "source_name": key, "available": True})
+    elif pool_code == "HAFU":
+        # Sporttery HAFU feeds commonly use first letter for half-time result
+        # and second letter for full-time result: h=胜, d=平, a=负.
+        for keys, label in (
+            (("hh", "h_h", "sHH", "sHh"), "胜胜"),
+            (("hd", "h_d", "sHD", "sHd"), "胜平"),
+            (("ha", "h_a", "sHA", "sHa"), "胜负"),
+            (("dh", "d_h", "sDH", "sDh"), "平胜"),
+            (("dd", "d_d", "sDD", "sDd"), "平平"),
+            (("da", "d_a", "sDA", "sDa"), "平负"),
+            (("ah", "a_h", "sAH", "sAh"), "负胜"),
+            (("ad", "a_d", "sAD", "sAd"), "负平"),
+            (("aa", "a_a", "sAA", "sAa"), "负负"),
+        ):
+            source_key = next((key for key in keys if _price(odds.get(key)) is not None), keys[0])
+            price = _price(odds.get(source_key))
+            if price is not None:
+                selections.append({"name": label, "odds": price, "source_name": source_key, "available": True})
 
     if selections:
         availability = _availability("available", "available")

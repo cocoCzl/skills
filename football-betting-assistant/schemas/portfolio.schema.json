@@ -49,7 +49,7 @@
               "market": { "type": "string", "minLength": 1 },
               "market_type": {
                 "type": "string",
-                "enum": ["ordinary_result", "handicap_result", "correct_score", "over_under", "total_goals", "mixed", "analysis_only"]
+                "enum": ["ordinary_result", "handicap_result", "correct_score", "over_under", "total_goals", "half_time_full_time", "mixed", "analysis_only"]
               },
               "market_available": { "type": "boolean" },
               "selection": { "type": "string", "minLength": 1 },

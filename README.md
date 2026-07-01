@@ -16,7 +16,7 @@
 cp -R football-betting-assistant ~/.codex/skills/
 ```
 
-不同 agent 的 skills 目录可能不同；以你使用的 agent 文档为准。仓库里的顶层 skill 目录才是开源源码，`.agent/`、`.agents/`、`.claude/`、`.pi/` 等目录是本地运行态或安装态目录，不应该提交。
+不同 agent 的 skills 目录可能不同；以你使用的 agent 文档为准。仓库里的顶层 skill 目录才是开源源码，`.agent/`、`.agents/`、`.claude/`、`.pi/` 等目录是本地运行态或安装态目录，不应该提交。开发或修复已有 skill 时，必须只修改顶层源码目录，例如 `football-betting-assistant/`，不要修改 `.agents/skills/...` 的本地安装副本。
 
 ## 仓库结构
 

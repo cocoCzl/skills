@@ -33,6 +33,7 @@ MARKET_LABELS = {
     "correct_score": "比分",
     "over_under": "大小球",
     "total_goals": "总进球",
+    "half_time_full_time": "半全场",
 }
 GROUP_STAGE_KEYWORDS = ("小组", "第3轮", "第三轮", "收官", "出线")
 HIGH_RISK_FLAGS = {
@@ -284,6 +285,7 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "protection": "等待球队数据和模型概率后确认",
                 "handicap_pick": selection_text(next((m for m in available if m.get("market") == "handicap_match_result"), {})) or "未取得",
                 "totals_pick": selection_text(next((m for m in available if m.get("market") == "total_goals"), {})) or "未取得",
+                "half_time_full_time_pick": selection_text(next((m for m in available if m.get("market") == "half_time_full_time"), {})) or "未取得",
                 "score_lean": "比分赔率未取得或未做泊松覆盖",
                 "stability": "降级",
                 "risk": " / ".join(motivation[:2]) if group_context_complete or not group_context_required else "group_context_missing：小组上下文不完整，稳健主单禁用",
@@ -299,6 +301,7 @@ def build_report(snapshot: dict[str, Any], matches: list[dict[str, Any]], topic:
                 "result_protection": "未接入完整模型，不给强保护结论",
                 "handicap_pick": selection_text(next((m for m in available if m.get("market") == "handicap_match_result"), {})) or "让球赔率未取得",
                 "totals_pick": selection_text(next((m for m in available if m.get("market") == "total_goals"), {})) or "总进球赔率未取得",
+                "half_time_full_time_pick": selection_text(next((m for m in available if m.get("market") == "half_time_full_time"), {})) or "半全场赔率未取得",
                 "score_candidates": ["未计算", "等待 xG/泊松模型", "不可作为比分购买方案"],
                 "bayesian_adjustments": motivation,
                 "poisson_summary": "本快照报告尚未运行 xG/泊松模型；只能确认竞彩市场和赔率可买性。",

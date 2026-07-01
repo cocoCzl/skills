@@ -29,6 +29,8 @@ scripts/
 
 - 真实 API key、token、密码、cookie 或私有配置。
 - `.agent/`、`.agents/`、`.claude/`、`.pi/`、`skills-lock.json` 等本地运行态文件。
+
+修改已有 skill 时必须改仓库顶层的源码目录，例如 `football-betting-assistant/`。不要把 `.agents/skills/...`、`.codex/skills/...` 或其他本地安装态目录当作源码；这些目录不会作为 GitHub 发布内容，也不应该出现在提交中。
 - `.env`、IDE 配置、系统缓存、`.DS_Store`、`__pycache__/`、测试缓存。
 - 只能在个人机器上生效的绝对路径或个人用户名。
 

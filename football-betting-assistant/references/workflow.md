@@ -75,6 +75,7 @@ When the user asks for 比分、胜平负、大小球 together, cover all reques
 - 让球/胜平负方向单: use only markets confirmed as buyable from the user's screenshot/source, up to eight legs. If ordinary 胜平负 is unavailable, state it is analysis-only and build the ticket from 让球胜平负 or another visible market.
 - 大小球/总进球单: provide at least one pure total-goals or over-under structure when the market exists in the supplied odds, up to eight legs.
 - 比分单: provide single-score, core coverage, enhanced coverage, and补洞 score sets with complete score lists for every match, but put only the four best score-concentration matches into a 比分4串1 ticket.
+- 半全场单: include only when verified HAFU odds exist; keep it as high variance and optional, with at most four legs.
 - 混合过关单: combine the strongest buyable direction legs with totals or selected scores to reduce dependence on exact-score hits. Describe it as higher tolerance than pure score strings, not as a guarantee.
 
 Do not compress portfolio analysis into only one summary table. The user should see why each match is included: source notes, model direction, top scores, risk, and grade.

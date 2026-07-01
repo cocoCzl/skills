@@ -16,6 +16,7 @@ MARKET_LIMITS = {
     "handicap_match_result": 8,
     "over_under": 8,
     "total_goals": 8,
+    "half_time_full_time": 4,
     "mixed": 8,
 }
 
@@ -51,6 +52,8 @@ def _leg_reason_to_exclude(leg: dict[str, Any], risk_preference: str) -> str | N
         five_plus = float(leg.get("five_plus_goal_probability") or 0.0)
         if selected_max < 5 and five_plus >= 0.12:
             return "total-goals selection omits material 5+ tail"
+    if market == "half_time_full_time" and risk_preference == "conservative" and _grade_value(grade) < 2:
+        return "half-time/full-time is high variance and needs at least B grade"
     return None
 
 
@@ -102,7 +105,7 @@ def build_portfolio(document: dict[str, Any]) -> dict[str, Any]:
         ticket_plans.append(
             {
                 "name": f"{market} conservative candidate",
-                "type": "score_4fold" if market == "correct_score" else ("totals" if market in {"over_under", "total_goals"} else "result_handicap"),
+                "type": "score_4fold" if market == "correct_score" else ("totals" if market in {"over_under", "total_goals"} else ("half_time_full_time" if market == "half_time_full_time" else "result_handicap")),
                 "market_family": market,
                 "legs": selected,
                 "unit_math": f"{unit_count} 注",

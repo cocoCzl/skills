@@ -79,6 +79,7 @@ Aggregate the score matrix:
 - Over line: sum scores where total goals > line.
 - Under line: sum scores where total goals < line.
 - Push: when total goals equals an integer line.
+- Half-time/full-time: split xG into first-half and second-half expectations, calculate both Poisson matrices, then aggregate the nine outcomes 胜胜、胜平、胜负、平胜、平平、平负、负胜、负平、负负.
 
 Use `scripts/poisson_calculator.py` when available. Without tools, give ranges and label them approximate.
 
@@ -146,12 +147,16 @@ For market-by-market grading, use `scripts/market_grade_calculator.py` when stru
 - `handicap_match_result`
 - `total_goals` / `over_under`
 - `correct_score`
+- `half_time_full_time`
 - overall match view, if the report needs a summary
 
 Complete markets calculate raw implied probability, market margin, return rate,
 and no-vig probability for every selection. Incomplete markets, missing odds,
 unknown availability, source-missing markets, and parser-failed markets must be
 marked approximate or unavailable for full Value Judgment.
+For `half_time_full_time`, all nine selections are required for full market
+grading. Treat it as a high-variance market; it should normally appear only in
+optional small combinations or high-odds ideas, not conservative main plans.
 
 Market strength can be used only as a bounded correction to the independent
 model probability. It must not replace the football model. If market direction

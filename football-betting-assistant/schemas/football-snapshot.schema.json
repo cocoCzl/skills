@@ -76,7 +76,7 @@
       "properties": {
         "market": {
           "type": "string",
-          "enum": ["match_result", "handicap_match_result", "correct_score", "over_under", "total_goals", "unsupported_market"]
+          "enum": ["match_result", "handicap_match_result", "correct_score", "over_under", "total_goals", "half_time_full_time", "unsupported_market"]
         },
         "source_market_name": { "type": "string", "minLength": 1 },
         "line": { "type": ["number", "string", "null"] },

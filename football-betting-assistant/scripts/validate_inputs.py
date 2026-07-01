@@ -30,10 +30,10 @@ CONFIDENCE = {"high", "medium", "low"}
 REFERENCE_GRADES = {"A", "B", "C", "Pass"}
 LINEUP_STATUSES = {"confirmed", "expected", "unconfirmed", "unavailable"}
 VENUE_TYPES = {"home_away", "neutral", "unknown"}
-MARKET_TYPES = {"ordinary_result", "handicap_result", "correct_score", "over_under", "total_goals", "mixed", "analysis_only"}
+MARKET_TYPES = {"ordinary_result", "handicap_result", "correct_score", "over_under", "total_goals", "half_time_full_time", "mixed", "analysis_only"}
 SNAPSHOT_MODES = {"china-lottery", "international-odds", "analysis-only"}
 SNAPSHOT_PROVIDERS = {"sporttery", "the-odds-api", "api-football", "football-data", "manual", "public-web", "custom"}
-SNAPSHOT_MARKETS = {"match_result", "handicap_match_result", "correct_score", "over_under", "total_goals", "unsupported_market"}
+SNAPSHOT_MARKETS = {"match_result", "handicap_match_result", "correct_score", "over_under", "total_goals", "half_time_full_time", "unsupported_market"}
 SNAPSHOT_AVAILABILITY = {"available", "unavailable", "unknown", "parse_failed"}
 SNAPSHOT_AVAILABILITY_REASONS = {"available", "not_offered", "source_missing", "waf_blocked", "parser_error", "stale_source", "unknown"}
 SNAPSHOT_SOURCE_STATUSES = {"ok", "blocked", "missing", "parse_failed", "stale"}
@@ -82,8 +82,11 @@ def validate_odds(record: dict[str, Any], path: str) -> tuple[list[str], list[st
     if record.get("confidence") == "low":
         warnings.append(f"{path}: low odds confidence; downgrade value judgment")
     prices = [record.get(name) for name in ("home_price", "draw_price", "away_price", "over_price", "under_price")]
+    prices.extend((item or {}).get("odds") for item in (record.get("selections") or []) if isinstance(item, dict))
     if not any(price is not None for price in prices):
         warnings.append(f"{path}: no prices supplied; value judgment unavailable")
+    if record.get("market") == "half_time_full_time" and len([price for price in prices if price is not None]) < 9:
+        warnings.append(f"{path}: half_time_full_time needs all nine prices for full value judgment")
     return errors, warnings
 
 

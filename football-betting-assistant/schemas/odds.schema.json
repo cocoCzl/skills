@@ -8,7 +8,7 @@
   "properties": {
     "market": {
       "type": "string",
-      "enum": ["match_result", "handicap_match_result", "correct_score", "over_under", "total_goals"]
+      "enum": ["match_result", "handicap_match_result", "correct_score", "over_under", "total_goals", "half_time_full_time"]
     },
     "bookmaker_or_source": { "type": "string", "minLength": 1 },
     "line": { "type": ["number", "string", "null"] },
@@ -17,6 +17,19 @@
     "away_price": { "type": ["number", "null"], "exclusiveMinimum": 1 },
     "over_price": { "type": ["number", "null"], "exclusiveMinimum": 1 },
     "under_price": { "type": ["number", "null"], "exclusiveMinimum": 1 },
+    "selections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "odds"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "odds": { "type": ["number", "null"], "exclusiveMinimum": 1 },
+          "source_name": { "type": "string" }
+        }
+      }
+    },
     "observed_at": { "type": "string", "format": "date-time" },
     "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
     "notes": { "type": "string" }

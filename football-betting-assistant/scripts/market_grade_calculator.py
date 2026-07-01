@@ -17,6 +17,7 @@ COMPLETE_MARKET_MIN_SELECTIONS = {
     "over_under": 2,
     "total_goals": 2,
     "correct_score": 2,
+    "half_time_full_time": 9,
 }
 
 
