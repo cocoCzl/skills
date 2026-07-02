@@ -1,6 +1,6 @@
 # Contributing
 
-感谢你改进这个 skills 合集。这个仓库的目标是让别人 clone 后可以直接理解、安装和验证每个 skill，而不是依赖某个人本地的 agent 运行态目录。
+感谢你改进 `coco-skills`。这个仓库的目标是让别人 clone 后可以直接理解、安装和验证每个 skill，而不是依赖某个人本地的 agent 运行态目录。
 
 ## 添加新 Skill
 

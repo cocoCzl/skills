@@ -1,6 +1,6 @@
-# Skills
+# Coco Skills
 
-这是一个面向 Codex / agent 工作流的开源 skill 合集仓库。带有 `SKILL.md` 的顶层目录是可独立安装和阅读的 skill；`tests/`、`examples/`、`evals/`、`scripts/` 等是仓库级开发资料。
+`coco-skills` 是一个面向 Codex / agent 工作流的开源 skill 合集仓库。带有 `SKILL.md` 的顶层目录是可独立安装和阅读的 skill；`tests/`、`examples/`、`evals/`、`scripts/` 等是仓库级开发资料。
 
 当前包含：
 
