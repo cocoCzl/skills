@@ -35,6 +35,8 @@ cp -R football-betting-assistant ~/.codex/skills/
 
 如果这个仓库发布到你使用的 skill 安装器，也可以用对应安装命令安装；例如发布后可按安装器约定使用 `npx ...` 添加该 skill。不同 agent 的 skills 目录和安装命令可能不同，以你的 agent 文档为准。
 
+如果你使用的是字节、阿里或其他类似 Codex App 的大模型软件，先看仓库示例目录里的新手指南：[`examples/football_betting_assistant/README.md`](../examples/football_betting_assistant/README.md)。它按“原生 skill、自定义规则、知识库、本地命令、纯聊天”几种能力说明怎么接入，以及哪些场景只能降级使用。
+
 安装后，用户提出足球投注分析、竞彩、胜平负、让球胜平负、比分推荐、大小球、总进球、串关、四串一或赛后复盘相关请求时，这个 skill 应自动触发。普通用户不需要先运行脚本，可以直接问：
 
 ```text
